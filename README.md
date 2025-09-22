@@ -1,7 +1,7 @@
 
-  # Endeavor Health Configuration Management Console (Copy)
+  # Endeavor Health Configuration Management Console 
 
-  This is a code bundle for Endeavor Health Configuration Management Console (Copy). The original project is available at https://www.figma.com/design/UlD24pijmLriD3HJPw3ZpB/Endeavor-Health-Configuration-Management-Console--Copy-.
+  This is a code bundle for Endeavor Health Configuration Management Console. 
 
   ## Running the code
 
