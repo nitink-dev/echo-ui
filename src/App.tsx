@@ -130,7 +130,7 @@ export default function App() {
     try {
       if (scannerData.id) {
         // Edit existing scanner
-        await axios.put(`http://localhost:3001/api/scanners/edit/${scannerData.id}`, scannerData);
+        await axios.put(`http://localhost:3001/api/scanners/${scannerData.id}`, scannerData);
   
         setAppState((prev) => ({
           ...prev,
@@ -143,7 +143,7 @@ export default function App() {
         }));
       } else {
         // Add new scanner
-        const res = await axios.post(`http://localhost:3001/api/scanners/create`, scannerData);
+        const res = await axios.post(`http://localhost:3001/api/scanners`, scannerData);
   
         const newScanner = {
           ...scannerData,

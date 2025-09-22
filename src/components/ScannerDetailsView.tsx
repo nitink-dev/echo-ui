@@ -56,7 +56,7 @@ export function ScannerDetailsView({ scanner, onBack }: ScannerDetailsViewProps)
     const fetchReports = async () => {
       setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:3001/api/scanners/${scanner.id}/analysis-reports`);
+        const res = await axios.get(`http://localhost:3001/api/scanner/${scanner.id}/reports`);
         setAnalysisReports(res.data);
       } catch (err) {
         console.error('Error fetching reports:', err);
