@@ -181,14 +181,24 @@ useEffect(() => {
   };
 
   // Handle confirming delete
-  const handleDeleteConfirm = () => {
-    if (parameterToDelete) {
+  // Handle confirming delete
+const handleDeleteConfirm = async () => {
+  if (parameterToDelete) {
+    try {
+      await axios.delete(`${BASE_URL}/slides/${parameterToDelete.barcode}`);
+      
       setQAParameters(prev => prev.filter(param => param.id !== parameterToDelete.id));
-      toast.success('QA Slide Parameter deleted successfully');
+      toast.success(`QA Slide Parameter "${parameterToDelete.barcode}" deleted successfully`);
+    } catch (err: any) {
+      console.error("Error deleting parameter:", err);
+      toast.error(err.message || "Error deleting QA Slide Parameter");
+    } finally {
       setDeleteDialogOpen(false);
       setParameterToDelete(null);
     }
-  };
+  }
+};
+
 
   // Handle DICOM store editing
   const handleEditDicom = () => {

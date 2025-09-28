@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Download, FileText, Calendar, Activity } from 'lucide-react';
 import { Button } from './ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
@@ -40,58 +40,36 @@ interface ScannerDetailsViewProps {
   onBack: () => void;
 }
 
-const mockAnalysisReports: AnalysisReport[] = [
-  {
-    id: '1',
-    dateOfAnalysis: '2024-01-15 09:30:00',
-    slideIdentifier: 'SLD-2024-001',
-    deviceIdentifier: 'PATH_SCAN_01',
-    patchColors: 'RGB(255,128,64), RGB(64,128,255)',
-    deltaValues: 'ΔE: 2.3, ΔH: 1.8'
-  },
-  {
-    id: '2',
-    dateOfAnalysis: '2024-01-15 08:45:00',
-    slideIdentifier: 'SLD-2024-002',
-    deviceIdentifier: 'PATH_SCAN_01',
-    patchColors: 'RGB(200,100,50), RGB(50,100,200)',
-    deltaValues: 'ΔE: 1.9, ΔH: 2.1'
-  },
-  {
-    id: '3',
-    dateOfAnalysis: '2024-01-14 16:20:00',
-    slideIdentifier: 'SLD-2024-003',
-    deviceIdentifier: 'PATH_SCAN_01',
-    patchColors: 'RGB(180,90,45), RGB(45,90,180)',
-    deltaValues: 'ΔE: 3.1, ΔH: 1.5'
-  },
-  {
-    id: '4',
-    dateOfAnalysis: '2024-01-14 14:15:00',
-    slideIdentifier: 'SLD-2024-004',
-    deviceIdentifier: 'PATH_SCAN_01',
-    patchColors: 'RGB(220,110,55), RGB(55,110,220)',
-    deltaValues: 'ΔE: 2.7, ΔH: 1.9'
-  },
-  {
-    id: '5',
-    dateOfAnalysis: '2024-01-14 11:30:00',
-    slideIdentifier: 'SLD-2024-005',
-    deviceIdentifier: 'PATH_SCAN_01',
-    patchColors: 'RGB(160,80,40), RGB(40,80,160)',
-    deltaValues: 'ΔE: 2.1, ΔH: 2.3'
-  }
-];
+
 
 export function ScannerDetailsView({ scanner, onBack }: ScannerDetailsViewProps) {
   const [currentPage, setCurrentPage] = useState(1);
-  const [analysisReports] = useState(mockAnalysisReports);
+  const [analysisReports, setAnalysisReports] = useState<AnalysisReport[]>([]);
   const itemsPerPage = 12;
 
   const totalPages = Math.ceil(analysisReports.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const currentReports = analysisReports.slice(startIndex, endIndex);
+
+  useEffect(() => {
+    const fetchReports = async () => {
+      try {
+        const response = await fetch(`${BASE_URL}/scanners/${scanner.serialNumber}/reports`);
+        if (!response.ok) throw new Error('Failed to fetch reports');
+        const data: AnalysisReport[] = await response.json();
+        setAnalysisReports(data);
+
+      } catch (err) {
+        console.error('Error fetching reports:', err);
+        toast.error('Unable to fetch analysis reports');
+      } finally {
+      }
+    };
+
+    fetchReports();
+  }, [scanner.id]);
+
 
   const getStatusBadge = (status: SlideScanner['status']) => {
     switch (status) {
