@@ -8,6 +8,7 @@ import { DataStoreConfig } from "./components/DataStoreConfig";
 import { ClinicalAppsConfig } from "./components/ClinicalAppsConfig";
 import { Toaster } from "./components/ui/sonner";
 import axios from "axios";
+import {BASE_URL} from "./util/util"
 
 interface SlideScanner {
   id?: string;
@@ -20,6 +21,7 @@ interface SlideScanner {
   department: string;
   ipAddress: string;
   port: string;
+  dicomStore?: string; // new field for DICOM Store
   vendor: string;
   otherIdentifier?: string;
   status?: "online" | "offline" | "maintenance";
@@ -47,42 +49,51 @@ interface AppState {
 export default function App() {
   
 
-
-  const [appState, setAppState] = useState<AppState>({
+const [appState, setAppState] = useState<AppState>({
     currentPage: "slide-scanner",
     scanners: [], 
     selectedScanner: null,
   });
 
-   // Fetch scanners from API on mount
-   useEffect(() => {
-    const fetchScanners = async () => {
-      try {
-        const res = await axios.get("http://localhost:3001/api/scanners"); 
-        
-        const apiScanners = res.data.map((scanner: any) => ({
-          id: scanner.id,
-          name: scanner.name,
-          aeTitle: scanner.aeTitle,
-          model: scanner.model,
-          serialNumber: scanner.deviceSerialNumber,
-          location: scanner.location,
-          hospitalName: "Endeavor Health Main", // static since not in API
-          department: scanner.department,
-          ipAddress: "N/A", // not in API
-          port: "N/A", // not in API
-          vendor: "Unknown", // not in API
-          status: "online" as const, // default until backend provides
-          lastSeen: new Date().toLocaleString(),
-        }));
-        setAppState((prev) => ({ ...prev, scanners: apiScanners }));
-      } catch (error) {
-        console.error("Error fetching scanners:", error);
-      }
-    };
 
-    fetchScanners();
-  }, []);
+useEffect(() => {
+  const fetchScanners = async () => {
+    try {
+      const res = await axios.get(BASE_URL+"/scanners", {
+        headers: {
+              "Accept": "application/json"
+        }
+      });
+
+      const apiScanners = res.data.map((scanner: any) => ({
+        id: scanner.id,
+        name: scanner.name,
+        aeTitle: scanner.aeTitle,
+        model: scanner.model,
+        serialNumber: scanner.deviceSerialNumber,
+        location: scanner.location,
+        hospitalName: scanner.hospitalName,
+        otherIdentifier: scanner.deviceId,
+        dicomStore: scanner.dicomStore,
+        department: scanner.department,
+        ipAddress: "N/A", // not in API
+        port: "N/A", // not in API
+        vendor: "Unknown", // not in API
+        status: "online" as const, // default until backend provides
+        lastSeen: new Date().toLocaleString(),
+      }));
+
+      setAppState((prev) => ({ ...prev, scanners: apiScanners }));
+    } catch (error) {
+      console.error("Error fetching scanners:", error);
+    }
+  };
+
+  fetchScanners();
+}, []);
+
+
+
 
 
   const navigateToPage = (
@@ -128,9 +139,26 @@ export default function App() {
 
   const handleSaveScanner = async (scannerData: SlideScanner) => {
     try {
+      // Backend payload mapping
+      const payload = {
+        id: scannerData.id, // only if editing
+        name: scannerData.name,
+        aeTitle: scannerData.aeTitle,
+        model: scannerData.model,
+        deviceId: scannerData.otherIdentifier,         
+        deviceSerialNumber: scannerData.serialNumber,
+        location: scannerData.location,
+        hospitalName: scannerData.hospitalName,    
+        department: scannerData.department,
+        dicomStore: scannerData.dicomStore,        
+        ipAddress: scannerData.ipAddress,        
+        port: scannerData.port,              
+        vendor: scannerData.vendor                  
+      };
+  
       if (scannerData.id) {
-        // Edit existing scanner
-        await axios.put(`http://localhost:3001/api/scanners/${scannerData.id}`, scannerData);
+        // Update existing scanner
+        await axios.put(`${BASE_URL}/scanners/${payload.deviceSerialNumber}`, payload);
   
         setAppState((prev) => ({
           ...prev,
@@ -143,11 +171,11 @@ export default function App() {
         }));
       } else {
         // Add new scanner
-        const res = await axios.post(`http://localhost:3001/api/scanners`, scannerData);
+        const res = await axios.post(`${BASE_URL}/scanners`, payload);
   
         const newScanner = {
           ...scannerData,
-          id: res.data.id ?? Date.now().toString(), // use backend id if returned
+          id: res.data.id ?? Date.now().toString(),
           status: "offline" as const,
           lastSeen: new Date().toLocaleString(),
         };
@@ -162,6 +190,7 @@ export default function App() {
       console.error("Error saving scanner:", error);
     }
   };
+  
   
 
   const handleCancelForm = () => {

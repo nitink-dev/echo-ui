@@ -414,7 +414,7 @@ export function SlideScannerListView({
                   <TableHead className="font-semibold text-gray-700 px-4 py-3 w-[15%]">AE Title</TableHead>
                   <TableHead className="font-semibold text-gray-700 px-4 py-3 w-[20%]">Model & Serial</TableHead>
                   <TableHead className="font-semibold text-gray-700 px-4 py-3 w-[25%]">Location</TableHead>
-                  <TableHead className="font-semibold text-gray-700 px-4 py-3 w-[10%]">Status</TableHead>
+                  {/* <TableHead className="font-semibold text-gray-700 px-4 py-3 w-[10%]">Status</TableHead> */}
                   <TableHead className="w-[5%] px-4 py-3" aria-label="Actions"></TableHead>
                 </TableRow>
               </TableHeader>
@@ -449,7 +449,7 @@ export function SlideScannerListView({
                         <div className="text-xs text-gray-500 truncate">{scanner.hospitalName}</div>
                       </div>
                     </TableCell>
-                    <TableCell className="px-4 py-3">{getStatusBadge(scanner.status)}</TableCell>
+                    {/* <TableCell className="px-4 py-3">{getStatusBadge(scanner.status)}</TableCell> */}
                     <TableCell className="px-4 py-3">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -472,7 +472,7 @@ export function SlideScannerListView({
                             Edit Scanner
                           </DropdownMenuItem>
                           <DropdownMenuSeparator />
-                          <DropdownMenuItem onClick={() => handleDownloadPDF(scanner)} className="cursor-pointer">
+                          {/* <DropdownMenuItem onClick={() => handleDownloadPDF(scanner)} className="cursor-pointer">
                             <FileText className="h-4 w-4 mr-2" />
                             Download PDF
                           </DropdownMenuItem>
@@ -480,7 +480,7 @@ export function SlideScannerListView({
                             <Download className="h-4 w-4 mr-2" />
                             Download CSV
                           </DropdownMenuItem>
-                          <DropdownMenuSeparator />
+                          <DropdownMenuSeparator /> */}
                           <DropdownMenuItem 
                             onClick={() => handleDeleteClick(scanner)}
                             className="text-red-600 cursor-pointer focus:text-red-600"

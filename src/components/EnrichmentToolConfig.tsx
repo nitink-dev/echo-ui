@@ -135,12 +135,14 @@ export function EnrichmentToolConfig() {
   const isExpanded = (sectionId: string) => expandedSections.has(sectionId);
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-6 bg-white">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 p-6 border-b border-gray-200">
         <h1 className="text-2xl font-semibold text-gray-900 mb-2">Enrichment Tool</h1>
         <p className="text-gray-600">Configure enrichment services, connectors, and data processing workflows</p>
       </div>
+
+      <div className="px-6 pb-6 space-y-6">
 
       {/* DICOM Receiver Section */}
       <Card className="border border-gray-200 shadow-sm">
@@ -534,14 +536,15 @@ export function EnrichmentToolConfig() {
         </Collapsible>
       </Card>
 
-      {/* Action Buttons */}
-      <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
-        <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
-          Reset to Defaults
-        </Button>
-        <Button className="bg-[#10b981] hover:bg-[#059669] text-white">
-          Save Configuration
-        </Button>
+        {/* Action Buttons */}
+        <div className="flex justify-end gap-3 pt-6 border-t border-gray-200">
+          <Button variant="outline" className="border-gray-200 hover:bg-gray-50">
+            Reset to Defaults
+          </Button>
+          <Button className="bg-[#10b981] hover:bg-[#059669] text-white">
+            Save Configuration
+          </Button>
+        </div>
       </div>
     </div>
   );

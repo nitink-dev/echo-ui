@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Plus, Edit, Trash2, Save, X, BarChart3, Database, Download, FileText } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -8,38 +8,23 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from './ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from './ui/alert-dialog';
 import { toast } from 'sonner@2.0.3';
+import axios from "axios";
 
 interface QASlideParameter {
   id: string;
   barcode: string;
   activationCode: string;
+  dicomWebUrl:String;
+  
 }
 
 interface QAAnalysisConfigProps {
   // Props could be added here for external state management
 }
 
-const mockQAParameters: QASlideParameter[] = [
-  {
-    id: '1',
-    barcode: 'QA-2024-001',
-    activationCode: 'ACT-789123'
-  },
-  {
-    id: '2',
-    barcode: 'QA-2024-002',
-    activationCode: 'ACT-456789'
-  },
-  {
-    id: '3',
-    barcode: 'QA-2024-003',
-    activationCode: 'ACT-123456'
-  }
-];
-
 interface ParameterFormData {
   barcode: string;
-  activationCode: string;
+  activationCode: string;  
 }
 
 const initialFormData: ParameterFormData = {
@@ -48,10 +33,12 @@ const initialFormData: ParameterFormData = {
 };
 
 export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
-  const [qaParameters, setQAParameters] = useState<QASlideParameter[]>(mockQAParameters);
+  const BASE_URL="http://localhost:8081/api";
+  const [qaParameters, setQAParameters] = useState<QASlideParameter[]>([]);
   const [dicomStoreAddress, setDicomStoreAddress] = useState('projects/endeavor-health/locations/us-central1/datasets/pathology/dicomStores/qa-slides');
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
+
   
   // Parameter modal state
   const [parameterModalOpen, setParameterModalOpen] = useState(false);
@@ -70,6 +57,30 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
     setParameterErrors({});
     setParameterModalOpen(true);
   };
+
+useEffect(() => {
+  const fetchQAParameters = async () => {
+    try {
+      const res = await axios.get(BASE_URL+"/slides", {
+        headers: {
+              "Accept": "application/json"
+        }
+      });
+      const apislides = res.data.qaSlides.map((slide: any) => ({
+        id: slide.id,
+        barcode: slide.barcode,
+        activationCode: slide.activationCode     
+      }));
+      setQAParameters(apislides) ;
+    } catch (error) {
+      console.error("Error fetching slides:", error);
+    }
+  };
+
+  fetchQAParameters();
+}, []);
+
+
 
   // Handle opening edit parameter modal
   const handleEditParameter = (parameter: QASlideParameter) => {
@@ -123,15 +134,19 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
   };
 
   // Handle saving parameter
-  const handleSaveParameter = () => {
+  const handleSaveParameter = async ()  => {
     if (!validateParameterForm()) {
       toast.error('Please correct the errors in the form');
       return;
     }
-
+    const payload = {"barcode":parameterFormData.barcode,"activationCode":parameterFormData.activationCode,"dicomWebUrl" :"null"}
+    try{
     if (editingParameter) {
       // Edit existing parameter
+     await axios.put(`${BASE_URL}/slides/${payload.barcode}`, payload);
+    
       setQAParameters(prev => prev.map(param => 
+
         param.id === editingParameter.id 
           ? { ...param, ...parameterFormData }
           : param
@@ -139,13 +154,20 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
       toast.success('QA Slide Parameter updated successfully');
     } else {
       // Add new parameter
+      const res = await axios.post(`${BASE_URL}/slides`, payload);
       const newParameter: QASlideParameter = {
-        id: Date.now().toString(),
-        ...parameterFormData
+        id: res.data.id,
+        barcode: res.data.barcode,
+        activationCode: res.data.activationCode,
+        dicomWebUrl: res.data.dicomWebUrl
       };
       setQAParameters(prev => [...prev, newParameter]);
       toast.success('QA Slide Parameter added successfully');
     }
+  }catch(err:any){
+    toast.error(err.message || "Error: A Slide Parameter not added");
+    
+  }
 
     setParameterModalOpen(false);
     setEditingParameter(null);
@@ -297,7 +319,7 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <Button 
+                        {/* <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleDownloadPDF(parameter)}
@@ -305,8 +327,8 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
                           title="Download PDF Report"
                         >
                           <FileText className="h-4 w-4" />
-                        </Button>
-                        <Button 
+                        </Button> */}
+                        {/* <Button 
                           variant="outline" 
                           size="sm"
                           onClick={() => handleDownloadCSV(parameter)}
@@ -314,7 +336,7 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
                           title="Download CSV Data"
                         >
                           <Download className="h-4 w-4" />
-                        </Button>
+                        </Button> */}
                         <Button 
                           variant="outline" 
                           size="sm"
@@ -399,6 +421,7 @@ export function QAAnalysisConfig({}: QAAnalysisConfigProps) {
               <Label htmlFor="parameterBarcode">QA Slide Barcode *</Label>
               <Input
                 id="parameterBarcode"
+                disabled={editingParameter !== null} // Disable editing barcode if in edit mode
                 value={parameterFormData.barcode}
                 onChange={(e) => handleParameterInputChange('barcode', e.target.value)}
                 placeholder="e.g. QA-2024-001"

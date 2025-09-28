@@ -18,6 +18,7 @@ interface SlideScanner {
   serialNumber: string;
   ipAddress: string;
   port: string;
+  dicomStore?: string;
   vendor: string;
   otherIdentifier?: string;
 }
@@ -40,6 +41,7 @@ interface FormData {
   ipAddress: string;
   port: string;
   vendor: string;
+  dicomStore: string;
   otherIdentifier: string;
 }
 
@@ -55,19 +57,57 @@ const initialFormData: FormData = {
   department: '',
   location: '',
   serialNumber: '',
+  dicomStore: '',
   ipAddress: '',
   port: '',
   vendor: '',
   otherIdentifier: ''
 };
 
-const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'serialNumber', 'ipAddress', 'port', 'vendor'];
+const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'serialNumber'];
 
 export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: SlideScannerFormProps) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
   const [errors, setErrors] = useState<FormErrors>({});
   const [isDirty, setIsDirty] = useState(false);
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
+
+  const [hospitals, setHospitals] = useState<string[]>([]);
+  const [locations, setLocations] = useState<string[]>([]);
+  const [departments, setDepartments] = useState<string[]>([]);
+  const [dicomStore, setDicomStore] = useState<Record<string, string[]>>({});
+
+
+  const BASE_URL="http://localhost:8081/api";
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/hospital-metadata`)
+      .then(res => res.json())
+      .then(data => {
+        setHospitals(data.locations || []); // hospital names
+        setLocations(data.names || []);    // location names
+      })
+      .catch(() => {
+        toast.error('Failed to fetch hospital metadata');
+      });
+  }, []);
+
+  useEffect(() => {
+    fetch(`${BASE_URL}/scanners/datasets/dicomStores`)
+      .then(res => res.json())
+      .then(data => {
+        console.log("DICOM response:", data); // 👈 Debug log
+        setDepartments(Object.keys(data));    // departments = JSON keys
+        setDicomStore(data);                 // keep full map for later use
+      })
+      .catch(err => {
+        console.error(err);
+        toast.error("Failed to load department metadata");
+      });
+  }, []);
+  
+  
+
 
   // Initialize form data if editing
   useEffect(() => {
@@ -80,6 +120,7 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
         department: scanner.department || '',
         location: scanner.location || '',
         serialNumber: scanner.serialNumber || '',
+        dicomStore: scanner.dicomStore || '',
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
@@ -119,20 +160,20 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
     }
 
     // Validate IP Address format
-    if (formData.ipAddress) {
-      const ipRegex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
-      if (!ipRegex.test(formData.ipAddress)) {
-        newErrors.ipAddress = 'Please enter a valid IP address (e.g., 192.168.1.1)';
-      }
-    }
+    // if (formData.ipAddress) {
+    //   const ipRegex = /^((25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)$/;
+    //   if (!ipRegex.test(formData.ipAddress)) {
+    //     newErrors.ipAddress = 'Please enter a valid IP address (e.g., 192.168.1.1)';
+    //   }
+    // }
 
     // Validate Port number
-    if (formData.port) {
-      const portNum = parseInt(formData.port);
-      if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
-        newErrors.port = 'Port must be a number between 1 and 65535';
-      }
-    }
+    // if (formData.port) {
+    //   const portNum = parseInt(formData.port);
+    //   if (isNaN(portNum) || portNum < 1 || portNum > 65535) {
+    //     newErrors.port = 'Port must be a number between 1 and 65535';
+    //   }
+    // }
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -270,14 +311,18 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
               <Label htmlFor="hospitalName" className="text-sm font-medium text-gray-700">
                 Hospital Name *
               </Label>
-              <Input
+              <select
                 id="hospitalName"
                 value={formData.hospitalName}
                 onChange={(e) => handleInputChange('hospitalName', e.target.value)}
-                placeholder="e.g. Endeavor Health Main"
-                className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.hospitalName ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
-              {errors.hospitalName && <p className="text-sm text-red-600 flex items-center gap-1">{errors.hospitalName}</p>}
+                className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.hospitalName ? 'border-red-500 focus:border-red-500' : ''}`}
+              >
+                <option value="">Select Hospital</option>
+                {hospitals.map((h, i) => (
+                  <option key={i} value={h}>{h}</option>
+                ))}
+              </select>
+              {errors.hospitalName && <p className="text-sm text-red-600">{errors.hospitalName}</p>}
             </div>
 
             {/* Department Name */}
@@ -285,30 +330,59 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
               <Label htmlFor="department" className="text-sm font-medium text-gray-700">
                 Department Name *
               </Label>
-              <Input
+              <select
                 id="department"
                 value={formData.department}
-                onChange={(e) => handleInputChange('department', e.target.value)}
-                placeholder="e.g. Pathology"
-                className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.department ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
-              {errors.department && <p className="text-sm text-red-600 flex items-center gap-1">{errors.department}</p>}
+                onChange={(e) => handleInputChange("department", e.target.value)}
+                className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.department ? 'border-red-500 focus:border-red-500' : ''}`}
+              >
+                <option value="">Select Department</option>
+                {departments.map((dept, i) => (
+                  <option key={i} value={dept}>{dept}</option>
+                ))}
+              </select>
+              {errors.department && <p className="text-sm text-red-600">{errors.department}</p>}
             </div>
+
 
             {/* Location */}
             <div className="space-y-2">
               <Label htmlFor="location" className="text-sm font-medium text-gray-700">
                 Location *
               </Label>
-              <Input
+              <select
                 id="location"
                 value={formData.location}
                 onChange={(e) => handleInputChange('location', e.target.value)}
-                placeholder="e.g. Pathology Lab - Room 101"
-                className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.location ? 'border-red-500 focus:border-red-500' : ''}`}
-              />
-              {errors.location && <p className="text-sm text-red-600 flex items-center gap-1">{errors.location}</p>}
+                className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.location ? 'border-red-500 focus:border-red-500' : ''}`}
+              >
+                <option value="">Select Location</option>
+                {locations.map((loc, i) => (
+                  <option key={i} value={loc}>{loc}</option>
+                ))}
+              </select>
+              {errors.location && <p className="text-sm text-red-600">{errors.location}</p>}
             </div>
+
+            {formData.department && (
+              <div className="space-y-2">
+                <Label htmlFor="dicomStore" className="text-sm font-medium text-gray-700">
+                  DICOM Store *
+                </Label>
+                <select
+                  id="dicomStore"
+                  value={formData.dicomStore || ""}
+                  onChange={(e) => handleInputChange("dicomStore", e.target.value)}
+                  className="h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20"
+                >
+                  <option value="">Select DICOM Store</option>
+                  {(dicomStore[formData.department] || []).map((store, i) => (
+                    <option key={i} value={store}>{store}</option>
+                  ))}
+                </select>
+              </div>
+            )}
+
 
             {/* Device Serial Number */}
             <div className="space-y-2">
@@ -317,6 +391,7 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
               </Label>
               <Input
                 id="serialNumber"
+                disabled={isEdit}
                 value={formData.serialNumber}
                 onChange={(e) => handleInputChange('serialNumber', e.target.value)}
                 placeholder="e.g. LCA-2023-001"
@@ -373,10 +448,11 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
             {/* Other Identifier */}
             <div className="space-y-2">
               <Label htmlFor="otherIdentifier" className="text-sm font-medium text-gray-700">
-                Other Identifier
+                Other Identifier (Device ID)
               </Label>
               <Input
                 id="otherIdentifier"
+                disabled={isEdit}
                 value={formData.otherIdentifier}
                 onChange={(e) => handleInputChange('otherIdentifier', e.target.value)}
                 placeholder="Optional additional identifier"
