@@ -52,39 +52,41 @@ export function EnrichmentToolConfig() {
     email: false,
   });
 
-  const [form, setForm] = useState<any>({
-    dicomReceiver: { aet: "", ipAddress: "", port: "", networkDrive: "" },
-    lisConnector: {
-      applicationName: "",
-      ipAddress: "",
-      receivingPort: "",
-      incomingPort: "",
-      receivingFacility: "",
-      receivingAppName: "",
-      sendingFacility: "",
-    },
-    enrichmentService: { messageType: "OUL" },
-    exportService: {
-      synapseServerFolder: "gt450dx",
-      synapseEnabled: false,
-      visioPharmEnabled: false,
-      ibexEnabled: false,
-    },
-    hl7Messaging: {
-      applicationName: "eh-hl7-connector",
-      ipAddress: "10.201.8.12",
-      receivingPort: "2575",
-      outputPort: "6661",
-      receivingFacility: "",
-      receivingAppName: "",
-      sendingFacility: "",
-    },
-    emailService: {
-      emailFrom: "EnrichmentService@northshore.org",
-      emailTo: [] as string[],
-      emailIbexTo: [] as string[],
-    },
-  });
+  // Initialize empty form (no static defaults)
+const [form, setForm] = useState<any>({
+  dicomReceiver: { aet: "", ipAddress: "", port: "", networkDrive: "" },
+  lisConnector: {
+    applicationName: "",
+    ipAddress: "",
+    receivingPort: "",
+    incomingPort: "",
+    receivingFacility: "",
+    receivingAppName: "",
+    sendingFacility: "",
+  },
+  enrichmentService: { messageType: "" },
+  exportService: {
+    synapseServerFolder: "",
+    synapseEnabled: false,
+    visioPharmEnabled: false,
+    ibexEnabled: false,
+  },
+  hl7Messaging: {
+    applicationName: "",
+    ipAddress: "",
+    receivingPort: "",
+    outputPort: "",
+    receivingFacility: "",
+    receivingAppName: "",
+    sendingFacility: "",
+  },
+  emailService: {
+    emailFrom: "",
+    emailTo: [] as string[],
+    emailIbexTo: [] as string[],
+  },
+});
+
 
   const [originalForm, setOriginalForm] = useState(form);
 
@@ -100,22 +102,18 @@ export function EnrichmentToolConfig() {
 
   // Sync dicomReceiver
   useEffect(() => {
-    if (dicomReceiver) {
+    if (dicomReceiver && Object.keys(dicomReceiver).length > 0) {
       const newData = {
-        aet: dicomReceiver["storescp.aetitle"] || dicomReceiver.aet || "",
-        port: dicomReceiver["server.port"] || dicomReceiver.port || "",
-        ipAddress:
-          dicomReceiver["server.ipAddress"] || dicomReceiver.ipAddress || "",
-        networkDrive:
-          dicomReceiver["storescp.storage.path"] ||
-          dicomReceiver["network-drive"] ||
-          dicomReceiver.networkDrive ||
-          "",
+        aet: dicomReceiver.aet || dicomReceiver["storescp.aetitle"] || "",
+        port: dicomReceiver.port || dicomReceiver["server.port"] || "",
+        ipAddress: dicomReceiver.ipAddress || dicomReceiver["server.ipAddress"] || "",
+        networkDrive: dicomReceiver["network-drive"] || dicomReceiver["storescp.storage.path"] || "",
       };
       setForm((prev: any) => ({ ...prev, dicomReceiver: newData }));
       setOriginalForm((prev: any) => ({ ...prev, dicomReceiver: newData }));
     }
   }, [dicomReceiver]);
+  
 
   // Sync lisConnector
   useEffect(() => {
@@ -176,57 +174,65 @@ export function EnrichmentToolConfig() {
     }
   }, [exportService]);
 
-  // Sync hl7Connector
+  // HL7 Connector
   useEffect(() => {
-    if (hl7Connector && Object.keys(hl7Connector).length > 0) {
+    if (!hl7Connector) return;
+  
+    const raw =
+      hl7Connector?.data ||
+      hl7Connector?.payload?.data ||
+      hl7Connector?.payload ||
+      hl7Connector;
+  
+    console.log("Normalized HL7 Connector Data:", raw);
+  
+    if (raw && Object.keys(raw).length > 0) {
       const newData = {
-        applicationName: hl7Connector.name || hl7Connector.appName || "eh-hl7-connector",
-        ipAddress: hl7Connector.ipAddress || "10.201.8.12",
+        applicationName: raw.appName || raw.name || "",
+        ipAddress: raw.ipAddress || "",
         receivingPort:
-          hl7Connector["receive-port"]?.toString() ||
-          hl7Connector["receivePort"]?.toString() ||
-          hl7Connector.receivingPort?.toString() ||
-          "2575",
-        outputPort: hl7Connector.outputPort?.toString() || "6661",
-        receivingFacility: hl7Connector.receivingFacility || "",
-        receivingAppName: hl7Connector.receivingAppName || hl7Connector.receivingApp || "",
-        sendingFacility: hl7Connector.sendingFacility || "",
+          raw["receive-port"]?.toString() ||
+          raw.receivePort?.toString() ||
+          raw.receivingPort?.toString() ||
+          "",
+        outputPort: raw.outputPort?.toString() || "",
+        receivingFacility: raw.receivingFacility || "",
+        receivingAppName: raw.receivingAppName || raw.receivingApp || "",
+        sendingFacility: raw.sendingFacility || "",
       };
       setForm((prev: any) => ({ ...prev, hl7Messaging: newData }));
       setOriginalForm((prev: any) => ({ ...prev, hl7Messaging: newData }));
     }
   }, [hl7Connector]);
+  
+
+
 
   // Sync emailService
   useEffect(() => {
     if (emailService && Object.keys(emailService).length > 0) {
-      // normalize arrays/strings
       const normalizeToArray = (v: any) => {
-        if (!v && v !== "") return [];
+        if (!v) return [];
         if (Array.isArray(v)) return v;
-        if (typeof v === "string") {
-          return v
-            .split(",")
-            .map((s) => s.trim())
-            .filter(Boolean);
-        }
+        if (typeof v === "string")
+          return v.split(",").map((s) => s.trim()).filter(Boolean);
         return [];
       };
-
+  
       const newData = {
-        emailFrom:
-          Array.isArray(emailService.emailFrom) && emailService.emailFrom.length > 0
-            ? emailService.emailFrom[0]
-            : typeof emailService.emailFrom === "string"
-            ? emailService.emailFrom
-            : "EnrichmentService@northshore.org",
+        emailFrom: Array.isArray(emailService.emailFrom)
+          ? emailService.emailFrom[0] || ""
+          : emailService.emailFrom || "",
         emailTo: normalizeToArray(emailService.emailTo),
         emailIbexTo: normalizeToArray(emailService.emailIbexTo),
       };
+  
+      // ✅ show already-added emails from API in UI
       setForm((prev: any) => ({ ...prev, emailService: newData }));
       setOriginalForm((prev: any) => ({ ...prev, emailService: newData }));
     }
   }, [emailService]);
+  
 
   const handleEdit = (key: keyof typeof editMode, enable: boolean) => {
     setEditMode((prev) => ({ ...prev, [key]: enable }));
