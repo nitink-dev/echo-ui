@@ -48,7 +48,7 @@ export const addScanner = createAsyncThunk<SlideScanner, Omit<SlideScanner, 'id'
   }
 );
 
-// Update existing scanner
+// Update existing scanner (using deviceSerialNumber as identifier)
 export const updateScanner = createAsyncThunk<SlideScanner, SlideScanner>(
   'scanners/updateScanner',
   async (scanner, { rejectWithValue }) => {
@@ -62,13 +62,13 @@ export const updateScanner = createAsyncThunk<SlideScanner, SlideScanner>(
   }
 );
 
-// Delete a scanner
+// Delete a scanner (using deviceSerialNumber instead of id)
 export const deleteScanner = createAsyncThunk<string, string>(
   'scanners/deleteScanner',
-  async (id, { rejectWithValue }) => {
+  async (serialNumber, { rejectWithValue }) => {
     try {
-      await axios.delete(`/api/scanners/${id}`);
-      return id;
+      await axios.delete(`/api/scanners/${serialNumber}`);
+      return serialNumber; // return serial number for reducer
     } catch (err: any) {
       console.error("Delete scanner failed:", err);
       return rejectWithValue(err.response?.data?.message || 'Failed to delete scanner');
@@ -108,19 +108,24 @@ const scannerSlice = createSlice({
         state.items.push(action.payload);
       })
 
-      // Update
+      // Update (match by deviceSerialNumber)
       .addCase(updateScanner.fulfilled, (state, action: PayloadAction<SlideScanner>) => {
-        const index = state.items.findIndex(s => s.id === action.payload.id);
+        const index = state.items.findIndex(
+          (s) => s.deviceSerialNumber === action.payload.deviceSerialNumber
+        );
         if (index !== -1) {
           state.items[index] = action.payload;
           console.log("✏️ Scanner updated:", action.payload);
         }
       })
 
-      // Delete
+      // Delete (match by deviceSerialNumber)
       .addCase(deleteScanner.fulfilled, (state, action: PayloadAction<string>) => {
-        state.items = state.items.filter(scanner => scanner.id !== action.payload);
-        console.log("🗑️ Scanner deleted:", action.payload);
+        const deletedSerial = action.payload;
+        state.items = state.items.filter(
+          (scanner) => scanner.deviceSerialNumber !== deletedSerial
+        );
+        console.log("🗑️ Scanner deleted:", deletedSerial);
       });
   },
 });
