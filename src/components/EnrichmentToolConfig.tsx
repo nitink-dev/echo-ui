@@ -43,6 +43,16 @@ export function EnrichmentToolConfig() {
     loading,
   } = useSelector((s: any) => s.ehTools || {});
 
+  const [initializedSections, setInitializedSections] = useState({
+    dicom: false,
+    lis: false,
+    enrichment: false,
+    export: false,
+    hl7: false,
+    email: false,
+  });
+  
+
   const [editMode, setEditMode] = useState<{ [key: string]: boolean }>({
     dicom: false,
     lis: false,
@@ -102,22 +112,26 @@ const [form, setForm] = useState<any>({
 
   // Sync dicomReceiver
   useEffect(() => {
-    if (dicomReceiver && Object.keys(dicomReceiver).length > 0) {
-      const newData = {
-        aet: dicomReceiver.aet || dicomReceiver["storescp.aetitle"] || "",
-        port: dicomReceiver.port || dicomReceiver["server.port"] || "",
-        ipAddress: dicomReceiver.ipAddress || dicomReceiver["server.ipAddress"] || "",
-        networkDrive: dicomReceiver["network-drive"] || dicomReceiver["storescp.storage.path"] || "",
-      };
-      setForm((prev: any) => ({ ...prev, dicomReceiver: newData }));
-      setOriginalForm((prev: any) => ({ ...prev, dicomReceiver: newData }));
-    }
+    if (!dicomReceiver || Object.keys(dicomReceiver).length === 0 || initializedSections.dicom)
+      return;
+  
+    const newData = {
+      aet: dicomReceiver.aet || dicomReceiver["storescp.aetitle"] || "",
+      port: dicomReceiver.port || dicomReceiver["server.port"] || "",
+      ipAddress: dicomReceiver.ipAddress || dicomReceiver["server.ipAddress"] || "",
+      networkDrive: dicomReceiver["network-drive"] || dicomReceiver["storescp.storage.path"] || "",
+    };
+  
+    setForm((prev: any) => ({ ...prev, dicomReceiver: newData }));
+    setOriginalForm((prev: any) => ({ ...prev, dicomReceiver: newData }));
+    setInitializedSections((p) => ({ ...p, dicom: true }));
   }, [dicomReceiver]);
+  
   
 
   // Sync lisConnector
   useEffect(() => {
-    if (lisConnector) {
+    if (lisConnector && !initializedSections.lisConnector) {
       const newData = {
         applicationName: lisConnector.name || lisConnector.appName || "",
         ipAddress: lisConnector["lis.ipAddress"] || lisConnector.ipAddress || "",
@@ -137,23 +151,25 @@ const [form, setForm] = useState<any>({
       };
       setForm((prev: any) => ({ ...prev, lisConnector: newData }));
       setOriginalForm((prev: any) => ({ ...prev, lisConnector: newData }));
+      setInitializedSections((p) => ({ ...p, lisConnector: true }));
     }
   }, [lisConnector]);
 
   // Sync enrichmentService
   useEffect(() => {
-    if (enrichmentService && enrichmentService.messageType) {
+    if (enrichmentService && enrichmentService.messageType && !initializedSections.enrichmentService) {
       const newData = {
         messageType: enrichmentService.messageType || "OUL",
       };
       setForm((prev: any) => ({ ...prev, enrichmentService: newData }));
       setOriginalForm((prev: any) => ({ ...prev, enrichmentService: newData }));
+      setInitializedSections((p) => ({ ...p, enrichmentService: true }));
     }
   }, [enrichmentService]);
 
   // Sync exportService
   useEffect(() => {
-    if (exportService) {
+    if (exportService && !initializedSections.exportService) {
       const newData = {
         synapseServerFolder: exportService.synapseServerFolder || "gt450dx",
         synapseEnabled:
@@ -171,12 +187,14 @@ const [form, setForm] = useState<any>({
       };
       setForm((prev: any) => ({ ...prev, exportService: newData }));
       setOriginalForm((prev: any) => ({ ...prev, exportService: newData }));
+      setInitializedSections((p) => ({ ...p, enrichmentService: true }));
+
     }
   }, [exportService]);
 
   // HL7 Connector
   useEffect(() => {
-    if (!hl7Connector) return;
+    if (!hl7Connector || initializedSections.hl7Connector) return;
   
     const raw =
       hl7Connector?.data ||
@@ -202,6 +220,8 @@ const [form, setForm] = useState<any>({
       };
       setForm((prev: any) => ({ ...prev, hl7Messaging: newData }));
       setOriginalForm((prev: any) => ({ ...prev, hl7Messaging: newData }));
+      setInitializedSections((p) => ({ ...p, hl7Connector: true }));
+
     }
   }, [hl7Connector]);
   
