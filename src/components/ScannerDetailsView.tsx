@@ -61,7 +61,7 @@ export function ScannerDetailsView({ scanner, onBack }: ScannerDetailsViewProps)
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await fetch(`${BASE_URL}/scanners/${scanner.deviceSerialNumber}/reports`);
+        const response = await fetch(`${BASE_URL}/api/scanners/${scanner.deviceSerialNumber}/reports`);
         if (!response.ok) throw new Error('Failed to fetch reports');
         const data: AnalysisReport[] = await response.json();
         setAnalysisReports(data);

@@ -206,32 +206,66 @@ const [form, setForm] = useState<any>({
   }, [hl7Connector]);
   
 
+// Sync emailService (load once when API gives first data)
+useEffect(() => {
+  if (!emailService || Object.keys(emailService).length === 0) return;
+
+  setForm((prev: any) => {
+    // only initialize if empty
+    const alreadyInitialized =
+      prev.emailService.emailFrom ||
+      prev.emailService.emailTo.length ||
+      prev.emailService.emailIbexTo.length;
+
+    if (alreadyInitialized) return prev;
+
+    const normalizeToArray = (v: any) => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      if (typeof v === "string")
+        return v.split(",").map((s) => s.trim()).filter(Boolean);
+      return [];
+    };
+
+    const newData = {
+      emailFrom: Array.isArray(emailService.emailFrom)
+        ? emailService.emailFrom[0] || ""
+        : emailService.emailFrom || "",
+      emailTo: normalizeToArray(emailService.emailTo),
+      emailIbexTo: normalizeToArray(emailService.emailIbexTo),
+    };
+
+    return { ...prev, emailService: newData };
+  });
+
+  setOriginalForm((prev: any) => {
+    const alreadyInitialized =
+      prev.emailService.emailFrom ||
+      prev.emailService.emailTo.length ||
+      prev.emailService.emailIbexTo.length;
+    if (alreadyInitialized) return prev;
+
+    const normalizeToArray = (v: any) => {
+      if (!v) return [];
+      if (Array.isArray(v)) return v;
+      if (typeof v === "string")
+        return v.split(",").map((s) => s.trim()).filter(Boolean);
+      return [];
+    };
+
+    const newData = {
+      emailFrom: Array.isArray(emailService.emailFrom)
+        ? emailService.emailFrom[0] || ""
+        : emailService.emailFrom || "",
+      emailTo: normalizeToArray(emailService.emailTo),
+      emailIbexTo: normalizeToArray(emailService.emailIbexTo),
+    };
+
+    return { ...prev, emailService: newData };
+  });
+}, [emailService]);
 
 
-  // Sync emailService
-  useEffect(() => {
-    if (emailService && Object.keys(emailService).length > 0) {
-      const normalizeToArray = (v: any) => {
-        if (!v) return [];
-        if (Array.isArray(v)) return v;
-        if (typeof v === "string")
-          return v.split(",").map((s) => s.trim()).filter(Boolean);
-        return [];
-      };
-  
-      const newData = {
-        emailFrom: Array.isArray(emailService.emailFrom)
-          ? emailService.emailFrom[0] || ""
-          : emailService.emailFrom || "",
-        emailTo: normalizeToArray(emailService.emailTo),
-        emailIbexTo: normalizeToArray(emailService.emailIbexTo),
-      };
-  
-      // ✅ show already-added emails from API in UI
-      setForm((prev: any) => ({ ...prev, emailService: newData }));
-      setOriginalForm((prev: any) => ({ ...prev, emailService: newData }));
-    }
-  }, [emailService]);
   
 
   const handleEdit = (key: keyof typeof editMode, enable: boolean) => {
@@ -547,10 +581,11 @@ const [form, setForm] = useState<any>({
               disabled={!editMode.enrichment}
               className={`w-full border rounded p-2 ${!editMode.enrichment ? "bg-gray-50 text-gray-600" : ""}`}
             >
-              <option value="OUL">OUL</option>
-              <option value="ORM">ORM</option>
-              <option value="ORU">ORU</option>
-              <option value="MDM">MDM</option>
+              
+             
+              <option value="ORU">ORU to OUL</option>
+              <option value="QBP">QBP to OML</option>
+             
             </select>
           </div>
         </>
