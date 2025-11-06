@@ -412,11 +412,15 @@ useEffect(() => {
         }
 
         // Ensure arrays are sent as arrays and emailFrom as array (to match sample payload)
+        const cleanEmailTo = (form.emailService.emailTo || []).filter((e: string) => e.trim() !== "");
+        const cleanEmailIbexTo = (form.emailService.emailIbexTo || []).filter((e: string) => e.trim() !== "");
+
         body = {
           ...(emailDiff.emailFrom !== undefined && { emailFrom: [form.emailService.emailFrom] }),
-          ...(emailDiff.emailTo !== undefined && { emailTo: form.emailService.emailTo }),
-          ...(emailDiff.emailIbexTo !== undefined && { emailIbexTo: form.emailService.emailIbexTo }),
+          ...(emailDiff.emailTo !== undefined && { emailTo: cleanEmailTo }),
+          ...(emailDiff.emailIbexTo !== undefined && { emailIbexTo: cleanEmailIbexTo }),
         };
+
         break;
     }
 
