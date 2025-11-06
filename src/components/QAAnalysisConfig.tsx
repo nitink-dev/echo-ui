@@ -10,6 +10,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { toast } from 'sonner@2.0.3';
 import { Eye, EyeOff } from 'lucide-react';
 import { useAppDispatch } from '../hooks';
+import { useSelector } from "react-redux";
 import { addQAParameter, deleteQAParameter, fetchDicomStores, fetchQAParameters, updateDicomStore, updateQAParameter } from '../slices/qaSlice';
 
 interface QASlideParameter {
@@ -45,6 +46,9 @@ export function QAAnalysisConfig({ }: QAAnalysisConfigProps) {
   const [tempDicomAddress, setTempDicomAddress] = useState();
   const [dicomStore, setDicomStore] = useState([]);
 
+  const qaParamsFromStore = useSelector((state: any) => state.qa.qaParameters);
+const dicomStoresFromStore = useSelector((state: any) => state.qa.dicomStores);
+
 
   // Parameter modal state
   const [parameterModalOpen, setParameterModalOpen] = useState(false);
@@ -68,6 +72,18 @@ export function QAAnalysisConfig({ }: QAAnalysisConfigProps) {
     dispatch(fetchQAParameters());
     dispatch(fetchDicomStores());
   }, [dispatch]);
+
+
+useEffect(() => {
+  if (qaParamsFromStore?.length) setQAParameters(qaParamsFromStore);
+}, [qaParamsFromStore]);
+
+useEffect(() => {
+  if (dicomStoresFromStore?.length) {
+    setDicomStore(dicomStoresFromStore);
+    if (!dicomStoreAddress) setDicomStoreAddress(dicomStoresFromStore[0]);
+  }
+}, [dicomStoresFromStore]);
 
   // Handle opening edit parameter modal
   const handleEditParameter = (parameter: QASlideParameter) => {

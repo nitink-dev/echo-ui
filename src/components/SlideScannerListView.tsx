@@ -34,13 +34,17 @@ export function SlideScannerListView({
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [scannerToDelete, setScannerToDelete] = useState<SlideScanner | null>(null);
 
-  const filteredScanners = scanners.filter(
-    (scanner) =>
-      scanner.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scanner.aeTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scanner.deviceSerialNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      scanner.location.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredScanners = scanners.filter((scanner) => {
+    const term = searchTerm.toLowerCase();
+    return (
+      scanner.name.toLowerCase().includes(term) ||
+      scanner.aeTitle.toLowerCase().includes(term) ||
+      scanner.deviceSerialNumber.toLowerCase().includes(term) ||
+      (scanner.model?.toLowerCase() || "").includes(term) ||
+      scanner.location.toLowerCase().includes(term)
+    );
+  });
+  
 
   const handleDeleteClick = (scanner: SlideScanner) => {
     setScannerToDelete(scanner);
@@ -90,9 +94,9 @@ export function SlideScannerListView({
             />
           </div>
           <div className="flex items-center gap-2">
-            <Button variant="outline" size="sm" className="border-gray-200 hover:bg-[#f8faff] hover:border-[#007BFF] px-3 h-10 flex-shrink-0">
+            {/* <Button variant="outline" size="sm" className="border-gray-200 hover:bg-[#f8faff] hover:border-[#007BFF] px-3 h-10 flex-shrink-0">
               <Filter className="h-4 w-4 sm:mr-2" /> <span className="hidden sm:inline">Filter</span>
-            </Button>
+            </Button> */}
             <Button onClick={onAddScanner} className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-4 h-10 flex-shrink-0">
               <Plus className="h-4 w-4 mr-2" /> <span className="hidden sm:inline">Add New Scanner</span>
             </Button>
