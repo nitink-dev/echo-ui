@@ -53,7 +53,7 @@ export function SlideScannerListView({
 
   const handleDeleteConfirm = () => {
     if (scannerToDelete) {
-      onDeleteScanner(scannerToDelete.id);
+      onDeleteScanner(scannerToDelete.deviceSerialNumber);
       setDeleteDialogOpen(false);
       setScannerToDelete(null);
     }
@@ -132,7 +132,7 @@ export function SlideScannerListView({
             </TableHeader>
             <TableBody>
               {filteredScanners.map((scanner, index) => (
-                <TableRow key={scanner.id} className={`cursor-pointer hover:bg-[#f8faff] border-gray-200 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}>
+                <TableRow key={scanner.deviceSerialNumber} className={`cursor-pointer hover:bg-[#f8faff] border-gray-200 transition-colors ${index % 2 === 0 ? "bg-white" : "bg-gray-50/30"}`}>
                   <TableCell className="px-4 py-3" onClick={() => onViewScanner(scanner)}>
                     <div>
                       <div className="font-semibold text-gray-900 text-sm truncate">{scanner.name}</div>

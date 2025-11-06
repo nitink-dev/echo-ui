@@ -53,7 +53,7 @@ export const updateScanner = createAsyncThunk<SlideScanner, SlideScanner>(
   'scanners/updateScanner',
   async (scanner, { rejectWithValue }) => {
     try {
-      const response = await axios.put(`/api/scanners/${scanner.id}`, scanner);
+      const response = await axios.put(`/api/scanners/${scanner.deviceSerialNumber}`, scanner);
       return response.data;
     } catch (err: any) {
       console.error("Update scanner failed:", err);
