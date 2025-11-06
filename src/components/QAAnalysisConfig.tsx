@@ -17,7 +17,7 @@ interface QASlideParameter {
   id: string;
   barcode: string;
   activationCode: string;
-  dicomWebUrl: String;
+  dicomUrl: String;
 
 }
 
@@ -47,7 +47,9 @@ export function QAAnalysisConfig({ }: QAAnalysisConfigProps) {
   const [dicomStore, setDicomStore] = useState([]);
 
   const qaParamsFromStore = useSelector((state: any) => state.qa.qaParameters);
-const dicomStoresFromStore = useSelector((state: any) => state.qa.dicomStores);
+  const dicomStoresFromStore = useSelector((state: any) => state.qa.dicomStores);
+  const dicomStoreAddressFromStore = useSelector((state: any) => state.qa.dicomStoreAddress);
+  
 
 
   // Parameter modal state
@@ -79,11 +81,37 @@ useEffect(() => {
 }, [qaParamsFromStore]);
 
 useEffect(() => {
+  // set all stores
   if (dicomStoresFromStore?.length) {
     setDicomStore(dicomStoresFromStore);
-    if (!dicomStoreAddress) setDicomStoreAddress(dicomStoresFromStore[0]);
   }
-}, [dicomStoresFromStore]);
+
+  // 1️⃣ Prefer value from store
+  if (dicomStoreAddressFromStore) {
+    setDicomStoreAddress(dicomStoreAddressFromStore);
+    return;
+  }
+
+  // 2️⃣ If store didn’t load yet, check QA params for dicomWebUrl
+  if (qaParamsFromStore?.length) {
+    const firstWithDicom = qaParamsFromStore.find((p: any) => p.dicomWebUrl);
+    if (firstWithDicom?.dicomWebUrl) {
+      setDicomStoreAddress(firstWithDicom.dicomWebUrl);
+      return;
+    }
+  }
+
+  // 3️⃣ Fallback: if neither, take first store if available
+  if (dicomStoresFromStore?.length) {
+    const fallback =
+      dicomStoresFromStore[0]?.dicomUrl ||
+      (typeof dicomStoresFromStore[0] === 'string' ? dicomStoresFromStore[0] : null);
+    setDicomStoreAddress(fallback);
+  }
+}, [qaParamsFromStore, dicomStoresFromStore, dicomStoreAddressFromStore]);
+
+
+
 
   // Handle opening edit parameter modal
   const handleEditParameter = (parameter: QASlideParameter) => {
@@ -424,11 +452,15 @@ useEffect(() => {
                     className="h-11 w-full rounded-md bg-[#f8faff] border border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20"
                   >
                     <option value="">Select DICOM Store</option>
-                    {dicomStore.map((store, i) => (
-                      <option key={i} value={store}>
-                        {store}
-                      </option>
-                    ))}
+                    {dicomStore.map((store: any, i) => {
+                      const value = store?.dicomUrl || store; // support both string and object forms
+                      return (
+                        <option key={i} value={value}>
+                          {value}
+                        </option>
+                      );
+                    })}
+
                   </select>
 
                 {isEditingDicom ? (

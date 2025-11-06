@@ -1,6 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import axios from 'axios';
-import { BASE_URL } from '../util/util';
+import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
+import axios from "axios";
+import { BASE_URL } from "../util/util";
 
 export interface QASlideParameter {
   id: string;
@@ -19,33 +19,49 @@ interface QAState {
 
 const initialState: QAState = {
   qaParameters: [],
-  dicomStoreAddress: '',
+  dicomStoreAddress: "",
   dicomStores: [],
   loading: false,
   error: null,
 };
 
 // --- Async Thunks ---
-export const fetchQAParameters = createAsyncThunk(
-  'qa/fetchQAParameters',
-  async (_, { rejectWithValue }) => {
-    try {
-      const res = await axios.get(`${BASE_URL}/api/slides`);
-      const apislides = res.data.qaSlides.map((slide: any) => ({
-        id: slide.id,
-        barcode: slide.barcode,
-        activationCode: slide.activationCode,
-        dicomWebUrl: slide.dicomWebUrl,
+
+export const fetchQAParameters = createAsyncThunk<
+  { slides: QASlideParameter[]; dicomUrl: string }
+>("qa/fetchQAParameters", async (_, { rejectWithValue }) => {
+  try {
+    const res = await axios.get(`${BASE_URL}/api/slides`);
+    const data = res.data;
+
+    console.log("📥 API /api/slides response:", data);
+
+    // ✅ Case 1: { dicomUrl, qaSlides: [...] }
+    if (data?.qaSlides && data?.dicomUrl) {
+      const slides = data.qaSlides.map((slide: any) => ({
+        ...slide,
+        dicomWebUrl: data.dicomUrl,
       }));
-      return { slides: apislides, dicomUrl: res.data.dicomUrl };
-    } catch (err: any) {
-      return rejectWithValue(err.message);
+      return { slides, dicomUrl: data.dicomUrl };
     }
+
+    // ✅ Case 2: API returns only an array
+    if (Array.isArray(data)) {
+      return { slides: data, dicomUrl: "" };
+    }
+
+    // ✅ Fallback
+    return { slides: [], dicomUrl: "" };
+  } catch (err: any) {
+    console.error("❌ Fetch QA parameters failed:", err);
+    return rejectWithValue(
+      err.response?.data?.message || "Failed to fetch QA parameters"
+    );
   }
-);
+});
 
 export const fetchDicomStores = createAsyncThunk(
-  'qa/fetchDicomStores',
+  "qa/fetchDicomStores",
   async (_, { rejectWithValue }) => {
     try {
       const res = await fetch(`${BASE_URL}/api/scanners/datasets/dicomStores`);
@@ -59,7 +75,7 @@ export const fetchDicomStores = createAsyncThunk(
 );
 
 export const updateDicomStore = createAsyncThunk(
-  'qa/updateDicomStore',
+  "qa/updateDicomStore",
   async (dicomStoreAddress: string, { rejectWithValue }) => {
     try {
       const payload = { "gcp-config.pathqa-store-url": dicomStoreAddress.trim() };
@@ -72,8 +88,11 @@ export const updateDicomStore = createAsyncThunk(
 );
 
 export const addQAParameter = createAsyncThunk(
-  'qa/addQAParameter',
-  async (payload: { barcode: string; activationCode: string }, { rejectWithValue }) => {
+  "qa/addQAParameter",
+  async (
+    payload: { barcode: string; activationCode: string },
+    { rejectWithValue }
+  ) => {
     try {
       const res = await axios.post(`${BASE_URL}/api/slides`, payload);
       return {
@@ -89,8 +108,11 @@ export const addQAParameter = createAsyncThunk(
 );
 
 export const updateQAParameter = createAsyncThunk(
-  'qa/updateQAParameter',
-  async (payload: { barcode: string; activationCode: string }, { rejectWithValue }) => {
+  "qa/updateQAParameter",
+  async (
+    payload: { barcode: string; activationCode: string },
+    { rejectWithValue }
+  ) => {
     try {
       await axios.put(`${BASE_URL}/api/slides/${payload.barcode}`, payload);
       return payload;
@@ -101,7 +123,7 @@ export const updateQAParameter = createAsyncThunk(
 );
 
 export const deleteQAParameter = createAsyncThunk(
-  'qa/deleteQAParameter',
+  "qa/deleteQAParameter",
   async (barcode: string, { rejectWithValue }) => {
     try {
       await axios.delete(`${BASE_URL}/api/slides/${barcode}`);
@@ -114,18 +136,23 @@ export const deleteQAParameter = createAsyncThunk(
 
 // --- Slice ---
 const qaSlice = createSlice({
-  name: 'qa',
+  name: "qa",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
       // Fetch QA Parameters
-      .addCase(fetchQAParameters.pending, (state) => { state.loading = true; })
-      .addCase(fetchQAParameters.fulfilled, (state, action) => {
-        state.loading = false;
-        state.qaParameters = action.payload.slides;
-        state.dicomStoreAddress = action.payload.dicomUrl;
+      .addCase(fetchQAParameters.pending, (state) => {
+        state.loading = true;
       })
+      .addCase(
+        fetchQAParameters.fulfilled,
+        (state, action: PayloadAction<{ slides: QASlideParameter[]; dicomUrl: string }>) => {
+          state.loading = false;
+          state.qaParameters = action.payload.slides;
+          state.dicomStoreAddress = action.payload.dicomUrl;
+        }
+      )
       .addCase(fetchQAParameters.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
@@ -148,7 +175,9 @@ const qaSlice = createSlice({
 
       // Update
       .addCase(updateQAParameter.fulfilled, (state, action) => {
-        const index = state.qaParameters.findIndex(q => q.barcode === action.payload.barcode);
+        const index = state.qaParameters.findIndex(
+          (q) => q.barcode === action.payload.barcode
+        );
         if (index >= 0) {
           state.qaParameters[index].activationCode = action.payload.activationCode;
         }
@@ -156,7 +185,9 @@ const qaSlice = createSlice({
 
       // Delete
       .addCase(deleteQAParameter.fulfilled, (state, action) => {
-        state.qaParameters = state.qaParameters.filter(q => q.barcode !== action.payload);
+        state.qaParameters = state.qaParameters.filter(
+          (q) => q.barcode !== action.payload
+        );
       });
   },
 });
