@@ -394,7 +394,7 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
             {/* IP Address */}
             <div className="space-y-2">
               <Label htmlFor="ipAddress" className="text-sm font-medium text-gray-700">
-                IP Address *
+                IP Address
               </Label>
               <Input
                 id="ipAddress"
@@ -409,7 +409,7 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
             {/* Port */}
             <div className="space-y-2">
               <Label htmlFor="port" className="text-sm font-medium text-gray-700">
-                Port *
+                Port
               </Label>
               <Input
                 id="port"
@@ -424,7 +424,7 @@ export function SlideScannerForm({ scanner, onSave, onCancel, isEdit = false }: 
             {/* Vendor */}
             <div className="space-y-2">
               <Label htmlFor="vendor" className="text-sm font-medium text-gray-700">
-                Vendor *
+                Vendor
               </Label>
               <Input
                 id="vendor"
