@@ -61,12 +61,20 @@ export default function App() {
 
   const handleSaveScanner = async (scannerData: SlideScanner) => {
     try {
+      // Convert all empty string values to null
+      const sanitizedData: SlideScanner = Object.fromEntries(
+        Object.entries(scannerData).map(([key, value]) => [
+          key,
+          value === "" ? null : value,
+        ])
+      ) as SlideScanner;
+  
       const scannerToSave: SlideScanner = {
-        ...scannerData,
-        id: scannerData.id || Math.random().toString(36).substring(2, 9), // generate id for new scanner
+        ...sanitizedData,
+        id: sanitizedData.id || Math.random().toString(36).substring(2, 9), // generate id for new scanner
       };
-
-      if (scannerData.id) {
+  
+      if (sanitizedData.id) {
         // update
         await dispatch(updateScanner(scannerToSave));
         toast.success("Scanner updated successfully");
@@ -75,11 +83,13 @@ export default function App() {
         await dispatch(addScanner(scannerToSave));
         toast.success("Scanner added successfully");
       }
+  
       navigateToPage("list");
     } catch (err: any) {
       toast.error(err.message || "Error saving scanner");
     }
   };
+  
 
   const handleCancelForm = () => navigateToPage("list");
   const handleBackToList = () => navigateToPage("list");
