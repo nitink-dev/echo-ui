@@ -2,7 +2,7 @@
 import { defineConfig } from 'vitest/config';
   import react from '@vitejs/plugin-react-swc';
   import path from 'path';
-import { BASE_URL } from './src/util/util';
+import { BASE_URL } from './src/utils/constants';
 
   export default defineConfig({
     plugins: [react()],
