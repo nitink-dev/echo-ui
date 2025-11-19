@@ -1,5 +1,5 @@
 
-export const BASE_URL = "http://10.201.8.208:8080";
+export const BASE_URL = "http://localhost:3050";
 
 export const REQUIRED_SCANNER_FIELDS = [
   'name',

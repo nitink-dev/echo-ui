@@ -19,6 +19,8 @@ import { useAppDispatch } from './hooks';
 import { SlideScanner } from "./types/scanner.types";
 import { PageType, Breadcrumb } from "./types/common.types";
 import { sanitizeFormData } from "./utils/helpers";
+import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
+import { LisConfig } from "./components/features/lis/lisConfig";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -116,8 +118,8 @@ export default function App() {
       // "google-dicom-temp": <DataStoreConfig storeType="google-dicom-temp" />,
       // "google-dicom-final": <DataStoreConfig storeType="google-dicom-final" />,
       // "hl7-store": <DataStoreConfig storeType="hl7-store" />,
-      // lis: <ClinicalAppsConfig appType="lis" />,
-      // synapse: <ClinicalAppsConfig appType="synapse" />,
+      lis: <LisConfig appType="lis" />,
+      synapse: <SynapseConfig appType="synapse" />,
       "enrichment-tool": <EnrichmentToolConfig />
     };
 
