@@ -49,7 +49,7 @@ const navigationItems: NavigationItem[] = [
     children: [
       { label: 'LIS', icon: Activity, id: 'lis' },
       { label: 'Synapse Pacs', icon: Settings, id: 'synapse' },
-      { label: 'Slide Image Analysis', icon: Microscope, id: 'imaage-slide' },
+      { label: 'Slide Image Analysis', icon: Microscope, id: 'qa-analysis' },
       { label: 'Enrichment Tool', icon: Cpu, id: 'enrichment-tool' }
     ]
   }

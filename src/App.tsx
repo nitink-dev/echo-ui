@@ -111,12 +111,12 @@ export default function App() {
       add: [{ label: "Slide Scanner", href: "#" }, { label: "Add Scanner" }],
       edit: [{ label: "Slide Scanner", href: "#" }, { label: "Edit Scanner" }],
       view: [{ label: "Slide Scanner", href: "#" }, { label: "Scanner Details" }],
-      "qa-analysis": [{ label: "Clinical Applications" }, { label: "Slide Image Analysis" }],
       "google-dicom-temp": [{ label: "Data Stores" }, { label: "Google DICOM Temp" }],
       "google-dicom-final": [{ label: "Data Stores" }, { label: "Google DICOM Final" }],
       "hl7-store": [{ label: "Data Stores" }, { label: "HL7 Store" }],
       lis: [{ label: "Clinical Applications" }, { label: "LIS" }],
       synapse: [{ label: "Clinical Applications" }, { label: "Synapse" }],
+      "qa-analysis": [{ label: "Clinical Applications" }, { label: "QA Slide Analysis" }],
       "enrichment-tool": [{ label: "Clinical Applications" }, { label: "Enrichment Tool" }]
     };
 
@@ -140,12 +140,13 @@ export default function App() {
         <ScannerForm scanner={selectedScanner} onSave={handleSaveScanner} onCancel={handleCancelForm} isEdit={true} />
       ) : null,
       view: selectedScanner ? <ScannerDetails scanner={selectedScanner} onBack={handleBackToList} /> : null,
-      "qa-analysis": <QAConfig />,
+     
       // "google-dicom-temp": <DataStoreConfig storeType="google-dicom-temp" />,
       // "google-dicom-final": <DataStoreConfig storeType="google-dicom-final" />,
       // "hl7-store": <DataStoreConfig storeType="hl7-store" />,
       lis: <LisConfig appType="lis" />,
       synapse: <SynapseConfig appType="synapse" />,
+      "qa-analysis": <QAConfig />,
       "enrichment-tool": <EnrichmentToolConfig />
     };
 
