@@ -115,7 +115,7 @@ export function LisConfig() {
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">LIS Configuration</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">LIS Application Details</h1>
         
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
@@ -130,9 +130,9 @@ export function LisConfig() {
               {renderInput("ipAddress", "IP Address", !editMode)}
               {renderInput("receivingPort", "Receiving Port", !editMode)}
               {renderInput("incomingPort", "Incoming Port", !editMode)}
-              {renderInput("receivingFacility", "Receiving Facility", !editMode)}
+              {/* {renderInput("receivingFacility", "Receiving Facility", !editMode)}
               {renderInput("receivingAppName", "Receiving App Name", !editMode)}
-              {renderInput("sendingFacility", "Sending Facility", !editMode)}
+              {renderInput("sendingFacility", "Sending Facility", !editMode)} */}
             </div>
 
             <div className="mt-4 bottom-4 right-4 flex gap-2">

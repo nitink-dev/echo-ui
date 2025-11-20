@@ -153,7 +153,7 @@ export function SynapseConfig() {
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Synapse Configuration</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">Synapse VM Details</h1>
         
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
@@ -168,8 +168,8 @@ export function SynapseConfig() {
               {renderInput("ipAddress", "IP Address", !editMode)}
               {renderInput("receivingPort", "Receiving Port", !editMode)}
               {renderInput("networkFolder", "Network Folder Location", !editMode)}
-              {renderInput("synapsePluginUrl", "Synapse Plugin URL", !editMode)}
-              {renderInput("synapseVmDetails", "Synapse VM Details", !editMode)}
+              {/* {renderInput("synapsePluginUrl", "Synapse Plugin URL", !editMode)}
+              {renderInput("synapseVmDetails", "Synapse VM Details", !editMode)} */}
             </div>
 
             <div className="mt-4 bottom-4 right-4 flex gap-2">

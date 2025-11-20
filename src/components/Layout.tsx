@@ -5,6 +5,8 @@ import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
+import { useAppDispatch } from '../hooks';
+import { logout } from '../store/slices/authSlice';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -46,7 +48,7 @@ const navigationItems: NavigationItem[] = [
     id: 'clinical-apps',
     children: [
       { label: 'LIS', icon: Activity, id: 'lis' },
-      { label: 'Synapse', icon: Settings, id: 'synapse' },
+      { label: 'Synapse Pacs', icon: Settings, id: 'synapse' },
       { label: 'Slide Image Analysis', icon: Microscope, id: 'imaage-slide' },
       { label: 'Enrichment Tool', icon: Cpu, id: 'enrichment-tool' }
     ]
@@ -59,6 +61,8 @@ interface NavigationProps {
 }
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
+  const dispatch = useAppDispatch();
+
   const [expandedSections, setExpandedSections] = useState<string[]>(['devices', 'data-stores', 'clinical-apps']);
 
   const toggleSection = (sectionId: string) => {
@@ -151,6 +155,8 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
 }
 
 export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: LayoutProps) {
+  const dispatch = useAppDispatch();
+
   return (
     <div className="min-h-screen bg-[#fafbff]">
       {/* Top Bar */}
@@ -225,7 +231,13 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
                   Preferences
                 </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-[#E2E8F0]" />
-                <DropdownMenuItem className="hover:bg-[#FEF2F2] text-[#DC2626] hover:text-[#991B1B] transition-colors">
+                <DropdownMenuItem 
+                className="hover:bg-[#FEF2F2] text-[#DC2626] hover:text-[#991B1B] transition-colors"
+                onClick={() => {
+                  dispatch(logout());
+                  onNavigate("login");  // redirect to login page
+                }}
+                >
                   Logout
                 </DropdownMenuItem>
               </DropdownMenuContent>

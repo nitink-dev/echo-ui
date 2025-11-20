@@ -21,23 +21,49 @@ import { PageType, Breadcrumb } from "./types/common.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { LisConfig } from "./components/features/lis/lisConfig";
+import { loadStoredSession } from "./store/slices/authSlice";
+import { LoginPage } from "./components/auth/login/login";
 
 export default function App() {
   const dispatch = useAppDispatch();
-  const [currentPage, setCurrentPage] = useState<PageType>("list");
+  const [currentPage, setCurrentPage] = useState<PageType>(localStorage.getItem("currentPage") || "list");
   const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
 
   const scanners = useSelector((state: any) => state.scanners.items);
   const loading = useSelector((state: any) => state.scanners.loading);
 
-  useEffect(() => {
-    dispatch(fetchScanners());
-  }, [dispatch]);
+    // auth state stored in Redux or localStorage
+    const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+
+    useEffect(() => {
+      dispatch(loadStoredSession());
+    }, []);
+
+    useEffect(() => {
+      if (isLoggedIn) {
+        dispatch(fetchScanners());
+        let curr = localStorage.getItem("currentPage") || "list"
+        setCurrentPage(curr);
+      }
+    }, [dispatch, isLoggedIn]);
+
+   
+    console.log("currentPage:", currentPage);
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
+    localStorage.setItem("currentPage", page.match('login') ? 'list' : page);
     setCurrentPage(page);
     setSelectedScanner(scanner || null);
   };
+
+  if (!isLoggedIn) {
+    return (
+      <>
+        <LoginPage />
+        <Toaster />
+      </>
+    );
+  }
 
   const handleAddScanner = () => navigateToPage('add');
   const handleEditScanner = (scanner: SlideScanner) => navigateToPage('edit', scanner);

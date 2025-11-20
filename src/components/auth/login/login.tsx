@@ -1,12 +1,15 @@
 import React, { useState } from "react";
 import { Lock, User, Eye, EyeOff } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
-import { Button } from "../../../ui/button";
-import { Input } from "../../../ui/input";
-import { Label } from "../../../ui/label";
+import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
+import { Button } from "../../ui/button";
+import { Input } from "../../ui/input";
+import { Label } from "../../ui/label";
 import { toast } from "sonner";
+import { useAppDispatch } from "../../../hooks/useAppDispatch";
+import { loginUser } from "../../../store/slices/authSlice";
 
 export function LoginPage() {
+  const dispatch = useAppDispatch();
   const [formData, setFormData] = useState({
     username: "",
     password: "",
@@ -29,13 +32,12 @@ export function LoginPage() {
     setLoading(true);
 
     try {
-      // TODO: Replace with actual login API call
-      // const response = await axios.post("/api/auth/login", formData);
-      
-      // Simulated API call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-      
-      toast.success("Login successful!");
+      const response = await dispatch(loginUser(formData)).unwrap();
+      if(response !== "successful login"){
+        toast.success("Login failed!");
+      } else {
+        toast.success("Login successful!");
+      }
       // TODO: Redirect to dashboard or handle authentication token
       // navigate("/dashboard");
     } catch (error) {
