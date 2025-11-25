@@ -4,6 +4,7 @@ import metadataReducer from "./slices/metadataSlice";
 import qaReducer from './slices/qaSlice';
 import ehToolsReducer from "./slices/ehToolsSlice";
 import authReducer from "./slices/authSlice";
+import healthReducer from './slices/healthSlice';
 
 // Configure the Redux store with all slices
 
@@ -14,6 +15,7 @@ export const store = configureStore({
     qa: qaReducer,
     ehTools: ehToolsReducer,
     auth: authReducer,
+    health: healthReducer,
   },
 });
 

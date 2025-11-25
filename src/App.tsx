@@ -23,6 +23,7 @@ import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { LisConfig } from "./components/features/lis/lisConfig";
 import { loadStoredSession } from "./store/slices/authSlice";
 import { LoginPage } from "./components/auth/login/login";
+import { HealthMonitor } from "./components/features/health/HealthMonitor";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -147,7 +148,8 @@ export default function App() {
       lis: <LisConfig appType="lis" />,
       synapse: <SynapseConfig appType="synapse" />,
       "qa-analysis": <QAConfig />,
-      "enrichment-tool": <EnrichmentToolConfig />
+      "enrichment-tool": <EnrichmentToolConfig />,
+      "health-status": <HealthMonitor />
     };
 
     return pageComponents[currentPage] || <div>Page Not Found</div>;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Building2, HelpCircle, User, ChevronDown, Settings, Database, Stethoscope, Monitor, Network, HardDrive, Activity, Microscope, ChevronRight, Cpu } from 'lucide-react';
+import { Building2, HelpCircle, User, ChevronDown, Settings, Database, Stethoscope, Monitor, Network, HardDrive, Activity, Microscope, ChevronRight, Cpu, MonitorCheckIcon } from 'lucide-react';
 import endeavorLogo from 'figma:asset/8d23b78a5fe745720187a8b480f0debc13c0b121.png';
 import { Button } from './ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
@@ -50,7 +50,8 @@ const navigationItems: NavigationItem[] = [
       { label: 'LIS', icon: Activity, id: 'lis' },
       { label: 'Synapse Pacs', icon: Settings, id: 'synapse' },
       { label: 'Slide Image Analysis', icon: Microscope, id: 'qa-analysis' },
-      { label: 'Enrichment Tool', icon: Cpu, id: 'enrichment-tool' }
+      { label: 'Enrichment Tool', icon: Cpu, id: 'enrichment-tool' },
+      { label: 'Health Status', icon: MonitorCheckIcon, id: 'health-status' }
     ]
   }
 ];

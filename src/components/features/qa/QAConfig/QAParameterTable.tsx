@@ -21,7 +21,8 @@ export function QAParameterTable({
   onDeleteParameter,
   onToggleVisibility
 }: QAParameterTableProps) {
-  if (qaParameters.length === 0) {
+  if(!qaParameters) return;
+  if (qaParameters?.length === 0) {
     return (
       <div className="text-center py-12">
         <div className="text-gray-400 text-lg mb-2">No QA parameters configured</div>

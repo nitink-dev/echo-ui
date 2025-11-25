@@ -9,7 +9,8 @@ export type PageType =
   | 'hl7-store'
   | 'lis'
   | 'synapse'
-  | 'enrichment-tool';
+  | 'enrichment-tool'
+  | 'health-status';
 
 export interface Breadcrumb {
   label: string;
