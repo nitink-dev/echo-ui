@@ -1,11 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Activity, Server, Database, RefreshCw, Clock, Wifi, WifiOff } from "lucide-react";
+import { Activity, Server, Database, RefreshCw, Clock, Wifi, WifiOff, Info } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Button } from "../../ui/button";
 import { Badge } from "../../ui/badge";
 import { useSelector } from "react-redux";
 import { fetchHealthStatus } from "../../../store/slices/healthSlice";
 import { useAppDispatch } from "../../../hooks";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "../../ui/tooltip";
 
 export function HealthMonitor() {
   const dispatch = useAppDispatch();
@@ -58,42 +64,73 @@ export function HealthMonitor() {
     return status === "UP" ? "Online" : "Offline";
   };
 
-  const ServiceCard = ({ service, type }: { service: any; type: string }) => (
-    <div className="flex items-start gap-4 p-4 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
-      <div className={`w-3 h-3 rounded-full mt-1.5 ${getStatusColor(service.status)} ${service.status === 'UP' ? 'animate-pulse' : ''}`} />
+  const ServiceCard = ({ service }: { service: any }) => (
+    <div className="flex items-start gap-4 p-2 bg-white rounded-lg border border-gray-200 hover:shadow-md transition-shadow">
       
+    
+  
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between gap-2 mb-2">
-          <h3 className="font-semibold text-gray-900 truncate">{service.name}</h3>
+        {/* Name + Status + Hover Info Button */}
+        <div className="flex items-center justify-between gap-2">
+         
+          <div className="flex items-center gap-2">
+          <div
+            className={`w-3 h-3 rounded-full ${getStatusColor(service.status)} ${
+              service.status === "UP" ? "animate-pulse" : ""
+            }`}
+          />
+          
+            <h3 className="font-semibold text-gray-900 truncate">
+              {service.name}
+            </h3>
+  
+            {/* Hover Info Tooltip */}
+            <TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger>
+                  <Info className="h-4 w-4 text-gray-500 hover:text-gray-700 cursor-pointer" />
+                </TooltipTrigger>
+  
+                <TooltipContent 
+                  side="right"
+                  className="bg-white border border-gray-200 shadow-xl p-4 rounded-xl text-xs text-gray-700 animate-in fade-in-0 zoom-in-95"
+                >
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-[10px] uppercase tracking-wider text-gray-500">URL</p>
+                      <p className="font-mono text-[11px] break-all text-gray-900">{service.url}</p>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">HTTP Status:</span>
+                      <span className="px-3 font-mono text-gray-800">{service.httpStatus ?? "N/A"}</span>
+                    </div>
+
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Latency:</span>
+                      <span className="font-mono text-gray-800">{service.latencyMs}ms</span>
+                    </div>
+                  </div>
+                </TooltipContent>
+
+              </Tooltip>
+            </TooltipProvider>
+          </div>
+  
           <Badge variant={getStatusBadgeVariant(service.status)} className="shrink-0">
             {getStatusText(service.status)}
           </Badge>
         </div>
-        
-        <div className="space-y-1 text-sm text-gray-600">
-          <div className="flex items-center gap-2">
-            <Server className="h-3.5 w-3.5 text-gray-400" />
-            <span className="truncate font-mono text-xs">{service.url}</span>
-          </div>
-          
-          <div className="flex items-center gap-4">
-            {service.httpStatus !== null && (
-              <span className="text-xs">
-                HTTP: <span className="font-mono">{service.httpStatus}</span>
-              </span>
-            )}
-            <span className="text-xs">
-              Latency: <span className="font-mono font-medium">{service.latencyMs}ms</span>
-            </span>
-          </div>
-          
-          {service.error && (
-            <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
-              <div className="text-xs font-semibold text-red-800 mb-1">Error:</div>
-              <div className="text-xs text-red-700 font-mono break-all">{service.error}</div>
+  
+        {/* Show error only */}
+        {service.error && (
+          <div className="mt-2 p-2 bg-red-50 rounded border border-red-200">
+            <div className="text-xs font-semibold text-red-800 mb-1">Error:</div>
+            <div className="text-xs text-red-700 font-mono break-all">
+              {service.error}
             </div>
-          )}
-        </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -182,7 +219,7 @@ export function HealthMonitor() {
         )}
 
         {/* Dependencies */}
-        {dependencies && (
+        {/* {dependencies && (
           <Card className="border border-gray-200 shadow-sm mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-lg">
@@ -198,72 +235,72 @@ export function HealthMonitor() {
               </div>
             </CardContent>
           </Card>
-        )}
-
-        {/* Microservices */}
-        <Card className="border border-gray-200 shadow-sm mb-6">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Server className="h-5 w-5 text-blue-600" />
-                Microservices
-                <span className="text-sm font-normal text-gray-600">
-                  ({microservices?.length || 0} services)
-                </span>
-              </CardTitle>
-              <div className="flex gap-4 text-sm">
-                <span className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                  <span className="font-medium text-green-700">{upCount(microservices)} Online</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                  <span className="font-medium text-red-700">{downCount(microservices)} Offline</span>
-                </span>
+        )} */}
+        <div className="grid grid-cols-2 xl:grid-cols-2 gap-6 w-full">
+          {/* Microservices */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Server className="h-5 w-5 text-blue-600" />
+                  Enrichment Tool Services
+                  <span className="text-sm font-normal text-gray-600">
+                    ({microservices?.length || 0} services)
+                  </span>
+                </CardTitle>
+                <div className="flex gap-4 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                    <span className="font-medium text-green-700">{upCount(microservices)} Online</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    <span className="font-medium text-red-700">{downCount(microservices)} Offline</span>
+                  </span>
+                </div>
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid lg:grid-cols-2 gap-4">
-              {microservices?.map((service: any, idx: number) => (
-                <ServiceCard key={idx} service={service} type="microservice" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Third Party Services */}
-        <Card className="border border-gray-200 shadow-sm">
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="flex items-center gap-2 text-lg">
-                <Activity className="h-5 w-5 text-orange-600" />
-                Third-Party Integrations
-                <span className="text-sm font-normal text-gray-600">
-                  ({thirdParties?.length || 0} services)
-                </span>
-              </CardTitle>
-              <div className="flex gap-4 text-sm">
-                <span className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
-                  <span className="font-medium text-green-700">{upCount(thirdParties)} Online</span>
-                </span>
-                <span className="flex items-center gap-1.5">
-                  <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                  <span className="font-medium text-red-700">{downCount(thirdParties)} Offline</span>
-                </span>
+            </CardHeader>
+            <CardContent>
+              <div className="grid lg:grid-cols-2 gap-4">
+                {microservices?.map((service: any, idx: number) => (
+                  <ServiceCard key={idx} service={service} type="microservice" />
+                ))}
               </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid lg:grid-cols-2 gap-4">
-              {thirdParties?.map((service: any, idx: number) => (
-                <ServiceCard key={idx} service={service} type="thirdparty" />
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
+          {/* Third Party Services */}
+          <Card className="border border-gray-200 shadow-sm">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2 text-lg">
+                  <Activity className="h-5 w-5 text-orange-600" />
+                  Integrated Applications
+                  <span className="text-sm font-normal text-gray-600">
+                    ({thirdParties?.length || 0} services)
+                  </span>
+                </CardTitle>
+                <div className="flex gap-4 text-sm">
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+                    <span className="font-medium text-green-700">{upCount(thirdParties)} Online</span>
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
+                    <span className="font-medium text-red-700">{downCount(thirdParties)} Offline</span>
+                  </span>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <div className="grid lg:grid-cols-2 gap-4">
+                {thirdParties?.map((service: any, idx: number) => (
+                  <ServiceCard key={idx} service={service} type="thirdparty" />
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
         {loading && (
           <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
             <div className="flex items-center gap-2 text-sm text-gray-700">

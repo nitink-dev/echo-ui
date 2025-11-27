@@ -69,13 +69,23 @@ const healthSlice = createSlice({
       })
       .addCase(fetchHealthStatus.fulfilled, (state, action) => {
         console.log('Fetched health status:', action.payload);
-        state.thirdParties = action.payload.thirdParties || [];
-        state.microservices = action.payload.microservices || [];
+      
+        const blockList = ['Database Service', 'Delete Service'];
+      
+        state.thirdParties = (action.payload.thirdParties || []).filter(
+          (svc: ServiceHealth) => !blockList.includes(svc.name)
+        );
+      
+        state.microservices = (action.payload.microservices || []).filter(
+          (svc: ServiceHealth) => !blockList.includes(svc.name)
+        );
+      
         state.dependencies = action.payload.dependencies || null;
         state.timestamp = action.payload.timestamp || null;
         state.lastFetched = Date.now();
         state.loading = false;
       })
+      
       .addCase(fetchHealthStatus.rejected, (state, action) => {
         state.error = action.payload as string || action.error.message;
         state.loading = false;
