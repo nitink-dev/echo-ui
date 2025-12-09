@@ -17,6 +17,16 @@ export function SlideScanStatus() {
   const [currentPage, setCurrentPage] = useState({ completed: 0, failed: 0, inProgress: 0 });
   const pageSize = 10;
 
+  // Handle tab change and fetch data
+  const handleTabChange = (newTab) => {
+    setActiveTab(newTab);
+    // Fetch data for the new tab if not already loaded
+    const data = statusData[newTab];
+    if (!data || !data.content || data.content.length === 0) {
+      fetchData(newTab, currentPage[newTab]);
+    }
+  };
+
   // Mock fetch function - replace with your actual API calls
   const fetchData = async (status, page) => {
     setStatusData(prev => ({
@@ -26,7 +36,7 @@ export function SlideScanStatus() {
 
     try {
       // Replace this with your actual API endpoint
-      const response = await fetch(`/api/${status}?page=${page}&size=${pageSize}`);
+      const response = await fetch(`/api/slide-scan-status/${status}?page=${page}&size=${pageSize}`);
       const data = await response.json();
       
       setStatusData(prev => ({
@@ -357,7 +367,7 @@ export function SlideScanStatus() {
           <div className="border-b border-gray-200">
             <div className="flex gap-1 p-2 bg-gray-50">
               <button
-                onClick={() => setActiveTab('completed')}
+                onClick={() => handleTabChange('completed')}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'completed'
                     ? 'bg-white text-gray-900 shadow-sm'
@@ -375,7 +385,7 @@ export function SlideScanStatus() {
                 </span>
               </button>
               <button
-                onClick={() => setActiveTab('failed')}
+                onClick={() => handleTabChange('failed')}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'failed'
                     ? 'bg-white text-gray-900 shadow-sm'
@@ -393,7 +403,7 @@ export function SlideScanStatus() {
                 </span>
               </button>
               <button
-                onClick={() => setActiveTab('inProgress')}
+                onClick={() => handleTabChange('inProgress')}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-medium transition-all ${
                   activeTab === 'inProgress'
                     ? 'bg-white text-gray-900 shadow-sm'
