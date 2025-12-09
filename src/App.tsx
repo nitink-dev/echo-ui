@@ -24,6 +24,7 @@ import { LisConfig } from "./components/features/lis/lisConfig";
 import { loadStoredSession } from "./store/slices/authSlice";
 import { LoginPage } from "./components/auth/login/login";
 import { HealthMonitor } from "./components/features/health/HealthMonitor";
+import { SlideScanStatus } from "./components/features/status/SlideScanStatus";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -149,7 +150,8 @@ export default function App() {
       synapse: <SynapseConfig appType="synapse" />,
       "qa-analysis": <QAConfig />,
       "enrichment-tool": <EnrichmentToolConfig />,
-      "health-status": <HealthMonitor />
+      "health-status": <HealthMonitor />,
+      "slide-status": <SlideScanStatus />
     };
 
     return pageComponents[currentPage] || <div>Page Not Found</div>;
