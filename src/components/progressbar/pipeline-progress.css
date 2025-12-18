@@ -1,0 +1,239 @@
+
+:root {
+  --pp-bg: #f3f4f6;             /* track background */
+  --pp-fg: #2563eb;             /* indicator fill (blue-600) */
+  --pp-fg-soft: #93c5fd;        /* soft blue for stripes */
+  --pp-text: #0f172a;           /* slate-900 */
+  --pp-muted: #64748b;          /* slate-500 */
+  --pp-reached: #16a34a;        /* green-600 */
+  --pp-active: #1d4ed8;         /* blue-700 */
+  --pp-border: #e5e7eb;         /* gray-200 */
+}
+
+.pipeline-progress {
+  display: grid;
+  gap: 12px;
+  color: var(--pp-text);
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+}
+
+.pp-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.pp-title {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.pp-percent {
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-active);
+  font-weight: 600;
+}
+
+.pp-root {
+  position: relative;
+  overflow: hidden;
+  background-color: var(--pp-bg);
+  border-radius: 8px;
+  height: 12px;
+  /* optional border for definition */
+  border: 1px solid var(--pp-border);
+}
+
+.pp-indicator {
+  height: 100%;
+  background-color: var(--pp-fg);
+  transition: transform 400ms cubic-bezier(0.65, 0, 0.35, 1);
+  will-change: transform;
+}
+
+/* decorative diagonal stripes over the indicator */
+.pp-stripes {
+  pointer-events: none;
+  position: absolute;
+  inset: 0;
+  background-image: linear-gradient(
+    -45deg,
+    transparent 0 45%,
+    var(--pp-fg-soft) 45% 55%,
+    transparent 55% 100%
+  );
+  background-size: 18px 18px;
+  mix-blend-mode: multiply;
+  opacity: 0.35;
+}
+
+/* Steps list */
+.pp-steps {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--pp-border);
+  border-radius: 8px;
+}
+
+.pp-step {
+  display: grid;
+  grid-template-columns: 24px 1fr;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--pp-border);
+}
+
+.pp-step:last-child {
+  border-bottom: none;
+}
+
+.pp-step-status {
+  display: grid;
+  place-items: center;
+}
+
+.pp-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: var(--pp-muted);
+}
+
+.pp-step--reached .pp-dot {
+  background: var(--pp-reached);
+}
+
+.pp-step--active .pp-dot {
+  background: var(--pp-active);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--pp-active) 30%, white);
+}
+
+.pp-step-content {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.pp-step-label {
+  font-size: 0.9rem;
+}
+
+.pp-step-value {
+  font-variant-numeric: tabular-nums;
+  color: var(--pp-muted);
+}
+
+/* -------- Row Milestones -------- */
+.pp-row-wrap {
+  position: relative;
+  margin-top: 8px;
+}
+
+/* Enable horizontal scroll if desired */
+.pp-row-wrap--scroll {
+  overflow-x: auto;
+  padding-bottom: 6px; /* space for scrollbar */
+}
+
+/* The row of steps */
+.pp-steps-row {
+  position: relative;
+  list-style: none;
+  margin: 0;
+  padding: 16px 8px; /* space for connector and dots */
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;   /* equal width cells */
+  gap: 12px;
+  align-items: start;
+  min-height: 72px;
+}
+
+/* line connecting the milestones (behind dots) */
+.pp-row-connector {
+  position: absolute;
+  left: 16px;
+  right: 16px;
+  top: 30px; /* aligns under the dots */
+  height: 2px;
+  background: var(--pp-border);
+  z-index: 0;
+}
+
+/* each step cell */
+.pp-row-step {
+  position: relative;
+  z-index: 1; /* above connector */
+}
+
+/* clickable area */
+.pp-row-button {
+  all: unset;
+  display: grid;
+  grid-template-rows: 18px auto auto; /* dot, label, value */
+  justify-items: center;
+  gap: 6px;
+  width: 100%;
+  cursor: pointer;
+  padding: 4px 6px;
+}
+
+/* milestone dot */
+.pp-row-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--pp-muted);
+  box-shadow: 0 0 0 2px #fff; /* crisp outline over connector */
+}
+
+/* reached & active states */
+.pp-row-step--reached .pp-row-dot {
+  background: var(--pp-reached);
+}
+
+.pp-row-step--active .pp-row-dot {
+  background: var(--pp-active);
+  box-shadow:
+    0 0 0 2px #fff,
+    0 0 0 6px color-mix(in oklab, var(--pp-active) 25%, white);
+}
+
+/* labels */
+.pp-row-label {
+  font-size: 0.85rem;
+  text-align: center;
+  color: var(--pp-text);
+}
+
+.pp-row-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.8rem;
+  color: var(--pp-muted);
+}
+
+/* hover/focus */
+.pp-row-button:hover .pp-row-label,
+.pp-row-button:focus-visible .pp-row-label {
+  text-decoration: underline;
+}
+
+.pp-row-button:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--pp-active) 60%, white);
+  outline-offset: 2px;
+}
+
+/* Optional: if you prefer wrapping to multiple lines instead of scroll */
+@media (max-width: 720px) {
+  .pp-steps-row {
+    grid-auto-flow: row;       /* allow wrapping */
+    grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+    gap: 10px 12px;
+  }
+  .pp-row-connector {
+    display: none; /* connector doesn't look great when wrapped */
+  }
+}

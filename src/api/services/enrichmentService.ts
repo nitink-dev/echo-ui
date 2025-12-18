@@ -1,0 +1,17 @@
+import axios from 'axios';
+
+export const enrichmentService = {
+  // Fetch tool config
+  fetchTool: async (toolKey: string) => {
+    const res = await axios.get(`/api/enrichment/tools/${toolKey}`);
+    const data = res.data?.data || res.data?.[toolKey] || res.data;
+    return { toolKey, data };
+  },
+
+  // Patch tool config
+  patchTool: async (toolKey: string, body: any) => {
+    const res = await axios.patch(`/api/enrichment/tools/${toolKey}`, body);
+    const data = res.data?.data || res.data?.[toolKey] || res.data;
+    return { toolKey, data };
+  }
+};
