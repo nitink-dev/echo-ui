@@ -1,7 +1,6 @@
-
 // FailedRecordsRow.jsx
 import React, { useState } from "react";
-import { CheckCircle2, XCircle, Clock, X } from "lucide-react";
+import { CheckCircle2, XCircle, Clock, X, Eye } from "lucide-react";
 import { BASE_URL } from "../../../../utils/constants";
 
 export function FailedRecordsRow({ record, index }) {
@@ -39,7 +38,8 @@ export function FailedRecordsRow({ record, index }) {
     }
   };
 
-  const handleRowClick = () => {
+  const handleViewDetails = (e) => {
+    e.stopPropagation();
     fetchDetails();
   };
 
@@ -53,7 +53,6 @@ export function FailedRecordsRow({ record, index }) {
       second: "2-digit",
     });
   };
-
 
   const formatDate = (dateString) => {
     if (!dateString) return "N/A";
@@ -88,75 +87,84 @@ export function FailedRecordsRow({ record, index }) {
   
   return (
     <>
-    <tr
-    onClick={handleRowClick} 
-    className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
-      <td className="px-6 py-0 text-sm text-gray-500">{index + 1}</td>
+      <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
+        <td className="px-6 py-0 text-sm text-gray-500">{index + 1}</td>
 
-      {/* Case Number removed */}
-      <td className="px-6 py-0">
-        <div className="font-mono text-sm text-gray-700">{record.slideBarcode}</div>
-      </td>
+        <td className="px-6 py-0">
+          <div className="font-mono text-sm text-gray-700">{record.slideBarcode}</div>
+        </td>
 
-      <td className="px-6 py-0">
-        <div className="text-sm text-gray-600">{record.deviceSerialNumber}</div>
-      </td>
+        <td className="px-6 py-0">
+          <div className="text-sm text-gray-600">{record.deviceSerialNumber}</div>
+        </td>
 
-      <td className="px-6 py-0">
-        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${config.bg}`}>
-          <StatusIcon className={`h-3.5 w-3.5 ${config.color}`} />
-          <span className={`text-xs font-medium ${config.color} capitalize`}>
-            {record.scanStatus.replace("-", " ")}
-          </span>
-        </div>
-      </td>
+        <td className="px-6 py-0">
+          <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full ${config.bg}`}>
+            <StatusIcon className={`h-3.5 w-3.5 ${config.color}`} />
+            <span className={`text-xs font-medium ${config.color} capitalize`}>
+              {record.scanStatus.replace("-", " ")}
+            </span>
+          </div>
+        </td>
 
-      {/* Created At removed */}
-      <td className="px-6 py-0 text-sm text-gray-500">
-        {formatTimestamp(record.updatedAt)}
-      </td>
-    </tr>
+        <td className="px-6 py-0 text-sm text-gray-500">
+          {formatTimestamp(record.updatedAt)}
+        </td>
 
-        {/* Popup Modal */}
-        {showPopup && detailsData && (
-          <div className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            {/* Dark Overlay */}
-            <div
-              className="absolute inset-0 bg-black/50"
-              onClick={() => setShowPopup(false)}
-            />
-              <div
-                    className="relative bg-white w-[90vw] max-w-[1200px] max-h-[85vh]
-                              rounded-xl shadow-2xl flex flex-col overflow-hidden
-                              z-[10000]"
-                  >
-                    {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-indigo-700">
-                <div>
-                  <h2 className="text-xl font-bold text-white">
-                    Slide Details
-                  </h2>
-                  <p className="text-sm text-indigo-100 mt-1">
-                    {Array.isArray(detailsData) && detailsData.length > 0 ? (
-                      <>SOP Instance Uid: <span className="font-medium">{detailsData[0].sopInstanceUid}</span></>
-                    ) : null}
-                  </p>
-                </div>
-                <button
-                  onClick={() => setShowPopup(false)}
-                  className="p-2 rounded-lg bg-white/10
-                            hover:bg-white/20 transition"
-                >
-                  <X className="h-5 w-5" />
-                </button>
+        <td className="px-6 py-0">
+          <button
+            onClick={handleViewDetails}
+            disabled={loading}
+            className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium 
+                       text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 
+                       rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed
+                       cursor-pointer"
+          >
+            <Eye className="h-4 w-4" />
+            {loading ? "Loading..." : "View Details"}
+          </button>
+        </td>
+      </tr>
+
+      {/* Popup Modal */}
+      {showPopup && detailsData && (
+        <div className="fixed inset-0 z-[9999] bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          {/* Dark Overlay */}
+          <div
+            className="absolute inset-0 bg-black/50"
+            onClick={() => setShowPopup(false)}
+          />
+          <div
+            className="relative bg-white w-[90vw] max-w-[1200px] max-h-[85vh]
+                      rounded-xl shadow-2xl flex flex-col overflow-hidden
+                      z-[10000]"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-indigo-600 to-indigo-700">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Slide Details
+                </h2>
+                <p className="text-sm text-indigo-100 mt-1">
+                  {Array.isArray(detailsData) && detailsData.length > 0 ? (
+                    <>SOP Instance Uid: <span className="font-medium">{detailsData[0].sopInstanceUid}</span></>
+                  ) : null}
+                </p>
               </div>
-  
-              {/* Content */}
-              <div className="flex-1 overflow-auto p-6">
-                {Array.isArray(detailsData) && detailsData.length > 0 ? (
-                  <div className="border border-gray-200 rounded-lg overflow-auto shadow-sm">
-                    <div className="relative overflow-x-auto overflow-y-auto max-h-[60vh]">
+              <button
+                onClick={() => setShowPopup(false)}
+                className="p-2 rounded-lg bg-white/10
+                          hover:bg-white/20 transition"
+              >
+                <X className="h-5 w-5 text-white" />
+              </button>
+            </div>
 
+            {/* Content */}
+            <div className="flex-1 overflow-auto p-6">
+              {Array.isArray(detailsData) && detailsData.length > 0 ? (
+                <div className="border border-gray-200 rounded-lg overflow-auto shadow-sm">
+                  <div className="relative overflow-x-auto overflow-y-auto max-h-[60vh]">
                     <table className="min-w-full border-collapse">
                       <thead className="bg-gray-100 sticky top-0 z-10">
                         <tr>
@@ -166,7 +174,6 @@ export function FailedRecordsRow({ record, index }) {
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Status</th>
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Enriched At</th>
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">DICOM Received</th>
-                          {/* <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Series UID</th> */}
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">SOP UID</th>
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">Study UID</th>
                         </tr>
@@ -209,12 +216,6 @@ export function FailedRecordsRow({ record, index }) {
                               </code>
                             </td>
 
-                            {/* <td className="px-4 py-3 text-xs">
-                              <code className="bg-gray-100 px-2 py-1 rounded break-all">
-                                {record.sopInstanceUid || 'N/A'}
-                              </code>
-                            </td> */}
-
                             <td className="px-4 py-3 text-xs">
                               <code className="bg-gray-100 px-2 py-1 rounded break-all">
                                 {record.actualStudyInstanceUid ||
@@ -226,20 +227,15 @@ export function FailedRecordsRow({ record, index }) {
                         ))}
                       </tbody>
                     </table>
-                    </div>
                   </div>
-                ) : (
-                  <div className="text-center py-8 text-gray-500">No data available</div>
-                )}
-              </div>
-
-  
-             
-
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">No data available</div>
+              )}
             </div>
           </div>
-        )}
-
-</>
+        </div>
+      )}
+    </>
   );
 }
