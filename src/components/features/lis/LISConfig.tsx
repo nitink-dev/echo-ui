@@ -213,12 +213,13 @@ export function LisConfig() {
     const hasError = Boolean(error);
 
     return (
-      <div className="space-y-1">
-        <Label className="text-sm font-medium text-gray-700">
+      <div className="space-y-2">
+        <Label htmlFor={field} className="text-sm font-medium text-gray-700">
           {label}
-          {rule?.required && !disabled && <span className="text-red-500 ml-1">*</span>}
+          {rule?.required && <span className="text-red-500 ml-1">*</span>}
         </Label>
         <Input
+          id={field}
           value={form[field] ?? ""}
           onChange={(e) => handleChange(field, e.target.value)}
           onBlur={() => handleBlur(field)}
@@ -230,16 +231,15 @@ export function LisConfig() {
             if (!rule.allowedPattern.test(e.key)) e.preventDefault();
           }}
           disabled={disabled}
-          className={
-            disabled ? "bg-gray-50 text-gray-600"
-              : hasError ? "border-red-500 focus-visible:ring-red-400" : ""
-          }
+          className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
+            hasError ? "border-red-500 focus:border-red-500" : ""
+          } ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""}`}
           aria-invalid={hasError}
           aria-describedby={hasError ? `${field}-error` : undefined}
         />
         {hasError && (
-          <p id={`${field}-error`} className="text-xs text-red-500 mt-1 flex items-center gap-1">
-            <span>⚠</span> {error}
+          <p id={`${field}-error`} className="text-sm text-red-600 flex items-center gap-1">
+            {error}
           </p>
         )}
       </div>
@@ -250,31 +250,50 @@ export function LisConfig() {
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">LIS Application Details</h1>
+
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Database className="h-5 w-5 text-blue-600" /> LIS Connector
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              <Database className="h-5 w-5 text-[#007BFF]" />
+              LIS Connector
             </CardTitle>
           </CardHeader>
+
           <CardContent>
-            <div className="grid md:grid-cols-2 gap-6 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {renderInput("applicationName", !editMode)}
               {renderInput("ipAddress", !editMode)}
               {renderInput("receivingPort", !editMode)}
               {renderInput("incomingPort", !editMode)}
             </div>
-            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+
+            <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
               {editMode ? (
                 <>
-                  <Button size="sm" onClick={handleSave} disabled={loading}>
+                  <Button
+                    size="sm"
+                    onClick={handleSave}
+                    disabled={loading}
+                    className="h-9 px-4 bg-[#007BFF] hover:bg-[#0069d9] text-white border-0"
+                  >
                     <Save className="h-4 w-4 mr-1" /> Save
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(false)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(false)}
+                    className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                  >
                     <X className="h-4 w-4 mr-1" /> Cancel
                   </Button>
                 </>
               ) : (
-                <Button size="sm" onClick={() => handleEdit(true)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEdit(true)}
+                  className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
                   <Edit className="h-4 w-4 mr-1" /> Edit
                 </Button>
               )}

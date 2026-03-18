@@ -168,7 +168,7 @@ export function EnrichmentToolConfig() {
 
     let sanitized = value;
     if (typeof value === "string") {
-      if (isIP)   sanitized = sanitizeByPattern(value, IP_ALLOWED_PATTERN);
+      if (isIP)        sanitized = sanitizeByPattern(value, IP_ALLOWED_PATTERN);
       else if (isPort) sanitized = sanitizeByPattern(value, PORT_ALLOWED_PATTERN);
     }
 
@@ -365,9 +365,12 @@ export function EnrichmentToolConfig() {
     const isPort = PORT_FIELDS[section]?.includes(field);
 
     return (
-      <div className="space-y-1">
-        <Label className="text-sm font-medium text-gray-700">{label}</Label>
+      <div className="space-y-2">
+        <Label htmlFor={`${section}-${field}`} className="text-sm font-medium text-gray-700">
+          {label}
+        </Label>
         <Input
+          id={`${section}-${field}`}
           value={(form as any)[section][field] ?? ""}
           onChange={(e) => handleChange(section, field, e.target.value)}
           onKeyDown={(e) => {
@@ -392,16 +395,19 @@ export function EnrichmentToolConfig() {
             }
           }}
           disabled={disabled}
-          className={`${disabled ? "bg-gray-50 text-gray-600" : ""} ${error ? "border-red-500" : ""}`}
+          className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
+            error ? "border-red-500 focus:border-red-500" : ""
+          } ${disabled ? "opacity-60 cursor-not-allowed bg-gray-100" : ""}`}
+          aria-invalid={Boolean(error)}
+          aria-describedby={error ? `${section}-${field}-error` : undefined}
         />
         {error && (
-          <p className="text-xs text-red-500 flex items-center gap-1">
+          <p id={`${section}-${field}-error`} className="text-sm text-red-600 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" /> {error}
           </p>
         )}
-        {/* Show hint for IP fields */}
         {isIP && !disabled && !error && (
-          <p className="text-xs text-gray-400">IPv4 (e.g. 192.168.1.1) or IPv6 (e.g. 2001:db8::1)</p>
+          <p className="text-xs text-gray-500">IPv4 (e.g. 192.168.1.1) or IPv6 (e.g. 2001:db8::1)</p>
         )}
       </div>
     );
@@ -447,7 +453,7 @@ export function EnrichmentToolConfig() {
           </div>
         )}
         {emails.filter((e) => !isValidEmail(e)).length > 0 && (
-          <p className="text-xs text-red-500 flex items-center gap-1">
+          <p className="text-sm text-red-600 flex items-center gap-1">
             <AlertCircle className="h-3 w-3" />
             {emails.filter((e) => !isValidEmail(e)).length} invalid email(s) — remove before saving
           </p>
@@ -455,7 +461,10 @@ export function EnrichmentToolConfig() {
         {inEdit && (
           <div className="space-y-1">
             <div className="flex gap-2">
-              <Input type="email" value={inputVal} placeholder="Enter email and press Enter or click Add"
+              <Input
+                type="email"
+                value={inputVal}
+                placeholder="Enter email and press Enter or click Add"
                 onChange={(e) => { setInput(e.target.value); if (inputErr) setErr(""); }}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === ",") {
@@ -463,19 +472,26 @@ export function EnrichmentToolConfig() {
                     addEmail(which, inputVal, setInput, setErr);
                   }
                 }}
-                className={`flex-1 ${inputErr ? "border-red-500" : ""}`}
+                className={`flex-1 h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
+                  inputErr ? "border-red-500 focus:border-red-500" : ""
+                }`}
               />
-              <Button type="button" size="sm" variant="outline" className="shrink-0"
-                onClick={() => addEmail(which, inputVal, setInput, setErr)}>
+              <Button
+                type="button"
+                size="sm"
+                variant="outline"
+                className="shrink-0 h-11 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                onClick={() => addEmail(which, inputVal, setInput, setErr)}
+              >
                 <Plus className="h-4 w-4 mr-1" /> Add
               </Button>
             </div>
             {inputErr && (
-              <p className="text-xs text-red-500 flex items-center gap-1">
+              <p className="text-sm text-red-600 flex items-center gap-1">
                 <AlertCircle className="h-3 w-3" /> {inputErr}
               </p>
             )}
-            <p className="text-xs text-gray-400">
+            <p className="text-xs text-gray-500">
               Press <kbd className="px-1 py-0.5 bg-gray-100 border rounded text-xs">Enter</kbd> or{" "}
               <kbd className="px-1 py-0.5 bg-gray-100 border rounded text-xs">,</kbd> to add
             </p>
@@ -494,25 +510,41 @@ export function EnrichmentToolConfig() {
       <Collapsible defaultOpen>
         <CollapsibleTrigger asChild>
           <CardHeader className="cursor-pointer">
-            <CardTitle className="flex items-center gap-2 text-lg">{icon} {title}</CardTitle>
+            <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
+              {icon} {title}
+            </CardTitle>
           </CardHeader>
         </CollapsibleTrigger>
         <CollapsibleContent>
           <CardContent className="space-y-4">
-            <div className="grid md:grid-cols-2 gap-6">{body}</div>
-            {/* Buttons are OUTSIDE the grid — no overlap */}
-            <div className="flex justify-end gap-2 pt-2 border-t border-gray-100">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{body}</div>
+            <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
               {editMode[keyName] ? (
                 <>
-                  <Button size="sm" onClick={() => handleSave(keyName)} disabled={loading}>
+                  <Button
+                    size="sm"
+                    onClick={() => handleSave(keyName)}
+                    disabled={loading}
+                    className="h-9 px-4 bg-[#007BFF] hover:bg-[#0069d9] text-white border-0"
+                  >
                     <Save className="h-4 w-4 mr-1" /> Save
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => handleEdit(keyName, false)}>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => handleEdit(keyName, false)}
+                    className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                  >
                     <X className="h-4 w-4 mr-1" /> Cancel
                   </Button>
                 </>
               ) : (
-                <Button size="sm" onClick={() => handleEdit(keyName, true)}>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => handleEdit(keyName, true)}
+                  className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                >
                   <Edit className="h-4 w-4 mr-1" /> Edit
                 </Button>
               )}
@@ -527,14 +559,14 @@ export function EnrichmentToolConfig() {
   return (
     <div className="space-y-6 p-6 bg-white">
 
-      {renderDynamicCard("DICOM Receiver", <Network className="h-5 w-5 text-blue-600" />, "dicom", <>
+      {renderDynamicCard("DICOM Receiver", <Network className="h-5 w-5 text-[#007BFF]" />, "dicom", <>
         {renderInput("dicomReceiver", "aet",          "AET",           !editMode.dicom)}
         {renderInput("dicomReceiver", "ipAddress",    "IP Address",    !editMode.dicom)}
         {renderInput("dicomReceiver", "port",         "Port",          !editMode.dicom)}
         {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
       </>)}
 
-      {renderDynamicCard("LIS Connector", <Database className="h-5 w-5 text-blue-600" />, "lis", <>
+      {renderDynamicCard("LIS Connector", <Database className="h-5 w-5 text-[#007BFF]" />, "lis", <>
         {renderInput("lisConnector", "applicationName",  "Application Name",   !editMode.lis)}
         {renderInput("lisConnector", "ipAddress",        "IP Address",         !editMode.lis)}
         {renderInput("lisConnector", "receivingPort",    "Sending To Port",    !editMode.lis)}
@@ -544,14 +576,16 @@ export function EnrichmentToolConfig() {
         {renderInput("lisConnector", "sendingFacility",  "Sending Facility",   !editMode.lis)}
       </>)}
 
-      {renderDynamicCard("Enrichment Service", <Activity className="h-5 w-5 text-blue-600" />, "enrichment", <>
+      {renderDynamicCard("Enrichment Service", <Activity className="h-5 w-5 text-[#007BFF]" />, "enrichment", <>
         <div className="space-y-2">
           <Label className="text-sm font-medium text-gray-700">Message Type</Label>
           <select
             value={form.enrichmentService.messageType}
             onChange={(e) => handleChange("enrichmentService", "messageType", e.target.value)}
             disabled={!editMode.enrichment}
-            className={`w-full border rounded p-2 ${!editMode.enrichment ? "bg-gray-50 text-gray-600" : ""}`}
+            className={`h-11 w-full rounded-md border border-gray-200 bg-[#f8faff] px-3 text-sm focus:border-[#007BFF] focus:outline-none focus:ring-2 focus:ring-[#007BFF]/20 ${
+              !editMode.enrichment ? "opacity-60 cursor-not-allowed bg-gray-100" : ""
+            }`}
           >
             <option value="OUL">Powerpath (OUL)</option>
             <option value="QBP">DPIA Profile (OML)</option>
@@ -559,49 +593,60 @@ export function EnrichmentToolConfig() {
         </div>
       </>)}
 
-      {renderDynamicCard("Export Service", <Cloud className="h-5 w-5 text-blue-600" />, "export", <>
-        <div className="space-y-4">
-          {[
-            ["synapseEnabled",    "Synapse Enabled"],
-            ["visioPharmEnabled", "VisioPharm Enabled"],
-            ["ibexEnabled",       "IBEX Enabled"],
-          ].map(([field, label]) => (
-            <div key={field} className="flex items-center justify-between">
-              <Label className="text-sm font-medium text-gray-700">{label}</Label>
-              <Switch
-                checked={!!form.exportService[field]}
-                onCheckedChange={(v: boolean) => handleChange("exportService", field, v)}
-                disabled={!editMode.export}
-              />
-            </div>
-          ))}
+      {renderDynamicCard("Export Service", <Cloud className="h-5 w-5 text-[#007BFF]" />, "export", <>
+        <div className="space-y-2">
+          <Label className="text-sm font-medium text-gray-700">Integrations</Label>
+          <div className="border border-gray-200 rounded-lg overflow-hidden">
+            {[
+              ["synapseEnabled",    "Synapse Enabled"],
+              ["visioPharmEnabled", "VisioPharm Enabled"],
+              ["ibexEnabled",       "IBEX Enabled"],
+            ].map(([field, label], idx, arr) => (
+              <div
+                key={field}
+                className={`flex items-center justify-between px-4 py-3 bg-white ${
+                  idx < arr.length - 1 ? "border-b border-gray-200" : ""
+                }`}
+              >
+                <Label className="text-sm font-medium text-gray-700">{label}</Label>
+                <Switch
+                  checked={!!form.exportService[field]}
+                  onCheckedChange={(v: boolean) => handleChange("exportService", field, v)}
+                  disabled={!editMode.export}
+                />
+              </div>
+            ))}
+          </div>
         </div>
         {renderInput("exportService", "synapseServerFolder", "Synapse Server Folder", !editMode.export)}
       </>)}
 
-      {renderDynamicCard("HL7 Messaging", <MessageSquare className="h-5 w-5 text-blue-600" />, "hl7", <>
-        {renderInput("hl7Messaging", "applicationName",  "Application Name",             !editMode.hl7)}
-        {renderInput("hl7Messaging", "ipAddress",        "IP Address (HL7 Provider)",    !editMode.hl7)}
-        {renderInput("hl7Messaging", "receivingPort",    "Receiving Port (HL7 Provider)",!editMode.hl7)}
-        {renderInput("hl7Messaging", "outputPort",       "Receiving App Port",           !editMode.hl7)}
-        {renderInput("hl7Messaging", "receivingFacility","Receiving Facility",           !editMode.hl7)}
-        {renderInput("hl7Messaging", "receivingAppName", "Receiving App Name",           !editMode.hl7)}
-        {renderInput("hl7Messaging", "sendingFacility",  "Sending Facility",             !editMode.hl7)}
+      {renderDynamicCard("HL7 Messaging", <MessageSquare className="h-5 w-5 text-[#007BFF]" />, "hl7", <>
+        {renderInput("hl7Messaging", "applicationName",  "Application Name",              !editMode.hl7)}
+        {renderInput("hl7Messaging", "ipAddress",        "IP Address (HL7 Provider)",     !editMode.hl7)}
+        {renderInput("hl7Messaging", "receivingPort",    "Receiving Port (HL7 Provider)", !editMode.hl7)}
+        {renderInput("hl7Messaging", "outputPort",       "Receiving App Port",            !editMode.hl7)}
+        {renderInput("hl7Messaging", "receivingFacility","Receiving Facility",            !editMode.hl7)}
+        {renderInput("hl7Messaging", "receivingAppName", "Receiving App Name",            !editMode.hl7)}
+        {renderInput("hl7Messaging", "sendingFacility",  "Sending Facility",              !editMode.hl7)}
       </>)}
 
-      {renderDynamicCard("Email Service", <Mail className="h-5 w-5 text-blue-600" />, "email", <>
-        <div className="space-y-1">
-          <Label className="text-sm font-medium text-gray-700">Email From</Label>
+      {renderDynamicCard("Email Service", <Mail className="h-5 w-5 text-[#007BFF]" />, "email", <>
+        <div className="space-y-2">
+          <Label htmlFor="emailFrom" className="text-sm font-medium text-gray-700">Email From</Label>
           <Input
+            id="emailFrom"
             type="email"
             value={form.emailService.emailFrom ?? ""}
             disabled={!editMode.email}
             onChange={(e) => handleChange("emailService", "emailFrom", e.target.value)}
             placeholder="sender@example.com"
-            className={`${!editMode.email ? "bg-gray-50 text-gray-600" : ""} ${fieldErrors["emailService.emailFrom"] ? "border-red-500" : ""}`}
+            className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
+              fieldErrors["emailService.emailFrom"] ? "border-red-500 focus:border-red-500" : ""
+            } ${!editMode.email ? "opacity-60 cursor-not-allowed bg-gray-100" : ""}`}
           />
           {form.emailService.emailFrom && !isValidEmail(form.emailService.emailFrom) && (
-            <p className="text-xs text-red-500 flex items-center gap-1">
+            <p className="text-sm text-red-600 flex items-center gap-1">
               <AlertCircle className="h-3 w-3" /> Invalid email format
             </p>
           )}
