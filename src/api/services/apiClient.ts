@@ -67,9 +67,10 @@ apiClient.interceptors.response.use(
 
       // Prefer a specific message from the server payload if available
       const serverMessage =
-        error.response.data?.message ||
-        error.response.data?.error ||
-        null;
+      error.response.data?.message ||
+      error.response.data?.error ||
+      error.response.data?.errorDescription ||  
+      null;
 
       message = serverMessage || HTTP_ERROR_MESSAGES[status] || `Unexpected error (${status}). Please contact support.`;
     } else if (error.request) {
