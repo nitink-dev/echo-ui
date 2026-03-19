@@ -52,6 +52,12 @@ export default function App() {
     }
   }, [dispatch, isLoggedIn]);
 
+  useEffect(() => {
+    if (isLoggedIn && currentPage === "list") {
+      dispatch(fetchScanners());
+    }
+  }, [currentPage]);
+  
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
     // Guard: don't navigate to a page the user cannot read
     if (!canRead(page)) {
