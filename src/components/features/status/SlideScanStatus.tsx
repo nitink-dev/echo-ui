@@ -760,8 +760,10 @@ const singleSlideToPageable = (slide) => ({
   content: [slide],
   totalElements: 1,
   totalPages: 1,
-  number: 0,
+  page: 0,        // ← was: number: 0
   size: pageSize,
+  hasNext: false,
+  hasPrevious: false,
 });
 
 /**
@@ -771,8 +773,10 @@ const emptyPageable = () => ({
   content: [],
   totalElements: 0,
   totalPages: 1,
-  number: 0,
+  page: 0,        // ← was: number: 0
   size: pageSize,
+  hasNext: false,
+  hasPrevious: false,
 });
 
 /**
@@ -782,13 +786,13 @@ const emptyPageable = () => ({
 const normalisePageable = (data) => {
   if (!data) return data;
   const totalElements = Number.isFinite(Number(data.totalElements))
-    ? Number(data.totalElements)
-    : 0;
+    ? Number(data.totalElements) : 0;
   const totalPages = Number.isFinite(Number(data.totalPages))
     ? Math.max(1, Number(data.totalPages))
     : Math.max(1, Math.ceil(totalElements / pageSize));
-  const number = Number.isFinite(Number(data.number)) ? Number(data.number) : 0;
-  return { ...data, totalElements, totalPages, number };
+  const page = Number.isFinite(Number(data.page ?? data.number))
+    ? Number(data.page ?? data.number) : 0; 
+  return { ...data, totalElements, totalPages, page };
 };
 
 export function SlideScanStatus() {
@@ -1104,6 +1108,7 @@ export function SlideScanStatus() {
           failed: emptyPageable(),
         }));
         setSearchState("not-found");
+        setActiveTab("inProgress");
         return;
       }
 
@@ -1134,6 +1139,7 @@ export function SlideScanStatus() {
         setSearchState("found");
       } else {
         setSearchState("not-found");
+        setActiveTab("inProgress");
       }
     } catch (err) {
       setStatusData((prev) => ({
@@ -1144,6 +1150,7 @@ export function SlideScanStatus() {
         error: {},
       }));
       setSearchState("not-found");
+      setActiveTab("inProgress");
     }
   };
 
@@ -1155,6 +1162,7 @@ export function SlideScanStatus() {
     setCurrentPage({ completed: 0, failed: 0, inProgress: 0 });
     currentPageRef.current = { completed: 0, failed: 0, inProgress: 0 };
     setSearchState("idle");
+    setActiveTab("inProgress");
 
     fetchData("inProgress", 0, emptyFilters);
     fetchData("completed", 0, emptyFilters);
@@ -1185,21 +1193,6 @@ export function SlideScanStatus() {
             </h1>
             <p className="text-sm text-gray-600 mt-1 flex items-center gap-2">
               Real-time monitoring of slide scanning operations
-              {isStreamConnected && (
-                <span className="inline-flex items-center gap-1 text-green-600">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                  </span>
-                  Live
-                </span>
-              )}
-              {!isStreamConnected && reconnectAttempts > 0 && (
-                <span className="inline-flex items-center gap-1 text-yellow-600">
-                  <RefreshCw className="h-3 w-3 animate-spin" />
-                  Reconnecting... (attempt {reconnectAttempts})
-                </span>
-              )}
             </p>
           </div>
 
