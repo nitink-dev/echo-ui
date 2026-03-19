@@ -2,6 +2,21 @@ import React from 'react';
 import { Input } from '../../../ui/input';
 import { Label } from '../../../ui/label';
 import { FormErrors } from '../../../../types/common.types';
+import { AlertCircle } from 'lucide-react';
+import {
+  IP_ALLOWED_PATTERN,
+  PORT_ALLOWED_PATTERN,
+  isValidIP,
+  isValidPort,
+  IP_ERROR_MESSAGE,
+  PORT_ERROR_MESSAGE,
+  sanitizeByPattern,
+} from '../../../../utils/validation.constants';
+
+// Allowed: A-Z, a-z, 0-9, underscore, hyphen
+const SERIAL_ALLOWED_PATTERN = /^[a-zA-Z0-9_-]$/;
+const sanitizeSerial = (value: string) =>
+  value.split('').filter((ch) => SERIAL_ALLOWED_PATTERN.test(ch)).join('');
 
 interface ScannerFormFieldsProps {
   formData: any;
@@ -26,8 +41,90 @@ export function ScannerFormFields({
   dicomStores,
   onInputChange,
   onSerialNumberBlur,
-  checkingSerialNumber = false
+  checkingSerialNumber = false,
 }: ScannerFormFieldsProps) {
+
+  // ── Device Serial Number handlers ─────────────────────────────────────────
+  const handleSerialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    onInputChange('deviceSerialNumber', sanitizeSerial(e.target.value));
+  };
+
+  const handleSerialKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
+    if (isCtrl) return; // allow Backspace, Delete, arrows, Ctrl+C/V, etc.
+    if (!SERIAL_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+  };
+
+  const handleSerialPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted    = e.clipboardData.getData('text');
+    const sanitized = sanitizeSerial(pasted);
+    if (sanitized !== pasted) {
+      e.preventDefault();
+      const inp   = e.currentTarget;
+      const start = inp.selectionStart ?? 0;
+      const end   = inp.selectionEnd   ?? 0;
+      const cur   = formData.deviceSerialNumber ?? '';
+      onInputChange('deviceSerialNumber', cur.slice(0, start) + sanitized + cur.slice(end));
+    }
+  };
+
+  // ── IP field handler ───────────────────────────────────────────────────────
+  const handleIpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeByPattern(e.target.value, IP_ALLOWED_PATTERN);
+    onInputChange('ipAddress', sanitized);
+  };
+
+  const handleIpKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
+    if (isCtrl) return;
+    if (!IP_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+  };
+
+  const handleIpPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted    = e.clipboardData.getData('text');
+    const sanitized = sanitizeByPattern(pasted, IP_ALLOWED_PATTERN);
+    if (sanitized !== pasted) {
+      e.preventDefault();
+      const inp   = e.currentTarget;
+      const start = inp.selectionStart ?? 0;
+      const end   = inp.selectionEnd   ?? 0;
+      const cur   = formData.ipAddress ?? '';
+      onInputChange('ipAddress', cur.slice(0, start) + sanitized + cur.slice(end));
+    }
+  };
+
+  // ── Port field handler ─────────────────────────────────────────────────────
+  const handlePortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeByPattern(e.target.value, PORT_ALLOWED_PATTERN);
+    onInputChange('port', sanitized);
+  };
+
+  const handlePortKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
+    if (isCtrl) return;
+    if (!PORT_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+  };
+
+  const handlePortPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted    = e.clipboardData.getData('text');
+    const sanitized = sanitizeByPattern(pasted, PORT_ALLOWED_PATTERN);
+    if (sanitized !== pasted) {
+      e.preventDefault();
+      const inp   = e.currentTarget;
+      const start = inp.selectionStart ?? 0;
+      const end   = inp.selectionEnd   ?? 0;
+      const cur   = formData.port ?? '';
+      onInputChange('port', cur.slice(0, start) + sanitized + cur.slice(end));
+    }
+  };
+
+  // ── Inline validation messages (in addition to parent-supplied errors) ─────
+  const ipInlineError =
+    formData.ipAddress && !isValidIP(formData.ipAddress) ? IP_ERROR_MESSAGE : '';
+
+  const portInlineError =
+    formData.port && !isValidPort(formData.port) ? PORT_ERROR_MESSAGE : '';
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -45,7 +142,9 @@ export function ScannerFormFields({
               errors.name ? 'border-red-500 focus:border-red-500' : ''
             }`}
           />
-          {errors.name && <p className="text-sm text-red-600 flex items-center gap-1">{errors.name}</p>}
+          {errors.name && (
+            <p className="text-sm text-red-600 flex items-center gap-1">{errors.name}</p>
+          )}
         </div>
 
         {/* AE Title */}
@@ -62,7 +161,9 @@ export function ScannerFormFields({
               errors.aeTitle ? 'border-red-500 focus:border-red-500' : ''
             }`}
           />
-          {errors.aeTitle && <p className="text-sm text-red-600 flex items-center gap-1">{errors.aeTitle}</p>}
+          {errors.aeTitle && (
+            <p className="text-sm text-red-600 flex items-center gap-1">{errors.aeTitle}</p>
+          )}
           <p className="text-xs text-gray-500">Uppercase letters, numbers, and underscores only</p>
         </div>
 
@@ -98,7 +199,9 @@ export function ScannerFormFields({
               <option key={i} value={h}>{h}</option>
             ))}
           </select>
-          {errors.hospitalName && <p className="text-sm text-red-600">{errors.hospitalName}</p>}
+          {errors.hospitalName && (
+            <p className="text-sm text-red-600">{errors.hospitalName}</p>
+          )}
         </div>
 
         {/* Department Name */}
@@ -119,7 +222,9 @@ export function ScannerFormFields({
               <option key={i} value={dept}>{dept}</option>
             ))}
           </select>
-          {errors.department && <p className="text-sm text-red-600">{errors.department}</p>}
+          {errors.department && (
+            <p className="text-sm text-red-600">{errors.department}</p>
+          )}
         </div>
 
         {/* Location */}
@@ -140,7 +245,9 @@ export function ScannerFormFields({
               <option key={i} value={loc}>{loc}</option>
             ))}
           </select>
-          {errors.location && <p className="text-sm text-red-600">{errors.location}</p>}
+          {errors.location && (
+            <p className="text-sm text-red-600">{errors.location}</p>
+          )}
         </div>
 
         {/* Storage Location (DICOM Store) */}
@@ -168,7 +275,9 @@ export function ScannerFormFields({
                 Research mode enabled - storage will be assigned automatically
               </p>
             )}
-            {errors.dicomStore && <p className="text-sm text-red-600">{errors.dicomStore}</p>}
+            {errors.dicomStore && (
+              <p className="text-sm text-red-600">{errors.dicomStore}</p>
+            )}
           </div>
         )}
 
@@ -182,7 +291,9 @@ export function ScannerFormFields({
               id="deviceSerialNumber"
               disabled={isEdit}
               value={formData.deviceSerialNumber}
-              onChange={(e) => onInputChange('deviceSerialNumber', e.target.value)}
+              onChange={handleSerialChange}
+              onKeyDown={handleSerialKeyDown}
+              onPaste={handleSerialPaste}
               onBlur={onSerialNumberBlur}
               placeholder="e.g. LCA-2023-001"
               className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 font-mono ${
@@ -191,47 +302,89 @@ export function ScannerFormFields({
             />
             {checkingSerialNumber && (
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-[#007BFF]"></div>
+                <div className="animate-spin rounded-full h-4 w-4 border-2 border-gray-300 border-t-[#007BFF]" />
               </div>
             )}
           </div>
           {errors.deviceSerialNumber && (
-            <p className="text-sm text-red-600 flex items-center gap-1">{errors.deviceSerialNumber}</p>
+            <p className="text-sm text-red-600 flex items-center gap-1">
+              {errors.deviceSerialNumber}
+            </p>
           )}
+          <p className="text-xs text-gray-500">
+            Letters, numbers, hyphens and underscores only (e.g. LCA-2023_001)
+          </p>
         </div>
 
-        {/* IP Address */}
+        {/* ── IP Address — with full validation ── */}
         <div className="space-y-2">
           <Label htmlFor="ipAddress" className="text-sm font-medium text-gray-700">
             IP Address
           </Label>
           <Input
             id="ipAddress"
-            value={formData.ipAddress}
-            onChange={(e) => onInputChange('ipAddress', e.target.value)}
+            value={formData.ipAddress ?? ''}
+            onChange={handleIpChange}
+            onKeyDown={handleIpKeyDown}
+            onPaste={handleIpPaste}
             placeholder="e.g. 192.168.1.1"
+            aria-invalid={Boolean(errors.ipAddress || ipInlineError)}
+            aria-describedby={
+              errors.ipAddress || ipInlineError ? 'ipAddress-error' : undefined
+            }
             className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
-              errors.ipAddress ? 'border-red-500 focus:border-red-500' : ''
+              errors.ipAddress || ipInlineError
+                ? 'border-red-500 focus:border-red-500'
+                : ''
             }`}
           />
-          {errors.ipAddress && <p className="text-sm text-red-600 flex items-center gap-1">{errors.ipAddress}</p>}
+          {(errors.ipAddress || ipInlineError) && (
+            <p
+              id="ipAddress-error"
+              className="text-sm text-red-600 flex items-center gap-1"
+            >
+              <AlertCircle className="h-3 w-3" />
+              {errors.ipAddress || ipInlineError}
+            </p>
+          )}
+          {!errors.ipAddress && !ipInlineError && (
+            <p className="text-xs text-gray-500">
+              IPv4 (e.g. 192.168.1.1) or IPv6 (e.g. 2001:db8::1)
+            </p>
+          )}
         </div>
 
-        {/* Port */}
+        {/* ── Port — with full validation ── */}
         <div className="space-y-2">
           <Label htmlFor="port" className="text-sm font-medium text-gray-700">
             Port
           </Label>
           <Input
             id="port"
-            value={formData.port}
-            onChange={(e) => onInputChange('port', e.target.value)}
+            value={formData.port ?? ''}
+            onChange={handlePortChange}
+            onKeyDown={handlePortKeyDown}
+            onPaste={handlePortPaste}
             placeholder="e.g. 104"
+            aria-invalid={Boolean(errors.port || portInlineError)}
+            aria-describedby={
+              errors.port || portInlineError ? 'port-error' : undefined
+            }
             className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
-              errors.port ? 'border-red-500 focus:border-red-500' : ''
+              errors.port || portInlineError
+                ? 'border-red-500 focus:border-red-500'
+                : ''
             }`}
           />
-          {errors.port && <p className="text-sm text-red-600 flex items-center gap-1">{errors.port}</p>}
+          {(errors.port || portInlineError) && (
+            <p
+              id="port-error"
+              className="text-sm text-red-600 flex items-center gap-1"
+            >
+              <AlertCircle className="h-3 w-3" />
+              {errors.port || portInlineError}
+            </p>
+          )}
         </div>
 
         {/* Vendor */}
@@ -248,7 +401,9 @@ export function ScannerFormFields({
               errors.vendor ? 'border-red-500 focus:border-red-500' : ''
             }`}
           />
-          {errors.vendor && <p className="text-sm text-red-600 flex items-center gap-1">{errors.vendor}</p>}
+          {errors.vendor && (
+            <p className="text-sm text-red-600 flex items-center gap-1">{errors.vendor}</p>
+          )}
         </div>
 
         {/* Other Identifier */}
@@ -289,7 +444,7 @@ export function ScannerFormFields({
                 checked={formData.research || false}
                 onChange={(e) => onInputChange('research', e.target.checked)}
               />
-              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+              <div className="w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600" />
             </label>
           </div>
 
@@ -300,7 +455,9 @@ export function ScannerFormFields({
                 Connection Status
               </label>
               <p className="text-xs text-gray-500 mt-1">
-                {isEdit ? 'Cannot change connection status when editing' : 'Set initial connection status'}
+                {isEdit
+                  ? 'Cannot change connection status when editing'
+                  : 'Set initial connection status'}
               </p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer">
@@ -311,7 +468,11 @@ export function ScannerFormFields({
                 onChange={(e) => onInputChange('connected', e.target.checked)}
                 disabled={isEdit}
               />
-              <div className={`w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${isEdit ? 'opacity-50 cursor-not-allowed' : ''}`}></div>
+              <div
+                className={`w-11 h-6 bg-gray-300 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600 ${
+                  isEdit ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              />
             </label>
           </div>
         </div>
