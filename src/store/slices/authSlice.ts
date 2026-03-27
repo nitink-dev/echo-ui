@@ -1,47 +1,42 @@
-// src/store/slices/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { authService } from "../../api/services/authService";
 import { Role } from "../../config/roleConfig";
 
 // ─────────────────────────────────────────────────────────────
-// 🔧 DEV ONLY: Static role for local testing (no backend needed).
-//    Change this value to switch roles:
-//      "ROLE_ADMIN"    → full access (RW everything)
-//      "ROLE_OPERATOR" → RW scanner + Read-only apps
-//      "ROLE_VIEWER"   → Read-only scanner, no LIS/Synapse/QA/Enrichment
-//    Set to null to use the real role returned by backend login.
+// 🔧 DEV ONLY: Set a static role for local testing.
+//    "ROLE_ADMIN"     → full access
+//    "ROLE_DEVELOPER" → full access (same as admin)
+//    "ROLE_OPERATOR"  → RW scanner + read-only apps
+//    "ROLE_VIEWER"    → read-only scanner, no apps
+//    Set to null to use the real role from backend login.
 // ─────────────────────────────────────────────────────────────
-const DEV_STATIC_ROLE: Role | null = "ROLE_ADMIN"; // ← change to test
+const DEV_STATIC_ROLE: Role | null = null; // ← set to a Role string to override
 
 interface AuthState {
   isLoggedIn: boolean;
-  token: string | null;
   user: string | null;
-  role: Role | null;
+  role: Role | null;        // primary role (first in roles array)
+  scopes: string[];         // e.g. ["platform.read", "platform.write"]
   loading: boolean;
   error: string | null;
 }
 
 const initialState: AuthState = {
   isLoggedIn: false,
-  token: null,
   user: null,
   role: null,
+  scopes: [],
   loading: false,
   error: null,
 };
 
-// ✅ Thunk: Login User using authService
+// ✅ Thunk: Login — backend sets SESSION cookie, we store role + scopes
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
-  async (
-    payload: { username: string; password: string },
-    { rejectWithValue }
-  ) => {
+  async (payload: { username: string; password: string }, { rejectWithValue }) => {
     try {
       const data = await authService.login(payload);
-      // Expected response: { token: "...", username: "...", role: "ROLE_ADMIN" | ... }
-      return data;
+      return data; // { username, roles: [...], scopes: [...] }
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Login failed. Please try again."
@@ -54,31 +49,42 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    // ✅ Logout Action
+
+    // ✅ Logout — clear state + let backend invalidate SESSION cookie
     logout(state) {
       state.isLoggedIn = false;
-      state.token = null;
-      state.user = null;
-      state.role = null;
+      state.user  = null;
+      state.role  = null;
+      state.scopes = [];
       state.error = null;
 
-      localStorage.removeItem("auth_token");
+      // No token in localStorage to remove for cookie-based sessions.
+      // We still persist role/user for UX — clear them on logout.
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_role");
+      localStorage.removeItem("auth_scopes");
+
+      // Fire-and-forget backend logout so SESSION is invalidated server-side
+      authService.logout();
     },
 
-    // ✅ Load stored session on app start
+    // ✅ Restore session on page reload
+    // SESSION cookie is sent automatically by the browser — we just restore
+    // the role + user we saved so the UI renders without a fresh login call.
     loadStoredSession(state) {
-      const token      = localStorage.getItem("auth_token");
       const user       = localStorage.getItem("auth_user");
       const storedRole = localStorage.getItem("auth_role") as Role | null;
+      const storedScopes = localStorage.getItem("auth_scopes");
 
-      if (token) {
+      // We check for stored user as the indicator that a session exists.
+      // The actual SESSION cookie validity is enforced by the backend — any
+      // API call with an expired cookie will return 401 and the interceptor
+      // should redirect to login.
+      if (user && storedRole) {
         state.isLoggedIn = true;
-        state.token = token;
         state.user  = user;
-        // 🔧 DEV: override with static role if set, else use stored role
         state.role  = DEV_STATIC_ROLE ?? storedRole;
+        state.scopes = storedScopes ? JSON.parse(storedScopes) : [];
       }
     },
   },
@@ -87,28 +93,26 @@ const authSlice = createSlice({
     builder
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        state.error   = null;
       })
 
       .addCase(loginUser.fulfilled, (state, action: PayloadAction<any>) => {
-        state.loading = false;
+        state.loading    = false;
+        state.isLoggedIn = true;
+        state.user       = action.payload.username;
+        state.scopes     = action.payload.scopes ?? [];
 
-        if (action.payload === "Login successful" || action.payload.token) {
-          state.isLoggedIn = true;
+        // Backend returns roles as an array — take the first one as the
+        // primary role for permission checks.
+        const backendRole = (action.payload.roles?.[0] as Role) ?? null;
+        state.role = DEV_STATIC_ROLE ?? backendRole;
+
+        // Persist for session restore on page reload
+        localStorage.setItem("auth_user",   action.payload.username);
+        if (state.role) {
+          localStorage.setItem("auth_role", state.role);
         }
-
-        state.token = action.payload.token;
-        state.user  = action.payload.username;
-
-        // 🔧 DEV: if DEV_STATIC_ROLE is set, use it — else use backend role
-        state.role  = DEV_STATIC_ROLE ?? (action.payload.role ?? null);
-
-        // Persist session
-        localStorage.setItem("auth_token", action.payload.token);
-        localStorage.setItem("auth_user",  action.payload.username);
-        if (action.payload.role) {
-          localStorage.setItem("auth_role", action.payload.role);
-        }
+        localStorage.setItem("auth_scopes", JSON.stringify(state.scopes));
       })
 
       .addCase(loginUser.rejected, (state, action) => {

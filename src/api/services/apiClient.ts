@@ -5,13 +5,28 @@ import { BASE_URL } from "../../utils/constants";
 const apiClient = axios.create({
   baseURL: BASE_URL || "",
   timeout: 20000,
+  withCredentials: true, // ✅ sends SESSION cookie on every request
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// ✅ REQUEST INTERCEPTOR — attach XSRF-TOKEN header from cookie
+// Spring Security expects X-XSRF-TOKEN header for state-changing requests
+apiClient.interceptors.request.use((config) => {
+  const xsrfToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("XSRF-TOKEN="))
+    ?.split("=")[1];
+
+  if (xsrfToken) {
+    config.headers["X-XSRF-TOKEN"] = decodeURIComponent(xsrfToken);
+  }
+
+  return config;
+});
+
 const HTTP_ERROR_MESSAGES: Record<number, string> = {
-  // 4xx Client Errors
   400: "Bad request. Please check the data you submitted.",
   401: "You are not authenticated. Please log in and try again.",
   402: "Payment required. Please update your billing details.",
@@ -30,7 +45,7 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
   415: "The uploaded file type is not supported.",
   416: "The requested data range cannot be fulfilled.",
   417: "The server could not meet the request expectation.",
-  418: "Unexpected server response.", // I'm a teapot — kept generic
+  418: "Unexpected server response.",
   422: "The submitted data is invalid or could not be processed.",
   423: "The resource is locked and cannot be modified right now.",
   424: "This request depends on another request that failed.",
@@ -40,8 +55,6 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
   429: "Too many requests. Please slow down and try again later.",
   431: "The request headers are too large.",
   451: "This resource is unavailable for legal reasons.",
-
-  // 5xx Server Errors
   500: "An internal server error occurred. Please try again later.",
   501: "This feature is not yet implemented on the server.",
   502: "The server received an invalid response from an upstream service.",
@@ -65,14 +78,16 @@ apiClient.interceptors.response.use(
     if (error.response) {
       const status: number = error.response.status;
 
-      // Prefer a specific message from the server payload if available
       const serverMessage =
-      error.response.data?.message ||
-      error.response.data?.error ||
-      error.response.data?.errorDescription ||  
-      null;
+        error.response.data?.message ||
+        error.response.data?.error ||
+        error.response.data?.errorDescription ||
+        null;
 
-      message = serverMessage || HTTP_ERROR_MESSAGES[status] || `Unexpected error (${status}). Please contact support.`;
+      message =
+        serverMessage ||
+        HTTP_ERROR_MESSAGES[status] ||
+        `Unexpected error (${status}). Please contact support.`;
     } else if (error.request) {
       message = "Network error. Please check your internet connection.";
     } else if (error.code === "ECONNABORTED") {
