@@ -3,9 +3,9 @@ import { toast } from "sonner";
 import { BASE_URL } from "../../utils/constants";
 
 const apiClient = axios.create({
-  baseURL: BASE_URL || "",
+  baseURL: BASE_URL,
   timeout: 20000,
-  withCredentials: true, // ✅ sends SESSION cookie on every request
+  withCredentials: true,
   headers: {
     "Content-Type": "application/json",
   },

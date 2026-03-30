@@ -1,4 +1,3 @@
-import { BASE_URL } from "../../utils/constants";
 import apiClient from "./apiClient";
 
 interface LoginRequest {
@@ -11,14 +10,14 @@ interface LoginRequest {
 // roles is an array, scopes is an array
 export interface LoginResponse {
   username: string;
-  roles: string[];      // e.g. ["ROLE_DEVELOPER"]
-  scopes: string[];     // e.g. ["platform.read", "platform.write", ...]
+  roles: string[];   // e.g. ["ROLE_DEVELOPER"]
+  scopes: string[];  // e.g. ["platform.read", "platform.write", ...]
 }
 
 export const authService = {
   login: async (payload: LoginRequest): Promise<LoginResponse> => {
     const response = await apiClient.post(
-      `${BASE_URL}/api/auth/login`,
+      `/api/auth/login`,
       payload,
       { headers: { "Content-Type": "application/json" } }
     );
@@ -28,9 +27,9 @@ export const authService = {
   },
 
   logout: async (): Promise<void> => {
-    // Call backend logout so SESSION cookie is invalidated server-side
-    await apiClient.post(`${BASE_URL}/api/auth/logout`).catch(() => {
-      // ignore — we clear local state regardless
-    });
+    // Call backend logout so SESSION cookie is invalidated server-side.
+    // 200, 201, 204 — sab valid success responses hain.
+    // Error propagate hogi — authSlice ka thunk handle karega.
+    await apiClient.post(`/api/auth/logout`);
   },
 };

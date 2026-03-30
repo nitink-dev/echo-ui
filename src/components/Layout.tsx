@@ -7,7 +7,7 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useAppDispatch } from '../hooks';
-import { logout } from '../store/slices/authSlice';
+import { logoutUser } from '../store/slices/authSlice';
 import { usePermissions } from '../hooks/usePermissions';
 
 interface LayoutProps {
@@ -157,6 +157,11 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
 export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: LayoutProps) {
   const dispatch = useAppDispatch();
 
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
+    onNavigate("login");
+  };
+
   return (
     <div className="min-h-screen bg-[#fafbff]">
       {/* Top Bar */}
@@ -223,10 +228,7 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
                 <DropdownMenuSeparator className="bg-[#E2E8F0]" />
                 <DropdownMenuItem
                   className="hover:bg-[#FEF2F2] text-[#DC2626] hover:text-[#991B1B] transition-colors"
-                  onClick={() => {
-                    dispatch(logout());
-                    onNavigate("login");
-                  }}
+                  onClick={handleLogout}
                 >
                   Logout
                 </DropdownMenuItem>

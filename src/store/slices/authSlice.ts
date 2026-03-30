@@ -15,8 +15,8 @@ const DEV_STATIC_ROLE: Role | null = null; // ← set to a Role string to overri
 interface AuthState {
   isLoggedIn: boolean;
   user: string | null;
-  role: Role | null;        // primary role (first in roles array)
-  scopes: string[];         // e.g. ["platform.read", "platform.write"]
+  role: Role | null;    // primary role (first in roles array)
+  scopes: string[];     // e.g. ["platform.read", "platform.write"]
   loading: boolean;
   error: string | null;
 }
@@ -45,35 +45,48 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// ✅ Thunk: Logout — backend invalidates SESSION cookie, we clear local state
+// Backend 200 / 201 / 204 — sab success treat hote hain.
+// Agar backend fail bhi ho jaaye, local state tab bhi clear hogi (finally block).
+export const logoutUser = createAsyncThunk(
+  "auth/logoutUser",
+  async (_, { dispatch }) => {
+    try {
+      await authService.logout();
+    } catch {
+      // Backend unreachable / already expired — koi baat nahi.
+      // Local state clear karna zaroori hai regardless.
+    } finally {
+      dispatch(clearAuthState());
+    }
+  }
+);
+
 const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
 
-    // ✅ Logout — clear state + let backend invalidate SESSION cookie
-    logout(state) {
+    // ✅ Internal reducer — sirf local state + localStorage clear karta hai.
+    // Directly dispatch mat karo — logoutUser thunk use karo.
+    clearAuthState(state) {
       state.isLoggedIn = false;
-      state.user  = null;
-      state.role  = null;
-      state.scopes = [];
-      state.error = null;
+      state.user       = null;
+      state.role       = null;
+      state.scopes     = [];
+      state.error      = null;
 
-      // No token in localStorage to remove for cookie-based sessions.
-      // We still persist role/user for UX — clear them on logout.
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_role");
       localStorage.removeItem("auth_scopes");
-
-      // Fire-and-forget backend logout so SESSION is invalidated server-side
-      authService.logout();
     },
 
     // ✅ Restore session on page reload
     // SESSION cookie is sent automatically by the browser — we just restore
     // the role + user we saved so the UI renders without a fresh login call.
     loadStoredSession(state) {
-      const user       = localStorage.getItem("auth_user");
-      const storedRole = localStorage.getItem("auth_role") as Role | null;
+      const user         = localStorage.getItem("auth_user");
+      const storedRole   = localStorage.getItem("auth_role") as Role | null;
       const storedScopes = localStorage.getItem("auth_scopes");
 
       // We check for stored user as the indicator that a session exists.
@@ -82,15 +95,16 @@ const authSlice = createSlice({
       // should redirect to login.
       if (user && storedRole) {
         state.isLoggedIn = true;
-        state.user  = user;
-        state.role  = DEV_STATIC_ROLE ?? storedRole;
-        state.scopes = storedScopes ? JSON.parse(storedScopes) : [];
+        state.user       = user;
+        state.role       = DEV_STATIC_ROLE ?? storedRole;
+        state.scopes     = storedScopes ? JSON.parse(storedScopes) : [];
       }
     },
   },
 
   extraReducers: (builder) => {
     builder
+      // ── Login ──────────────────────────────────────────────
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error   = null;
@@ -108,7 +122,7 @@ const authSlice = createSlice({
         state.role = DEV_STATIC_ROLE ?? backendRole;
 
         // Persist for session restore on page reload
-        localStorage.setItem("auth_user",   action.payload.username);
+        localStorage.setItem("auth_user", action.payload.username);
         if (state.role) {
           localStorage.setItem("auth_role", state.role);
         }
@@ -119,9 +133,26 @@ const authSlice = createSlice({
         state.loading    = false;
         state.error      = action.payload as string;
         state.isLoggedIn = false;
+      })
+
+      // ── Logout ─────────────────────────────────────────────
+      // logoutUser thunk ka fulfilled/rejected dono mein clearAuthState
+      // already dispatch ho chuka hota hai (finally block mein).
+      // Yahan sirf loading flag handle karna hai agar kabhi zaroori lage.
+      .addCase(logoutUser.pending, (state) => {
+        state.loading = true;
+      })
+
+      .addCase(logoutUser.fulfilled, (state) => {
+        state.loading = false;
+      })
+
+      .addCase(logoutUser.rejected, (state) => {
+        // clearAuthState already called in finally — yahan kuch extra nahi.
+        state.loading = false;
       });
   },
 });
 
-export const { logout, loadStoredSession } = authSlice.actions;
+export const { clearAuthState, loadStoredSession } = authSlice.actions;
 export default authSlice.reducer;
