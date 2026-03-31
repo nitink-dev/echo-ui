@@ -1,5 +1,6 @@
+// src/store/slices/authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { authService } from "../../api/services/authService";
+import { authService, SecurityConfigEntry } from "../../api/services/authService";
 import { Role } from "../../config/roleConfig";
 
 // ─────────────────────────────────────────────────────────────
@@ -15,8 +16,10 @@ const DEV_STATIC_ROLE: Role | null = null; // ← set to a Role string to overri
 interface AuthState {
   isLoggedIn: boolean;
   user: string | null;
-  role: Role | null;    // primary role (first in roles array)
-  scopes: string[];     // e.g. ["platform.read", "platform.write"]
+  role: Role | null;                       // primary role (first in roles array)
+  scopes: string[];                        // e.g. ["platform.read", "platform.write"]
+  securityConfig: SecurityConfigEntry[];   // live config from GET /api/auth/config
+  securityConfigLoaded: boolean;           // true once config has been fetched
   loading: boolean;
   error: string | null;
 }
@@ -26,6 +29,8 @@ const initialState: AuthState = {
   user: null,
   role: null,
   scopes: [],
+  securityConfig: [],
+  securityConfigLoaded: false,
   loading: false,
   error: null,
 };
@@ -33,9 +38,11 @@ const initialState: AuthState = {
 // ✅ Thunk: Login — backend sets SESSION cookie, we store role + scopes
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
-  async (payload: { username: string; password: string }, { rejectWithValue }) => {
+  async (payload: { username: string; password: string }, { rejectWithValue, dispatch }) => {
     try {
       const data = await authService.login(payload);
+      // After successful login, immediately fetch the security config
+      dispatch(fetchSecurityConfig());
       return data; // { username, roles: [...], scopes: [...] }
     } catch (err: any) {
       return rejectWithValue(
@@ -45,9 +52,24 @@ export const loginUser = createAsyncThunk(
   }
 );
 
+// ✅ Thunk: Fetch live security config from GET /api/auth/config
+// Called after login and on session restore so the UI always reflects
+// the latest route-level scope requirements from the backend.
+export const fetchSecurityConfig = createAsyncThunk(
+  "auth/fetchSecurityConfig",
+  async (_, { rejectWithValue }) => {
+    try {
+      return await authService.fetchSecurityConfig();
+    } catch (err: any) {
+      // Non-fatal — fall back to role-only permission checks
+      return rejectWithValue(
+        err.response?.data?.message || "Could not load security config."
+      );
+    }
+  }
+);
+
 // ✅ Thunk: Logout — backend invalidates SESSION cookie, we clear local state
-// Backend 200 / 201 / 204 — sab success treat hote hain.
-// Agar backend fail bhi ho jaaye, local state tab bhi clear hogi (finally block).
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { dispatch }) => {
@@ -70,34 +92,34 @@ const authSlice = createSlice({
     // ✅ Internal reducer — sirf local state + localStorage clear karta hai.
     // Directly dispatch mat karo — logoutUser thunk use karo.
     clearAuthState(state) {
-      state.isLoggedIn = false;
-      state.user       = null;
-      state.role       = null;
-      state.scopes     = [];
-      state.error      = null;
+      state.isLoggedIn          = false;
+      state.user                = null;
+      state.role                = null;
+      state.scopes              = [];
+      state.securityConfig      = [];
+      state.securityConfigLoaded = false;
+      state.error               = null;
 
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_role");
       localStorage.removeItem("auth_scopes");
     },
 
-    // ✅ Restore session on page reload
+    // ✅ Restore session on page reload.
     // SESSION cookie is sent automatically by the browser — we just restore
     // the role + user we saved so the UI renders without a fresh login call.
+    // Also re-fetches the security config so it's always fresh after reload.
     loadStoredSession(state) {
       const user         = localStorage.getItem("auth_user");
       const storedRole   = localStorage.getItem("auth_role") as Role | null;
       const storedScopes = localStorage.getItem("auth_scopes");
 
-      // We check for stored user as the indicator that a session exists.
-      // The actual SESSION cookie validity is enforced by the backend — any
-      // API call with an expired cookie will return 401 and the interceptor
-      // should redirect to login.
       if (user && storedRole) {
         state.isLoggedIn = true;
         state.user       = user;
         state.role       = DEV_STATIC_ROLE ?? storedRole;
         state.scopes     = storedScopes ? JSON.parse(storedScopes) : [];
+        // securityConfig will be re-fetched via the effect in App.tsx
       }
     },
   },
@@ -135,10 +157,19 @@ const authSlice = createSlice({
         state.isLoggedIn = false;
       })
 
+      // ── Security Config ────────────────────────────────────
+      .addCase(fetchSecurityConfig.fulfilled, (state, action: PayloadAction<SecurityConfigEntry[]>) => {
+        state.securityConfig       = action.payload;
+        state.securityConfigLoaded = true;
+      })
+
+      .addCase(fetchSecurityConfig.rejected, (state) => {
+        // Config unavailable — role-based fallback will be used.
+        // Mark as loaded so the UI doesn't stay in a loading state.
+        state.securityConfigLoaded = true;
+      })
+
       // ── Logout ─────────────────────────────────────────────
-      // logoutUser thunk ka fulfilled/rejected dono mein clearAuthState
-      // already dispatch ho chuka hota hai (finally block mein).
-      // Yahan sirf loading flag handle karna hai agar kabhi zaroori lage.
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
       })
@@ -148,7 +179,6 @@ const authSlice = createSlice({
       })
 
       .addCase(logoutUser.rejected, (state) => {
-        // clearAuthState already called in finally — yahan kuch extra nahi.
         state.loading = false;
       });
   },

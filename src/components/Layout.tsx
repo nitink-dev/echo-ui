@@ -1,14 +1,25 @@
 // src/components/Layout.tsx
 import React, { useState } from 'react';
-import { Building2, HelpCircle, User, ChevronDown, Settings, Database, Stethoscope, Monitor, Network, HardDrive, Activity, Microscope, ChevronRight, Cpu, MonitorCheckIcon } from 'lucide-react';
+import {
+  Building2, HelpCircle, User, ChevronDown, Settings, Database,
+  Stethoscope, Monitor, Network, HardDrive, Activity, Microscope,
+  ChevronRight, Cpu, MonitorCheckIcon,
+} from 'lucide-react';
 import endeavorLogo from 'figma:asset/8d23b78a5fe745720187a8b480f0debc13c0b121.png';
 import { Button } from './ui/button';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from './ui/breadcrumb';
+import {
+  DropdownMenu, DropdownMenuContent, DropdownMenuItem,
+  DropdownMenuSeparator, DropdownMenuTrigger,
+} from './ui/dropdown-menu';
+import {
+  Breadcrumb, BreadcrumbItem, BreadcrumbLink,
+  BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator,
+} from './ui/breadcrumb';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip';
 import { useAppDispatch } from '../hooks';
 import { logoutUser } from '../store/slices/authSlice';
 import { usePermissions } from '../hooks/usePermissions';
+import { useSelector } from 'react-redux';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -31,7 +42,7 @@ const navigationItems: NavigationItem[] = [
     id: 'devices',
     children: [
       { label: 'Slide Scanner', icon: Microscope, id: 'list' },
-    ]
+    ],
   },
   {
     label: 'Applications',
@@ -44,8 +55,8 @@ const navigationItems: NavigationItem[] = [
       { label: 'Enrichment Tool',      icon: Cpu,              id: 'enrichment-tool' },
       { label: 'Health Status',        icon: MonitorCheckIcon, id: 'health-status' },
       { label: 'Slide Status',         icon: MonitorCheckIcon, id: 'slide-status' },
-    ]
-  }
+    ],
+  },
 ];
 
 interface NavigationProps {
@@ -54,24 +65,33 @@ interface NavigationProps {
 }
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
-  const dispatch = useAppDispatch();
-  const { canRead, role } = usePermissions();
+  const { canRead, configLoaded } = usePermissions();
 
-  const [expandedSections, setExpandedSections] = useState<string[]>(['devices', 'data-stores', 'clinical-apps']);
+  const [expandedSections, setExpandedSections] = useState<string[]>([
+    'devices',
+    'data-stores',
+    'clinical-apps',
+  ]);
 
   const toggleSection = (sectionId: string) => {
-    setExpandedSections(prev =>
+    setExpandedSections((prev) =>
       prev.includes(sectionId)
-        ? prev.filter(id => id !== sectionId)
+        ? prev.filter((id) => id !== sectionId)
         : [...prev, sectionId]
     );
   };
 
-  // Filter children to only show pages the role can read
-  const filteredNavItems = navigationItems.map(section => ({
-    ...section,
-    children: section.children?.filter(item => canRead(item.id)),
-  })).filter(section => (section.children?.length ?? 0) > 0);
+  // Filter menu items based on live scope-aware permissions.
+  // While the config is still loading we show all items to avoid a jarring
+  // flash; the page-level guard in App.tsx will block access regardless.
+  const filteredNavItems = navigationItems
+    .map((section) => ({
+      ...section,
+      children: section.children?.filter(
+        (item) => !configLoaded || canRead(item.id)
+      ),
+    }))
+    .filter((section) => (section.children?.length ?? 0) > 0);
 
   return (
     <TooltipProvider>
@@ -81,7 +101,8 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
           return (
             <div key={section.id} className="space-y-1">
-              {index > 0 && <div className="h-px bg-[#E2E8F0] mx-2 my-3"></div>}
+              {index > 0 && <div className="h-px bg-[#E2E8F0] mx-2 my-3" />}
+
               <button
                 onClick={() => toggleSection(section.id)}
                 className="w-full flex items-center justify-between px-3 py-2.5 text-left transition-all duration-200 hover:bg-[#E0F0FF] rounded-lg group focus:outline-none focus:ring-2 focus:ring-[#007BFF] focus:ring-offset-2 focus:ring-offset-[#F1F5F9]"
@@ -123,22 +144,31 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
                             aria-current={currentPage === item.id ? 'page' : undefined}
                             tabIndex={0}
                           >
-                            <item.icon className={`h-4 w-4 transition-colors duration-200 ${
-                              currentPage === item.id
-                                ? 'text-[#007BFF]'
-                                : 'text-[#64748B] group-hover:text-[#007BFF]'
-                            }`} />
-                            <span className={`font-medium text-sm ${
-                              currentPage === item.id ? 'text-[#2C3E50] font-semibold' : ''
-                            }`}>
+                            <item.icon
+                              className={`h-4 w-4 transition-colors duration-200 ${
+                                currentPage === item.id
+                                  ? 'text-[#007BFF]'
+                                  : 'text-[#64748B] group-hover:text-[#007BFF]'
+                              }`}
+                            />
+                            <span
+                              className={`font-medium text-sm ${
+                                currentPage === item.id
+                                  ? 'text-[#2C3E50] font-semibold'
+                                  : ''
+                              }`}
+                            >
                               {item.label}
                             </span>
                             {currentPage === item.id && (
-                              <div className="ml-auto w-2 h-2 bg-[#007BFF] rounded-full"></div>
+                              <div className="ml-auto w-2 h-2 bg-[#007BFF] rounded-full" />
                             )}
                           </button>
                         </TooltipTrigger>
-                        <TooltipContent side="right" className="bg-[#2C3E50] text-white border-[#64748B]">
+                        <TooltipContent
+                          side="right"
+                          className="bg-[#2C3E50] text-white border-[#64748B]"
+                        >
                           <p>Navigate to {item.label}</p>
                         </TooltipContent>
                       </Tooltip>
@@ -154,17 +184,25 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
   );
 }
 
-export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: LayoutProps) {
+export function Layout({
+  children,
+  currentPage,
+  breadcrumbs = [],
+  onNavigate,
+}: LayoutProps) {
   const dispatch = useAppDispatch();
+
+  // Read username from store so the header always shows the real user
+  const username = useSelector((state: any) => state.auth.user) as string | null;
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
-    onNavigate("login");
+    onNavigate('login');
   };
 
   return (
     <div className="min-h-screen bg-[#fafbff]">
-      {/* Top Bar */}
+      {/* ── Top Bar ── */}
       <header className="fixed top-0 left-0 right-0 h-16 bg-[#2C3E50] text-white shadow-sm z-50 border-b border-[#34495E]">
         <div className="h-full flex items-center justify-between bg-[rgba(35,95,248,1)]">
           {/* Left: Logo */}
@@ -176,7 +214,7 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
             />
           </div>
 
-          {/* Right: Navigation Items */}
+          {/* Right: Nav buttons */}
           <div className="flex items-center gap-2 pr-6 sm:pr-4 header-nav-buttons">
             {/* Help Menu */}
             <DropdownMenu>
@@ -192,11 +230,20 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
                   <ChevronDown className="h-3 w-3 ml-2 sm:ml-2" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48 bg-white border border-[#E2E8F0] shadow-lg">
-                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">User Manual</DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">FAQs</DropdownMenuItem>
+              <DropdownMenuContent
+                align="end"
+                className="w-48 bg-white border border-[#E2E8F0] shadow-lg"
+              >
+                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">
+                  User Manual
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">
+                  FAQs
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-[#E2E8F0]" />
-                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">Contact Support</DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">
+                  Contact Support
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
 
@@ -212,19 +259,29 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
                   <div className="w-6 h-6 bg-[rgba(38,101,101,0)] hover:bg-[#007BFF] rounded-full flex items-center justify-center mr-2 sm:mr-2 transition-colors duration-200">
                     <User className="h-3 w-3 text-white" />
                   </div>
-                  <span className="hidden md:inline text-sm truncate text-[rgba(255,255,255,1)]">Dr. Sarah Johnson</span>
+                  <span className="hidden md:inline text-sm truncate text-[rgba(255,255,255,1)]">
+                    {username ?? 'User'}
+                  </span>
                   <span className="md:hidden sm:hidden text-sm">Profile</span>
                   <ChevronDown className="h-3 w-3 ml-2 flex-shrink-0" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56 bg-white border border-[#E2E8F0] shadow-lg">
+              <DropdownMenuContent
+                align="end"
+                className="w-56 bg-white border border-[#E2E8F0] shadow-lg"
+              >
                 <div className="px-3 py-2 border-b border-[#E2E8F0]">
-                  <p className="text-sm font-medium text-[#2C3E50]">Dr. Sarah Johnson</p>
+                  <p className="text-sm font-medium text-[#2C3E50]">
+                    {username ?? 'User'}
+                  </p>
                   <p className="text-xs text-[#64748B]">Endeavor Health</p>
-                  <p className="text-xs text-[#64748B]">System Administrator</p>
                 </div>
-                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">Profile Settings</DropdownMenuItem>
-                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">Preferences</DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">
+                  Profile Settings
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:bg-[#F8FAFF] transition-colors">
+                  Preferences
+                </DropdownMenuItem>
                 <DropdownMenuSeparator className="bg-[#E2E8F0]" />
                 <DropdownMenuItem
                   className="hover:bg-[#FEF2F2] text-[#DC2626] hover:text-[#991B1B] transition-colors"
@@ -239,14 +296,14 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
       </header>
 
       <div className="flex pt-16">
-        {/* Sidebar */}
+        {/* ── Sidebar ── */}
         <aside className="fixed left-0 top-16 bottom-0 w-72 bg-[#F1F5F9] shadow-sm z-40 border-r border-[#E2E8F0]">
           <div className="h-full overflow-y-auto p-6 bg-[#F1F5F9] nav-scrollbar">
             <Navigation currentPage={currentPage} onNavigate={onNavigate} />
           </div>
         </aside>
 
-        {/* Main Content */}
+        {/* ── Main Content ── */}
         <main className="ml-72 flex-1 bg-[#fafbff]">
           <div className="px-6 py-4">
             {/* Breadcrumbs */}
@@ -258,12 +315,17 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
                       <React.Fragment key={index}>
                         <BreadcrumbItem>
                           {crumb.href && (
-                            <BreadcrumbLink href={crumb.href} className="text-gray-600 hover:text-[#007BFF]">
+                            <BreadcrumbLink
+                              href={crumb.href}
+                              className="text-gray-600 hover:text-[#007BFF]"
+                            >
                               {crumb.label}
                             </BreadcrumbLink>
                           )}
                         </BreadcrumbItem>
-                        {index < breadcrumbs.length - 1 && <BreadcrumbSeparator />}
+                        {index < breadcrumbs.length - 1 && (
+                          <BreadcrumbSeparator />
+                        )}
                       </React.Fragment>
                     ))}
                   </BreadcrumbList>
@@ -272,9 +334,7 @@ export function Layout({ children, currentPage, breadcrumbs = [], onNavigate }: 
             )}
 
             {/* Page Content */}
-            <div className="min-h-[calc(100vh-8rem)]">
-              {children}
-            </div>
+            <div className="min-h-[calc(100vh-8rem)]">{children}</div>
           </div>
         </main>
       </div>
