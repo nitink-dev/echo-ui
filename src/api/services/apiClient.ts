@@ -14,15 +14,19 @@ const apiClient = axios.create({
 // ✅ REQUEST INTERCEPTOR — attach XSRF-TOKEN header from cookie
 // Spring Security expects X-XSRF-TOKEN header for state-changing requests
 apiClient.interceptors.request.use((config) => {
-  const xsrfToken = document.cookie
-    .split("; ")
+  const cookies = document.cookie.split("; ");
+
+  const xsrfToken = cookies
     .find((row) => row.startsWith("XSRF-TOKEN="))
     ?.split("=")[1];
+
+  // const sessionId = cookies
+  //   .find((row) => row.startsWith("SESSION="))
+  //   ?.split("=")[1];
 
   if (xsrfToken) {
     config.headers["X-XSRF-TOKEN"] = decodeURIComponent(xsrfToken);
   }
-
   return config;
 });
 
