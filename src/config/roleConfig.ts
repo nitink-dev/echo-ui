@@ -10,35 +10,34 @@ export interface PagePermission {
 }
 
 // ─────────────────────────────────────────────────────────────
-// PAGE → API ROUTE MAPPING
-// Maps each frontend page ID to the backend API routes it uses.
-// This lets us cross-reference the live security config to derive
-// whether the current user's scopes grant read/write access.
+// PLATFORM SUPER-SCOPES
+// Agar user ke paas in mein se koi bhi scope hai toh woh
+// specific feature scope ke bina bhi access paayega.
+// ROLE_DEVELOPER / platform admin yahi use karega.
 // ─────────────────────────────────────────────────────────────
-export const pageApiMap: Record<string, { read: string; write?: string }> = {
-  // Devices & Adapters
-  list:    { read: "/api/scanners",    write: "/api/scanners" },
-  add:     { read: "/api/scanners",    write: "/api/scanners" },
-  edit:    { read: "/api/scanners/**", write: "/api/scanners/**" },
-  view:    { read: "/api/scanners/**" },
+const PLATFORM_READ_SCOPES  = ["platform.read"];
+const PLATFORM_WRITE_SCOPES = ["platform.write", "platform.update", "platform.delete", "platform.create"];
 
-  // Applications
-  lis:                { read: "/api/config/**",           write: "/api/config/**" },
-  synapse:            { read: "/api/config/**",           write: "/api/config/**" },
-  "qa-analysis":      { read: "/api/slides",              write: "/api/slides/**" },
-  "enrichment-tool":  { read: "/api/enrichment/tools/**", write: "/api/enrichment/tools/**" },
-  "health-status":    { read: "/api/health/status/**" },
-  "slide-status":     { read: "/api/slide-scan-status/**" },
+// ─────────────────────────────────────────────────────────────
+// PAGE → API ROUTE MAPPING
+// ─────────────────────────────────────────────────────────────
+export const pageApiMap: Record<string, { read: string; write?: string; writeMethod?: string }> = {
+  list:              { read: "/api/scanners",            write: "/api/scanners",            writeMethod: "POST"  },
+  add:               { read: "/api/scanners",            write: "/api/scanners",            writeMethod: "POST"  },
+  edit:              { read: "/api/scanners/**",         write: "/api/scanners/**",         writeMethod: "PATCH" },
+  view:              { read: "/api/scanners/**" },
+  lis:               { read: "/api/config/**",           write: "/api/config/**",           writeMethod: "PATCH" },
+  synapse:           { read: "/api/config/**",           write: "/api/config/**",           writeMethod: "PATCH" },
+  "qa-analysis":     { read: "/api/slides",              write: "/api/slides/**",           writeMethod: "PATCH" },
+  "enrichment-tool": { read: "/api/enrichment/tools/**", write: "/api/enrichment/tools/**", writeMethod: "PATCH" },
+  "health-status":   { read: "/api/health/status/**" },
+  "slide-status":    { read: "/api/slide-scan-status/**" },
 };
 
 // ─────────────────────────────────────────────────────────────
-// ROLE-BASED PERMISSION MATRIX  (static fallback)
-// Used when the live security config hasn't loaded yet, or when
-// the config fetch failed.
-// ROLE_DEVELOPER = same as ROLE_ADMIN (full access, used in dev/staging)
+// ROLE-BASED PERMISSION MATRIX (static fallback)
 // ─────────────────────────────────────────────────────────────
 const permissionMatrix: Record<string, Record<Role, PagePermission>> = {
-  // ── Devices & Adapters ──────────────────────────────────────
   list: {
     ROLE_ADMIN:     { read: true,  write: true  },
     ROLE_DEVELOPER: { read: true,  write: true  },
@@ -58,13 +57,11 @@ const permissionMatrix: Record<string, Record<Role, PagePermission>> = {
     ROLE_VIEWER:    { read: false, write: false },
   },
   view: {
-    ROLE_ADMIN:     { read: true,  write: true  },
-    ROLE_DEVELOPER: { read: true,  write: true  },
-    ROLE_OPERATOR:  { read: true,  write: true  },
+    ROLE_ADMIN:     { read: true,  write: false },
+    ROLE_DEVELOPER: { read: true,  write: false },
+    ROLE_OPERATOR:  { read: true,  write: false },
     ROLE_VIEWER:    { read: true,  write: false },
   },
-
-  // ── Applications ────────────────────────────────────────────
   lis: {
     ROLE_ADMIN:     { read: true,  write: true  },
     ROLE_DEVELOPER: { read: true,  write: true  },
@@ -103,81 +100,85 @@ const permissionMatrix: Record<string, Record<Role, PagePermission>> = {
   },
 };
 
-/**
- * Get role-based permission for a page (static fallback).
- * Returns { read: false, write: false } if page/role not found.
- */
 export function getPermission(pageId: string, role: Role | null): PagePermission {
   if (!role) return { read: false, write: false };
   return permissionMatrix[pageId]?.[role] ?? { read: false, write: false };
 }
 
-/** Role-based read check (static fallback) */
 export function canRead(pageId: string, role: Role | null): boolean {
   return getPermission(pageId, role).read;
 }
 
-/** Role-based write check (static fallback) */
 export function canWrite(pageId: string, role: Role | null): boolean {
   return getPermission(pageId, role).write;
 }
 
 // ─────────────────────────────────────────────────────────────
-// SCOPE-BASED PERMISSION HELPERS
-// These use the live security config fetched from the backend.
-// They check whether the user's scopes satisfy the required scopes
-// for the API route(s) mapped to the given page.
+// INTERNAL HELPERS
 // ─────────────────────────────────────────────────────────────
 
-/**
- * Find the required scopes for a given API path + HTTP method
- * from the live security config.
- *
- * Supports wildcard patterns like /api/scanners/** by checking
- * if the config entry's path (with ** replaced) is a prefix match.
- */
 function getRequiredScopes(
   apiPath: string,
   method: string,
   securityConfig: SecurityConfigEntry[]
-): string[] {
-  // Exact match first, then wildcard match
+): { required: string[]; isPublic: boolean } {
   const entry = securityConfig.find((cfg) => {
-    const methodMatch = cfg.methods.includes(method.toUpperCase());
-    if (!methodMatch) return false;
-
+    if (!cfg.methods.includes(method.toUpperCase())) return false;
     if (cfg.api === apiPath) return true;
-
-    // Wildcard: /api/scanners/** matches /api/scanners or /api/scanners/anything
     if (cfg.api.endsWith("/**")) {
-      const prefix = cfg.api.slice(0, -3); // strip /**
-      return apiPath === prefix || apiPath.startsWith(prefix + "/") || apiPath.startsWith(prefix);
+      const prefix = cfg.api.slice(0, -3);
+      return (
+        apiPath === prefix ||
+        apiPath.startsWith(prefix + "/") ||
+        apiPath.startsWith(prefix)
+      );
     }
-
     return false;
   });
 
-  return entry?.requiredScopes ?? [];
+  return {
+    required: entry?.requiredScopes ?? [],
+    isPublic: entry?.isPublic ?? false,
+  };
 }
 
 /**
- * Check if the user's scopes satisfy ALL required scopes for an API entry.
+ * Core access check with OR logic:
+ *
+ *   ALLOW if route is public
+ *   OR user has platform super-scope  ← platform admin / ROLE_DEVELOPER
+ *   OR user has ALL specific feature scopes ← feature-specific role
+ *
+ * Example:
+ *   Required: ["scanners.read", "platform.read"]
+ *   User A has: ["platform.read"] → ✅ (platform super-scope)
+ *   User B has: ["scanners.read", "platform.read"] → ✅ (all feature scopes)
+ *   User C has: ["scanners.read"] only → ✅ (has the feature scope, missing platform.read
+ *               but platform.read is also in required — so still passes feature check)
+ *   User D has: [] → ❌
  */
-function userHasScopes(userScopes: string[], requiredScopes: string[]): boolean {
-  if (requiredScopes.length === 0) return true; // public or no restriction
-  return requiredScopes.every((scope) => userScopes.includes(scope));
+function userCanAccess(
+  userScopes: string[],
+  required: string[],
+  isPublic: boolean,
+  type: "read" | "write"
+): boolean {
+  if (isPublic) return true;
+  if (required.length === 0) return true;
+
+  // Platform super-scope — OR condition with feature scopes
+  const platformScopes = type === "read" ? PLATFORM_READ_SCOPES : PLATFORM_WRITE_SCOPES;
+  const hasPlatformScope = platformScopes.some((s) => userScopes.includes(s));
+  if (hasPlatformScope) return true;
+
+  // Feature-specific — must have ALL required scopes
+  return required.every((scope) => userScopes.includes(scope));
 }
 
-/**
- * Scope-aware read permission check.
- *
- * Priority:
- *   1. If securityConfig is loaded → use scope check against live config.
- *   2. Fallback → use static role-based matrix.
- *
- * A page is "readable" if the user's scopes cover the required scopes
- * for the GET request on the page's mapped API route.
- */
+// ─────────────────────────────────────────────────────────────
+// PUBLIC API — used by usePermissions hook
+// ─────────────────────────────────────────────────────────────
+
 export function canReadWithScopes(
   pageId: string,
   role: Role | null,
@@ -186,32 +187,15 @@ export function canReadWithScopes(
   configLoaded: boolean
 ): boolean {
   if (!configLoaded || securityConfig.length === 0) {
-    return canRead(pageId, role); // fallback
+    return canRead(pageId, role);
   }
-
   const mapping = pageApiMap[pageId];
-  if (!mapping) return canRead(pageId, role); // unknown page → fallback
+  if (!mapping) return canRead(pageId, role);
 
-  const required = getRequiredScopes(mapping.read, "GET", securityConfig);
-
-  // If the route is marked public, allow unconditionally
-  const entry = securityConfig.find(
-    (cfg) =>
-      cfg.api === mapping.read ||
-      (cfg.api.endsWith("/**") &&
-        mapping.read.startsWith(cfg.api.slice(0, -3)))
-  );
-  if (entry?.isPublic) return true;
-
-  return userHasScopes(userScopes, required);
+  const { required, isPublic } = getRequiredScopes(mapping.read, "GET", securityConfig);
+  return userCanAccess(userScopes, required, isPublic, "read");
 }
 
-/**
- * Scope-aware write permission check.
- *
- * Checks PATCH/PUT for the page's mapped write API route.
- * Falls back to role-based matrix if config not loaded.
- */
 export function canWriteWithScopes(
   pageId: string,
   role: Role | null,
@@ -220,20 +204,12 @@ export function canWriteWithScopes(
   configLoaded: boolean
 ): boolean {
   if (!configLoaded || securityConfig.length === 0) {
-    return canWrite(pageId, role); // fallback
+    return canWrite(pageId, role);
   }
-
   const mapping = pageApiMap[pageId];
-  if (!mapping?.write) return false; // no write route defined
+  if (!mapping?.write) return false;
 
-  // Check PATCH (most common mutating method in this API)
-  const required = getRequiredScopes(mapping.write, "PATCH", securityConfig);
-
-  if (required.length === 0) {
-    // Try POST as fallback (for create-only routes like /api/scanners POST)
-    const postRequired = getRequiredScopes(mapping.write, "POST", securityConfig);
-    return userHasScopes(userScopes, postRequired);
-  }
-
-  return userHasScopes(userScopes, required);
+  const method = mapping.writeMethod ?? "PATCH";
+  const { required, isPublic } = getRequiredScopes(mapping.write, method, securityConfig);
+  return userCanAccess(userScopes, required, isPublic, "write");
 }
