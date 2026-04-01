@@ -11,9 +11,7 @@ export interface PagePermission {
 
 // ─────────────────────────────────────────────────────────────
 // PLATFORM SUPER-SCOPES
-// Agar user ke paas in mein se koi bhi scope hai toh woh
-// specific feature scope ke bina bhi access paayega.
-// ROLE_DEVELOPER / platform admin yahi use karega.
+// ROLE_DEVELOPER / platform admin 
 // ─────────────────────────────────────────────────────────────
 const PLATFORM_READ_SCOPES  = ["platform.read"];
 const PLATFORM_WRITE_SCOPES = ["platform.write", "platform.update", "platform.delete", "platform.create"];
@@ -114,7 +112,7 @@ export function canWrite(pageId: string, role: Role | null): boolean {
 }
 
 // ─────────────────────────────────────────────────────────────
-// INTERNAL HELPERS
+//  HELPERS
 // ─────────────────────────────────────────────────────────────
 
 function getRequiredScopes(
@@ -151,11 +149,11 @@ function getRequiredScopes(
  *
  * Example:
  *   Required: ["scanners.read", "platform.read"]
- *   User A has: ["platform.read"] → ✅ (platform super-scope)
- *   User B has: ["scanners.read", "platform.read"] → ✅ (all feature scopes)
- *   User C has: ["scanners.read"] only → ✅ (has the feature scope, missing platform.read
+ *   User A has: ["platform.read"] →  (platform super-scope)
+ *   User B has: ["scanners.read", "platform.read"] → (all feature scopes)
+ *   User C has: ["scanners.read"] only → (has the feature scope, missing platform.read
  *               but platform.read is also in required — so still passes feature check)
- *   User D has: [] → ❌
+ *   User D has: [] → (denied — missing platform super-scope and missing required feature scopes)
  */
 function userCanAccess(
   userScopes: string[],
