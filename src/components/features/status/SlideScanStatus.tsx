@@ -944,72 +944,86 @@ export function SlideScanStatus() {
     });
   };
 
-  const connectToInProgressStream = () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
 
-    const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress`;
+const connectToInProgressStream = () => {
+  if (reconnectTimeoutRef.current) {
+    clearTimeout(reconnectTimeoutRef.current);
+    reconnectTimeoutRef.current = null;
+  }
+  if (eventSourceRef.current) {
+    eventSourceRef.current.close();
+    eventSourceRef.current = null;
+  }
 
-    try {
-      const eventSource = new EventSource(url);
-      eventSourceRef.current = eventSource;
+  // ✅ Read XSRF-TOKEN from cookie and pass as query param
+  // EventSource does not support custom headers — this is the only way
+  // to send the CSRF token for SSE endpoints with Spring Security.
+  const xsrfToken = document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("XSRF-TOKEN="))
+    ?.split("=")[1];
 
-      eventSource.onopen = () => {
-        setIsStreamConnected(true);
-        setReconnectAttempts(0);
-      };
+  const tokenParam = xsrfToken
+    ? `?_xsrf=${encodeURIComponent(decodeURIComponent(xsrfToken))}`
+    : "";
 
-      eventSource.addEventListener("slide_scan_status", (event) => {
-        try { updateInProgressWithSSE(JSON.parse(event.data)); }
-        catch (e) { console.error("❌ SSE parse error:", e); }
-      });
+  const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress${tokenParam}`;
 
-      eventSource.onmessage = (event) => {
-        try { updateInProgressWithSSE(JSON.parse(event.data)); }
-        catch (e) { console.error("❌ SSE parse error:", e); }
-      };
+  try {
+    // ✅ withCredentials: true — sends SESSION cookie automatically
+    const eventSource = new EventSource(url, { withCredentials: true });
+    eventSourceRef.current = eventSource;
 
-      eventSource.onerror = () => {
-        setIsStreamConnected(false);
-        if (eventSource.readyState === EventSource.CLOSED) {
-          setStatusData((prev) => ({
-            ...prev,
-            error: {
-              ...prev.error,
-              inProgress: reconnectAttempts > 3
-                ? "Stream connection failed. Please refresh manually."
-                : undefined,
-            },
-          }));
+    eventSource.onopen = () => {
+      setIsStreamConnected(true);
+      setReconnectAttempts(0);
+    };
 
-          if (reconnectAttempts < 5) {
-            const delay = Math.min(5000 * Math.pow(2, reconnectAttempts), 30000);
-            reconnectTimeoutRef.current = setTimeout(() => {
-              setReconnectAttempts((prev) => prev + 1);
-              connectToInProgressStream();
-            }, delay);
-          }
+    eventSource.addEventListener("slide_scan_status", (event) => {
+      try { updateInProgressWithSSE(JSON.parse(event.data)); }
+      catch (e) { console.error("SSE parse error:", e); }
+    });
+
+    eventSource.onmessage = (event) => {
+      try { updateInProgressWithSSE(JSON.parse(event.data)); }
+      catch (e) { console.error("SSE parse error:", e); }
+    };
+
+    eventSource.onerror = () => {
+      setIsStreamConnected(false);
+      if (eventSource.readyState === EventSource.CLOSED) {
+        setStatusData((prev) => ({
+          ...prev,
+          error: {
+            ...prev.error,
+            inProgress: reconnectAttempts > 3
+              ? "Stream connection failed. Please refresh manually."
+              : undefined,
+          },
+        }));
+
+        if (reconnectAttempts < 5) {
+          const delay = Math.min(5000 * Math.pow(2, reconnectAttempts), 30000);
+          reconnectTimeoutRef.current = setTimeout(() => {
+            setReconnectAttempts((prev) => prev + 1);
+            connectToInProgressStream();
+          }, delay);
         }
-      };
-    } catch (error) {
-      setStatusData((prev) => ({
-        ...prev,
-        error: { ...prev.error, inProgress: `Connection error: ${error.message}` },
-      }));
-    }
-  };
+      }
+    };
+  } catch (error) {
+    setStatusData((prev) => ({
+      ...prev,
+      error: { ...prev.error, inProgress: `Connection error: ${error.message}` },
+    }));
+  }
+};
 
   // Initial load
   useEffect(() => {
-    fetchData("failed", 0);
-    fetchData("completed", 0);
-    fetchData("inProgress", 0).then((data) => {
+    fetchData("failed", 0, null);
+    fetchData("completed", 0, null);
+    fetchData("inProgress", 0, null).then((data) => {
       if (data) {
         prevInProgressCountRef.current = data.totalElements ?? 0;
         connectToInProgressStream();
@@ -1027,7 +1041,7 @@ export function SlideScanStatus() {
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
-      fetchData("inProgress", currentPageRef.current.inProgress);
+      fetchData("inProgress", currentPageRef.current.inProgress, null);
     }, 30000);
     return () => clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -1035,14 +1049,14 @@ export function SlideScanStatus() {
 
   // Re-fetch inProgress on page change (SSE covers page 0 live)
   useEffect(() => {
-    if (currentPage.inProgress !== 0) fetchData("inProgress", currentPage.inProgress);
+    if (currentPage.inProgress !== 0) fetchData("inProgress", currentPage.inProgress, null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage.inProgress]);
 
   const handleRefresh = () => {
-    fetchData("failed", currentPageRef.current.failed);
-    fetchData("completed", currentPageRef.current.completed);
-    fetchData("inProgress", currentPageRef.current.inProgress);
+    fetchData("failed", currentPageRef.current.failed, null);
+    fetchData("completed", currentPageRef.current.completed, null);
+    fetchData("inProgress", currentPageRef.current.inProgress, null);
     setReconnectAttempts(0);
     connectToInProgressStream();
   };
@@ -1080,7 +1094,7 @@ export function SlideScanStatus() {
     setCurrentPage((prev) => ({ ...prev, [tab]: newPage }));
 
     //if (tab !== "inProgress") {
-      fetchData(tab, newPage);
+      fetchData(tab, newPage, null);
     //}
     {  console.log("currentPageNum: "+ currentPageNum+ ",totalPages: "+ totalPages )} 
   };
