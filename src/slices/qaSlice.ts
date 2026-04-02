@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
-import { BASE_URL } from "../util/util";
 import apiClient from "../api/services/apiClient";
+import { BASE_URL } from "../utils/constants";
 
 export interface QASlideParameter {
   id: string;
