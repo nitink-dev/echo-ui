@@ -64,8 +64,8 @@ export const fetchDicomStores = createAsyncThunk(
   "qa/fetchDicomStores",
   async (_, { rejectWithValue }) => {
     try {
-      const res = await fetch(`${BASE_URL}/api/scanners/datasets/dicomStores`);
-      const data = await res.json();
+      const res = await apiClient.get(`${BASE_URL}/api/scanners/datasets/dicomStores`);
+      const data = await res.data;
       const allStores: string[] = Object.values(data).flat();
       return allStores;
     } catch (err: any) {
