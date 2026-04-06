@@ -272,6 +272,7 @@ export default function App() {
         position="top-right"
         richColors
         visibleToasts={3}
+        expand={true}
         toastOptions={{
           duration: 4000,
           style: {

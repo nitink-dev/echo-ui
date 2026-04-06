@@ -36,6 +36,7 @@ export function ScannerTable({
   const [scannerToDelete, setScannerToDelete] = useState<SlideScanner | null>(null);
   const { canWrite } = usePermissions();
   const canEditScanner = canWrite("edit");
+  const canDeleteScanner = canWrite("delete");
 
   // Local UI state maps keyed by deviceSerialNumber
   const initialConnected = useMemo(() => {
@@ -180,7 +181,9 @@ export function ScannerTable({
                   >
                     <Switch
                       checked={!!connected}
+                      disabled={!canEditScanner}
                       onCheckedChange={(checked) => {
+                        if (!canEditScanner) return;
                         const next = Boolean(checked);
                         setConnectedMap(prev => ({ ...prev, [key]: next }));
                         dispatchUpdate({ connected: next });
@@ -216,9 +219,11 @@ export function ScannerTable({
                       </DropdownMenuItem>
                       )}
                       <DropdownMenuSeparator />
+                      {canDeleteScanner && (
                       <DropdownMenuItem onClick={() => handleDeleteClick(scanner)} className="text-red-600">
                         <Trash2 className="h-4 w-4 mr-2" /> Delete
                       </DropdownMenuItem>
+                    )}    
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>
