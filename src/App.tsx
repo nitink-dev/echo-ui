@@ -270,6 +270,8 @@ export default function App() {
       </Layout>
       <Toaster
         position="top-right"
+        richColors
+        visibleToasts={3}
         toastOptions={{
           duration: 4000,
           style: {

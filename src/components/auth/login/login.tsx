@@ -35,16 +35,12 @@ export function LoginPage() {
 
     try {
       const response = await dispatch(loginUser(formData)).unwrap();
-      if(response !== "Login successful"){
-        toast.success("Login failed!");
-      } else {
-        toast.success("Login successful");
-      }
+      toast.success(`Welcome, ${response.username}!`);
       // TODO: Redirect to dashboard or handle authentication token
       // navigate("/dashboard");
     } catch (error) {
       console.error("Login error:", error);
-      toast.error("Login failed. Please check your credentials.");
+      //toast.error("Login failed. Please check your credentials.");
     } finally {
       setLoading(false);
     }
