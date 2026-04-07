@@ -7,6 +7,7 @@ import { DicomStoreConfig } from './DicomStoreConfig';
 import { QAParameterTable } from './QAParameterTable';
 import { useQAConfig } from './useQAConfig';
 import { QAParameterForm } from './QAParameterForm';
+import { usePermissions } from '../../../../hooks/usePermissions';
 
 export function QAConfig() {
   const {
@@ -33,6 +34,10 @@ export function QAConfig() {
     handleSaveDicomStore
   } = useQAConfig();
 
+  const { canWrite } = usePermissions();
+  const canAdd = canWrite("add");
+    
+
   return (
     <div className="space-y-6">
       <div>
@@ -50,10 +55,12 @@ export function QAConfig() {
               </CardTitle>
               <CardDescription>Manage barcode and activation code pairs for QA slides</CardDescription>
             </div>
-            <Button onClick={handleAddParameter} className="bg-blue-600 hover:bg-blue-700">
-              <Plus className="h-4 w-4 mr-2" />
-              Add New
-            </Button>
+            {canAdd && (
+              <Button onClick={handleAddParameter} className="bg-blue-600 hover:bg-blue-700">
+                <Plus className="h-4 w-4 mr-2" />
+                Add New
+              </Button>
+            )}
           </div>
         </CardHeader>
         <CardContent>

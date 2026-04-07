@@ -3,6 +3,7 @@ import { Database, Edit, Save, X } from 'lucide-react';
 import { Button } from '../../../ui/button';
 import { Label } from '../../../ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../ui/card';
+import { usePermissions } from '../../../../hooks/usePermissions';
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -13,7 +14,8 @@ interface DicomStoreConfigProps {
 export function DicomStoreConfig({ dicomStores, dicomStoreAddress, onSave }: DicomStoreConfigProps) {
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
-
+  const { canWrite } = usePermissions();
+  const canEditDicomStore = canWrite("edit");
   useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
@@ -66,7 +68,7 @@ export function DicomStoreConfig({ dicomStores, dicomStoreAddress, onSave }: Dic
                 })}
               </select>
 
-              {isEditingDicom ? (
+              { canEditDicomStore && isEditingDicom ? (
                 <div className="flex gap-2">
                   <Button onClick={handleSaveDicom} className="bg-green-600 hover:bg-green-700">
                     Save

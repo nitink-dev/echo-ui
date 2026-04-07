@@ -3,6 +3,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
 import { Button } from '../../../ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../ui/table';
 import { QASlideParameter } from '../../../../types/qa.types';
+import { usePermissions } from '../../../../hooks/usePermissions';
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -22,18 +23,26 @@ export function QAParameterTable({
   onToggleVisibility
 }: QAParameterTableProps) {
   if (!qaParameters || qaParameters.length === 0) {
+    const { canWrite } = usePermissions();
+    const canAdd = canWrite("add");
     return (
       <div className="text-center py-12">
         <div className="text-gray-400 text-lg mb-2">No QA parameters configured</div>
         <p className="text-gray-600 mb-4">Add barcode and activation code pairs to get started</p>
+        {canAdd && (
         <Button onClick={onAddParameter} className="bg-blue-600 hover:bg-blue-700">
           <Plus className="h-4 w-4 mr-2" />
           Add First Parameter
         </Button>
+        )}
       </div>
     );
   }
 
+    const { canWrite } = usePermissions();
+    const canEdit = canWrite("edit");
+    const canDelete = canWrite("delete");
+    
   return (
     <Table>
       <TableHeader>
@@ -63,6 +72,7 @@ export function QAParameterTable({
             </TableCell>
             <TableCell>
               <div className="flex gap-1 flex-wrap">
+                {canEdit && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -72,6 +82,8 @@ export function QAParameterTable({
                 >
                   <Edit className="h-4 w-4" />
                 </Button>
+                )}
+                {canDelete && (
                 <Button
                   variant="outline"
                   size="sm"
@@ -81,6 +93,7 @@ export function QAParameterTable({
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>
