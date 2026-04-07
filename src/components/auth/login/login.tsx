@@ -89,8 +89,9 @@ export function LoginPage() {
                 <Label htmlFor="password" className="text-sm font-medium text-gray-700">
                   Password
                 </Label>
-                <div className="relative">
+                <div className="relative flex items-center">
                   <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
@@ -98,18 +99,14 @@ export function LoginPage() {
                     value={formData.password}
                     onChange={(e) => handleChange("password", e.target.value)}
                     className="pl-10 pr-10"
-                    autoComplete="current-password"
                   />
+
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
                   >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
                 </div>
               </div>
