@@ -25,6 +25,7 @@ import {
   EMAIL_ERROR_MESSAGE,
   sanitizeByPattern,
 } from "../../../../utils/validation.constants";
+import { usePermissions } from "../../../../hooks/usePermissions";
 
 // ─── IP / Port field maps ─────────────────────────────────────────────────────
 
@@ -46,6 +47,9 @@ export function EnrichmentToolConfig() {
   const dispatch = useAppDispatch();
   const { dicomReceiver, lisConnector, enrichmentService, exportService, hl7Connector, emailService, loading } =
     useSelector((s: any) => s.ehTools || {});
+
+  const { canWrite } = usePermissions();
+  const canEdit = canWrite("edit");
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false, lis: false, enrichment: false, export: false, hl7: false, email: false,
@@ -519,34 +523,38 @@ export function EnrichmentToolConfig() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{body}</div>
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {editMode[keyName] ? (
+              {canEdit && (
                 <>
-                  <Button
-                    size="sm"
-                    onClick={() => handleSave(keyName)}
-                    disabled={loading}
-                    className="h-9 px-4 bg-[#007BFF] hover:bg-[#0069d9] text-white border-0"
-                  >
-                    <Save className="h-4 w-4 mr-1" /> Save
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEdit(keyName, false)}
-                    className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
-                  >
-                    <X className="h-4 w-4 mr-1" /> Cancel
-                  </Button>
+                  {editMode[keyName] ? (
+                    <>
+                      <Button
+                        size="sm"
+                        onClick={() => handleSave(keyName)}
+                        disabled={loading}
+                        className="h-9 px-4 bg-[#007BFF] hover:bg-[#0069d9] text-white border-0"
+                      >
+                        <Save className="h-4 w-4 mr-1" /> Save
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => handleEdit(keyName, false)}
+                        className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                      >
+                        <X className="h-4 w-4 mr-1" /> Cancel
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => handleEdit(keyName, true)}
+                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                    >
+                      <Edit className="h-4 w-4 mr-1" /> Edit
+                    </Button>
+                  )}
                 </>
-              ) : (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleEdit(keyName, true)}
-                  className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
-                >
-                  <Edit className="h-4 w-4 mr-1" /> Edit
-                </Button>
               )}
             </div>
           </CardContent>
