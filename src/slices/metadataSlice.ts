@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { BASE_URL } from '../util/util';
+import { BASE_URL } from '../utils/constants';
 
 
 export const fetchHospitalMetadata = createAsyncThunk(
