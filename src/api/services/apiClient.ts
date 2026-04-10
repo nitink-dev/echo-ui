@@ -50,6 +50,8 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
   504: "Gateway timeout. Please try again.",
 };
 
+const LOGIN_PATH = "/login"; // ← apna login route yahan set karo
+
 // RESPONSE INTERCEPTOR
 apiClient.interceptors.response.use(
   (response) => response,
@@ -58,16 +60,30 @@ apiClient.interceptors.response.use(
     // ── Source tag: URL se component identify karo ─────────────────────────
     const url = error.config?.url ?? "unknown";
 
-    // e.g. "/api/scanners" → "scanners" , "/api/auth/login" → "auth/login"
-    //const sourcePath = url.replace(/^\/api\//, "").split("?")[0];
-    
-const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
-  .replace(/^\/api\//, "")
-  .split("?")[0];
-
+    const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
+      .replace(/^\/api\//, "")
+      .split("?")[0];
 
     if (error.response) {
       const status: number = error.response.status;
+
+      // ── 401 → Session expire ho gaya, login pe redirect karo ───────────
+      if (status === 401) {
+        // Agar already login page pe hai toh infinite loop avoid karo
+        if (window.location.pathname !== LOGIN_PATH) {
+          showErrorToast(
+            "Session expired. Please log in again.",
+            "session-expired"
+          );
+
+          // Toast dikhne ka waqt do, phir redirect karo
+          setTimeout(() => {
+            window.location.href = LOGIN_PATH;
+          }, 1500);
+        }
+
+        return Promise.reject(error);
+      }
 
       const serverMessage =
         error.response.data?.message ||
@@ -87,10 +103,10 @@ const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
       showErrorToast(displayMessage, toastId);
 
     } else if (error.request) {
-      // Network error 
+      // Network error
       showErrorToast(
         "Network error — server unreachable. Please check your connection.",
-        "network-error"  
+        "network-error"
       );
     } else if (error.code === "ECONNABORTED") {
       showErrorToast("The request timed out. Please try again.", `timeout-${sourcePath}`);
