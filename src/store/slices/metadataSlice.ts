@@ -10,9 +10,9 @@ export const fetchHospitalMetadata = createAsyncThunk(
       const res = await metadataService.fetchHospitalMetadata();
       console.log("Hospital metadata response:", res);
       return res;
-    } catch (err: any) {
-      console.error("Hospital metadata fetch error:", err);
-      return rejectWithValue(err.response?.data || "Fetch failed");
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      return rejectWithValue(errorMessage);
     }
   }
 );

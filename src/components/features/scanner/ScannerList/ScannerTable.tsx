@@ -35,6 +35,7 @@ import {
 // redux
 import { useDispatch } from "react-redux";
 import { usePermissions } from "../../../../hooks/usePermissions";
+import { toast } from "sonner";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -57,9 +58,9 @@ export function ScannerTable({
   const [scannerToDelete, setScannerToDelete] = useState<SlideScanner | null>(
     null,
   );
-  const { canWrite } = usePermissions();
+  const { canWrite, canDelete } = usePermissions();
   const canEditScanner = canWrite("edit");
-  const canDeleteScanner = canWrite("delete");
+  const canDeleteScanner = canDelete("list");
 
   // Local UI state maps keyed by deviceSerialNumber
   const initialConnected = useMemo(() => {
@@ -166,7 +167,7 @@ export function ScannerTable({
                 } as SlideScanner;
                 await dispatch(updateScanner(payload)).unwrap();
               } catch (err) {
-                console.error("Failed to update scanner:", err);
+                toast.error("Failed to update scanner:" + (err as any).message);
               }
             };
 

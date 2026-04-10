@@ -32,7 +32,7 @@ export function FailedRecordsRow({ record, index }) {
       setShowPopup(true);
     } catch (err) {
       setError(err.message || "Failed to fetch details");
-      console.error("Error fetching details:", err);
+      toast.error("Error fetching details: " + (err instanceof Error ? err.message : String(err)));
     } finally {
       setLoading(false);
     }

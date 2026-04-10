@@ -91,7 +91,7 @@ export function LisConfig() {
     Partial<Record<keyof FormState, string>>
   >({});
   const { canWrite } = usePermissions();
-  const canEditLis = canWrite("edit");
+  const canEditLis = canWrite("lis");
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }));
   }, [dispatch]);
@@ -259,8 +259,8 @@ export function LisConfig() {
       setErrors({});
       setTouched({});
     } catch (error) {
-      console.error("Update error:", error);
-      toast.error("Update failed. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Update failed: " + errorMessage);
     }
   };
 

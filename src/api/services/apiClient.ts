@@ -114,7 +114,6 @@ apiClient.interceptors.response.use(
       showErrorToast(error.message || "An unexpected error occurred.", `unknown-${sourcePath}`);
     }
 
-    console.error(`API Error [${sourcePath}]:`, error);
     return Promise.reject(error);
   }
 );

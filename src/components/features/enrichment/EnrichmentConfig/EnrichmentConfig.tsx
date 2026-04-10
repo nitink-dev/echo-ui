@@ -352,8 +352,8 @@ export function EnrichmentToolConfig() {
       setEditMode((prev) => ({ ...prev, [type]: false }));
       setFieldErrors({});
     } catch (error) {
-      console.error("Update error:", error);
-      toast.error("Update failed. Try again.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Update failed: " + errorMessage);
     }
   };
 

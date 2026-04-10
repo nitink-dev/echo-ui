@@ -53,8 +53,8 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
         const data: AnalysisReport[] = await response.json();
         setAnalysisReports(data);
       } catch (err) {
-        console.error("Error fetching reports:", err);
-        toast.error("Unable to fetch analysis reports");
+        const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+        toast.error("Unable to fetch analysis reports: " + errorMessage);
       } finally {
         setLoading(false);
       }
@@ -128,8 +128,8 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
       downloadFile(url, filename);
       toast.success(`Analysis report downloaded as ${format.toUpperCase()}`);
     } catch (err) {
-      console.error("Error downloading file:", err);
-      toast.error("File not found - Unable to download report");
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      toast.error("File not found - Unable to download report: " + errorMessage);
     }
   };
 

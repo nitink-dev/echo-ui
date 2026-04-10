@@ -1,8 +1,8 @@
-// src/hooks/usePermissions.ts
 import { useSelector } from "react-redux";
 import {
   canReadWithScopes,
   canWriteWithScopes,
+  canDeleteWithScopes,
 } from "../config/roleConfig";
 import { SecurityConfigEntry } from "../api/services/authService";
 
@@ -21,6 +21,9 @@ export function usePermissions() {
 
     canWrite: (pageId: string): boolean =>
       canWriteWithScopes(pageId, userScopes, securityConfig, configLoaded),
+
+    canDelete: (pageId: string): boolean =>
+      canDeleteWithScopes(pageId, userScopes, securityConfig, configLoaded),
 
     hasScope: (scope: string): boolean =>
       userScopes.includes(scope),

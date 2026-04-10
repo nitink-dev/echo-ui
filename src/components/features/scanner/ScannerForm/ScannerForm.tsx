@@ -74,8 +74,8 @@ export function ScannerForm({ scanner, onSave, onCancel, isEdit = false }: Scann
         setFieldError('deviceSerialNumber', '');
       }
     } catch (error) {
-      console.error('Error checking serial number:', error);
-      toast.error('Failed to validate serial number');
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Failed to validate serial number: " + errorMessage);
     } finally {
       setCheckingSerialNumber(false);
     }

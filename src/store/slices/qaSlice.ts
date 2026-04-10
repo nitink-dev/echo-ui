@@ -53,10 +53,8 @@ export const fetchQAParameters = createAsyncThunk<
     // ✅ Fallback
     return { slides: [], dicomUrl: "" };
   } catch (err: any) {
-    console.error("❌ Fetch QA parameters failed:", err);
-    return rejectWithValue(
-      err.response?.data?.message || "Failed to fetch QA parameters"
-    );
+    const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+    return rejectWithValue(errorMessage);
   }
 });
 

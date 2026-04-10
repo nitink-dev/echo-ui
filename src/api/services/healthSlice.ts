@@ -9,7 +9,6 @@ export const fetchHealthStatus = createAsyncThunk(
       console.log('Health status response:', res);
       return res;
     } catch (err: any) {
-      console.error('Health status fetch error:', err);
       return rejectWithValue(err.response?.data || 'Fetch failed');
     }
   }

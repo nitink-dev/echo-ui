@@ -13,6 +13,7 @@ import AutocompleteInput from "./AutocompleteInput";
 import { StatusPanel } from "./StatusPanel";
 import { StatusPanelCompleted } from "./StatusPanelCompleted";
 import { StatusPanelFailed } from "./StatusPanelFailed";
+import { toast } from "sonner";
 
 const TABS = [
   {
@@ -334,8 +335,8 @@ export function SlideScanStatus() {
       eventSource.addEventListener("slide_scan_status", (event) => {
         try {
           updateInProgressWithSSE(JSON.parse(event.data));
-        } catch (e) {
-          console.error("SSE parse error:", e);
+        } catch (e ) {
+          toast.error("SSE parse error:" + (e instanceof Error ?   e.message : String(e)));
         }
       });
 
@@ -343,7 +344,7 @@ export function SlideScanStatus() {
         try {
           updateInProgressWithSSE(JSON.parse(event.data));
         } catch (e) {
-          console.error("SSE parse error:", e);
+          toast.error("SSE parse error: " + (e instanceof Error ? e.message : String(e)));
         }
       };
 

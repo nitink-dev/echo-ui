@@ -117,7 +117,7 @@ export function SynapseConfig() {
   >({});
 
   const { canWrite } = usePermissions();
-  const canEditSynapse = canWrite("edit");
+  const canEditSynapse = canWrite("synapse");
 
   // Fetch on every mount — fixes blank name after navigation
   useEffect(() => {
@@ -138,8 +138,8 @@ export function SynapseConfig() {
           setOriginalForm(newData);
         }
       } catch (error) {
-        console.error("Failed to fetch Synapse config:", error);
-        toast.error("Failed to load Synapse configuration");
+        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        toast.error("Failed to load Synapse configuration: " + errorMessage);
       } finally {
         setLoading(false);
       }
@@ -290,8 +290,8 @@ export function SynapseConfig() {
       setErrors({});
       setTouched({});
     } catch (error) {
-      console.error("Update error:", error);
-      toast.error("Update failed. Please try again.");
+      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      toast.error("Update failed: " + errorMessage);
     } finally {
       setLoading(false);
     }

@@ -30,8 +30,8 @@ export const fetchScanners = createAsyncThunk<SlideScanner[]>(
       if (!Array.isArray(response)) throw new Error("Invalid API response: Expected array");
       return response;
     } catch (err: any) {
-      console.error("Fetch scanners failed:", err);
-      return rejectWithValue(err.response?.data?.message || 'Failed to fetch scanners');
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -44,8 +44,8 @@ export const addScanner = createAsyncThunk<SlideScanner, Omit<SlideScanner, 'id'
       const response = await scannerService.create(scanner); //apiClient.post('/api/scanners', scanner);
       return response;
     } catch (err: any) {
-      console.error("Add scanner failed:", err);
-      return rejectWithValue(err.response?.data?.message || 'Failed to add scanner');
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -65,8 +65,8 @@ export const updateScanner = createAsyncThunk<SlideScanner, Partial<SlideScanner
       
       return response.data;
     } catch (err: any) {
-      console.error("Update scanner failed:", err);
-      return rejectWithValue(err.response?.data?.message || 'Failed to update scanner');
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -79,8 +79,8 @@ export const deleteScanner = createAsyncThunk<string, string>(
       await scannerService.delete(serialNumber);
       return serialNumber; // return serial number for reducer
     } catch (err: any) {
-      console.error("Delete scanner failed:", err);
-      return rejectWithValue(err.response?.data?.message || 'Failed to delete scanner');
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -97,8 +97,8 @@ export const checkScannerExists = createAsyncThunk<boolean, string>(
       if (err.response?.status === 404) {
         return false;
       }
-      console.error("Check scanner failed:", err);
-      return rejectWithValue(err.response?.data?.message || 'Failed to check scanner');
+      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+      return rejectWithValue(errorMessage);
     }
   }
 );
@@ -126,7 +126,6 @@ const scannerSlice = createSlice({
       .addCase(fetchScanners.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload as string;
-        console.error("❌ Fetch scanners failed:", action.payload);
       })
 
       // Add
