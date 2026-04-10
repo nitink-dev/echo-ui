@@ -41,14 +41,12 @@ export const PipelineProgress: React.FC<PipelineProgressProps> = ({
   showHeader = true,
   scrollRow = false,
 }) => {
-  // infer initial selected index: highest step by value
   const inferredIndex =
     initialStepIndex ??
     steps.reduce((maxI, s, i, arr) => (s.value >= arr[maxI].value ? i : maxI), 0);
 
   const [selectedIndex, setSelectedIndex] = React.useState<number>(inferredIndex);
 
-  // derive value from selected step
   const selectedStep = steps[selectedIndex];
   const clamped = clamp(selectedStep?.value ?? 0);
 
