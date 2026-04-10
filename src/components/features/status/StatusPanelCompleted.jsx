@@ -1,8 +1,6 @@
 
-// StatusPanelCompleted.jsx
 import React from "react";
 import { Microscope, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
-//import { ScanRecordRow } from "./ScanRecordRow";
 import { CompletedRecordsRow } from "./records/CompletedRecordsRow";
 
 export const StatusPanelCompleted = ({

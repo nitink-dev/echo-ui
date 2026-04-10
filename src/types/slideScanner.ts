@@ -1,5 +1,5 @@
 export interface SlideScanner {
-    id?: string; // required
+    id?: string; 
     name: string;
     aeTitle: string;
     model: string;

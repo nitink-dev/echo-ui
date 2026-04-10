@@ -32,7 +32,6 @@ import {
   TableRow,
 } from "../../../ui/table";
 
-// redux
 import { useDispatch } from "react-redux";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import { toast } from "sonner";
@@ -62,7 +61,6 @@ export function ScannerTable({
   const canEditScanner = canWrite("edit");
   const canDeleteScanner = canDelete("list");
 
-  // Local UI state maps keyed by deviceSerialNumber
   const initialConnected = useMemo(() => {
     const map: Record<string, boolean> = {};
     scanners.forEach((s) => {
@@ -84,7 +82,6 @@ export function ScannerTable({
   const [researchMap, setResearchMap] =
     useState<Record<string, boolean>>(initialResearch);
 
-  // Keep local state in sync if scanners prop changes
   useEffect(() => setConnectedMap(initialConnected), [initialConnected]);
   useEffect(() => setResearchMap(initialResearch), [initialResearch]);
 
@@ -158,7 +155,7 @@ export function ScannerTable({
               connectedMap[key] ?? (scanner as any).connected ?? false;
             const research =
               researchMap[key] ?? (scanner as any).research ?? false;
-            const researchDisabled = true; //!connected;
+            const researchDisabled = true;
             const dispatchUpdate = async (partial: Partial<SlideScanner>) => {
               try {
                 const payload: SlideScanner = {
@@ -242,9 +239,7 @@ export function ScannerTable({
                       disabled={researchDisabled}
                       onCheckedChange={(checked) => {
                         const next = Boolean(checked);
-                        // optimistic UI
                         setResearchMap((prev) => ({ ...prev, [key]: next }));
-                        // persist via API
                         dispatchUpdate({ research: next });
                       }}
                       aria-label="Research"

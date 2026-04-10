@@ -1,4 +1,3 @@
-// src/components/features/scanner/ScannerForm/ScannerForm.tsx
 import React, { useState, useEffect } from 'react';
 import { ArrowLeft, Save, RotateCcw, X } from 'lucide-react';
 import { Button } from '../../../ui/button';
@@ -53,9 +52,7 @@ export function ScannerForm({ scanner, onSave, onCancel, isEdit = false }: Scann
     }
   }, [dicomStores]);
 
-  // Handle serial number blur validation
   const handleSerialNumberBlur = async () => {
-    // Skip validation if in edit mode or if field is empty
     if (isEdit || !formData.deviceSerialNumber || formData.deviceSerialNumber.trim() === '') {
       return;
     }
@@ -66,11 +63,9 @@ export function ScannerForm({ scanner, onSave, onCancel, isEdit = false }: Scann
       const result = await dispatch(checkScannerExists(formData.deviceSerialNumber)).unwrap();
       
       if (result) {
-        // Scanner exists
         setFieldError('deviceSerialNumber', 'This serial number already exists in the database');
         toast.error('Serial number already exists');
       } else {
-        // Scanner doesn't exist - clear any existing error
         setFieldError('deviceSerialNumber', '');
       }
     } catch (error) {
@@ -88,7 +83,6 @@ export function ScannerForm({ scanner, onSave, onCancel, isEdit = false }: Scann
     }
 
     if (isEdit) {
-      // For PATCH: only send changed fields
       const changedFields = getChangedFields();
       
       if (Object.keys(changedFields).length === 0) {
@@ -98,12 +92,11 @@ export function ScannerForm({ scanner, onSave, onCancel, isEdit = false }: Scann
 
       const patchData: Partial<SlideScanner> = {
         ...changedFields,
-        deviceSerialNumber: formData.deviceSerialNumber // Always include identifier
+        deviceSerialNumber: formData.deviceSerialNumber
       };
 
       onSave(patchData);
     } else {
-      // For POST: send complete data
       const scannerData: SlideScanner = {
         ...formData
       };

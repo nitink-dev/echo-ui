@@ -1,4 +1,3 @@
-// src/types/scanner.types.ts
 export interface SlideScanner {
   id?: string;
   name: string;

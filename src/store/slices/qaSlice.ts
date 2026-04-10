@@ -25,8 +25,6 @@ const initialState: QAState = {
   error: null,
 };
 
-// --- Async Thunks ---
-
 export const fetchQAParameters = createAsyncThunk<
   { slides: QASlideParameter[]; dicomUrl: string }
 >("qa/fetchQAParameters", async (_, { rejectWithValue }) => {
@@ -36,7 +34,6 @@ export const fetchQAParameters = createAsyncThunk<
 
     console.log("📥 API /api/slides response:", data);
 
-    // ✅ Case 1: { dicomUrl, qaSlides: [...] }
     if (data?.qaSlides && data?.dicomUrl) {
       const slides = data.qaSlides.map((slide: any) => ({
         ...slide,
@@ -45,12 +42,10 @@ export const fetchQAParameters = createAsyncThunk<
       return { slides, dicomUrl: data.dicomUrl };
     }
 
-    // ✅ Case 2: API returns only an array
     if (Array.isArray(data)) {
       return { slides: data, dicomUrl: "" };
     }
 
-    // ✅ Fallback
     return { slides: [], dicomUrl: "" };
   } catch (err: any) {
     const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
@@ -132,14 +127,12 @@ export const deleteQAParameter = createAsyncThunk(
   }
 );
 
-// --- Slice ---
 const qaSlice = createSlice({
   name: "qa",
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch QA Parameters
       .addCase(fetchQAParameters.pending, (state) => {
         state.loading = true;
       })
@@ -156,22 +149,17 @@ const qaSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Fetch DICOM Stores
       .addCase(fetchDicomStores.fulfilled, (state, action) => {
         state.dicomStores = action.payload;
       })
-
-      // Update DICOM Store
       .addCase(updateDicomStore.fulfilled, (state, action) => {
         state.dicomStoreAddress = action.payload;
       })
 
-      // Add
       .addCase(addQAParameter.fulfilled, (state, action) => {
         state.qaParameters.push(action.payload);
       })
 
-      // Update
       .addCase(updateQAParameter.fulfilled, (state, action) => {
         const index = state.qaParameters.findIndex(
           (q) => q.barcode === action.payload.barcode
@@ -181,7 +169,6 @@ const qaSlice = createSlice({
         }
       })
 
-      // Delete
       .addCase(deleteQAParameter.fulfilled, (state, action) => {
         state.qaParameters = state.qaParameters.filter(
           (q) => q.barcode !== action.payload

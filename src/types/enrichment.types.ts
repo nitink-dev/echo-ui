@@ -7,7 +7,6 @@ export type EnrichmentSection =
   | 'hl7'
   | 'email';
 
-// 2️⃣ Each section’s data structure
 
 export interface DicomReceiverConfig {
   aet: string;
@@ -53,7 +52,6 @@ export interface EmailServiceConfig {
   emailIbexTo: string[];
 }
 
-// 3️⃣ Combined structure for the form data
 
 export interface EnrichmentFormData {
   dicomReceiver: DicomReceiverConfig;

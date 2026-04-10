@@ -1,4 +1,3 @@
-// src/components/features/scanner/ScannerForm/useScannerForm.ts
 import { useState, useEffect, useMemo } from 'react';
 import { SlideScanner } from '../../../../types/scanner.types';
 import { FormErrors } from '../../../../types/common.types';
@@ -44,7 +43,6 @@ export function useScannerForm(scanner?: SlideScanner) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isDirty, setIsDirty] = useState(false);
 
-  // Initialize form data if editing
   useEffect(() => {
     if (scanner) {
       setFormData({
@@ -70,7 +68,7 @@ export function useScannerForm(scanner?: SlideScanner) {
     setFormData(prev => ({
       ...prev,
       [field]: value,
-      ...(field === 'department' ? { dicomStore: '' } : {}) // reset DICOM store on department change
+      ...(field === 'department' ? { dicomStore: '' } : {}) 
     }));
     setIsDirty(true);
 
@@ -82,7 +80,6 @@ export function useScannerForm(scanner?: SlideScanner) {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Check required fields
     requiredFields.forEach((field) => {
       const value = formData[field as keyof FormData];
       if (typeof value === 'string' && !value.trim()) {
@@ -90,12 +87,10 @@ export function useScannerForm(scanner?: SlideScanner) {
       }
     });
 
-    // Validate AE Title format (alphanumeric and underscores only)
     if (formData.aeTitle && !/^[A-Z0-9_]+$/.test(formData.aeTitle)) {
       newErrors.aeTitle = 'AE Title must contain only uppercase letters, numbers, and underscores';
     }
 
-    // Validate Serial Number format
     if (formData.deviceSerialNumber && formData.deviceSerialNumber.length < 3) {
       newErrors.deviceSerialNumber = 'Device Serial Number must be at least 3 characters long';
     }

@@ -66,7 +66,6 @@ const TABS = [
   },
 ];
 
-// Maps scanStatus string from API to our tab keys
 const SCAN_STATUS_TO_TAB = {
   "in-progress": "inProgress",
   inprogress: "inProgress",
@@ -75,42 +74,31 @@ const SCAN_STATUS_TO_TAB = {
   failed: "failed",
 };
 
-// Priority order for auto-jump when multiple tabs have results (used for list search fallback)
 const SEARCH_JUMP_PRIORITY = ["inProgress", "completed", "failed"];
 
 const pageSize = 9;
 
-/**
- * Converts a single slide object from /api/slides/{barcode} into a
- * pageable-shaped object that the status panels can render.
- */
 const singleSlideToPageable = (slide) => ({
   content: [slide],
   totalElements: 1,
   totalPages: 1,
-  page: 0, // ← was: number: 0
+  page: 0, 
   size: pageSize,
   hasNext: false,
   hasPrevious: false,
 });
 
-/**
- * Returns an empty pageable object (zero results).
- */
 const emptyPageable = () => ({
   content: [],
   totalElements: 0,
   totalPages: 1,
-  page: 0, // ← was: number: 0
+  page: 0, 
   size: pageSize,
   hasNext: false,
   hasPrevious: false,
 });
 
-/**
- * Normalises a pageable so totalElements / totalPages / number are always
- * safe finite integers — never undefined / null / NaN.
- */
+
 const normalisePageable = (data) => {
   if (!data) return data;
   const totalElements = Number.isFinite(Number(data.totalElements))
@@ -141,29 +129,18 @@ export function SlideScanStatus() {
     barcode: "",
     deviceId: "",
   });
-
-  // Search state: idle | searching | found | not-found
   const [searchState, setSearchState] = useState("idle");
-
   const [autoRefresh, setAutoRefresh] = useState(true);
-
-  // currentPage tracks the page index per tab (0-based)
   const [currentPage, setCurrentPage] = useState({
     completed: 0,
     failed: 0,
     inProgress: 0,
   });
-
-  // SSE refs
   const eventSourceRef = useRef(null);
   const reconnectTimeoutRef = useRef(null);
   const [isStreamConnected, setIsStreamConnected] = useState(false);
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
-
-  // Track previous in-progress count to detect drops (smart auto-refresh)
   const prevInProgressCountRef = useRef(null);
-
-  // Stale-closure guards
   const currentPageRef = useRef(currentPage);
   useEffect(() => {
     currentPageRef.current = currentPage;
@@ -176,7 +153,6 @@ export function SlideScanStatus() {
 
   const toApiStatus = (key) => (key === "inProgress" ? "in-progress" : key);
 
-  // ── Core fetch — returns the response data ──
   const fetchData = async (statusKey, page, overrideFilters) => {
     setStatusData((prev) => ({
       ...prev,
@@ -195,7 +171,6 @@ export function SlideScanStatus() {
       const data = normalisePageable(response.data);
 
       setStatusData((prev) => {
-        // Smart auto-refresh: detect in-progress count drop
         if (statusKey === "inProgress") {
           const newCount = data?.totalElements ?? 0;
           const oldCount = prevInProgressCountRef.current;
@@ -308,9 +283,6 @@ export function SlideScanStatus() {
       eventSourceRef.current = null;
     }
 
-    // ✅ Read XSRF-TOKEN from cookie and pass as query param
-    // EventSource does not support custom headers — this is the only way
-    // to send the CSRF token for SSE endpoints with Spring Security.
     const xsrfToken = document.cookie
       .split("; ")
       .find((row) => row.startsWith("XSRF-TOKEN="))
@@ -323,7 +295,6 @@ export function SlideScanStatus() {
     const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress${tokenParam}`;
 
     try {
-      // ✅ withCredentials: true — sends SESSION cookie automatically
       const eventSource = new EventSource(url, { withCredentials: true });
       eventSourceRef.current = eventSource;
 
@@ -385,7 +356,6 @@ export function SlideScanStatus() {
     }
   };
 
-  // Initial load
   useEffect(() => {
     fetchData("failed", 0, null);
     fetchData("completed", 0, null);
@@ -401,24 +371,19 @@ export function SlideScanStatus() {
       if (reconnectTimeoutRef.current)
         clearTimeout(reconnectTimeoutRef.current);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Smart auto-refresh: only polls in-progress; completed/failed fire only on count drop
   useEffect(() => {
     if (!autoRefresh) return;
     const interval = setInterval(() => {
       fetchData("inProgress", currentPageRef.current.inProgress, null);
     }, 30000);
     return () => clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoRefresh]);
 
-  // Re-fetch inProgress on page change (SSE covers page 0 live)
   useEffect(() => {
     if (currentPage.inProgress !== 0)
       fetchData("inProgress", currentPage.inProgress, null);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage.inProgress]);
 
   const handleRefresh = () => {
@@ -429,20 +394,12 @@ export function SlideScanStatus() {
     connectToInProgressStream();
   };
 
-  // ── Fixed pagination ──
-  // Reads current page from the ref (avoids stale closure) and writes the
-  // new page into both state AND the ref atomically so rapid clicks are safe.
   const handlePageChange = (tab, direction) => {
     const currentPageNum = currentPageRef.current[tab];
     const totalPages = statusData[tab]?.totalPages ?? 1;
 
     const nextVal = Math.min(currentPageNum + 1, totalPages - 1);
     const preVal = Math.max(0, currentPageNum - 1);
-    // const newPage =
-    //   direction === "next"
-    //     ? Math.min(currentPageNum + 1, totalPages - 1)
-    //     : Math.max(0, currentPageNum - 1) ;
-
     const newPage = direction === "next" ? nextVal : preVal;
 
     {
@@ -451,17 +408,13 @@ export function SlideScanStatus() {
       );
     }
 
-    // No-op if page hasn't changed
     if (newPage === currentPageNum) return;
 
-    // Update ref immediately so rapid successive calls see the latest value
     currentPageRef.current = { ...currentPageRef.current, [tab]: newPage };
 
     setCurrentPage((prev) => ({ ...prev, [tab]: newPage }));
 
-    //if (tab !== "inProgress") {
     fetchData(tab, newPage, null);
-    //}
     {
       console.log(
         "currentPageNum: " + currentPageNum + ",totalPages: " + totalPages,
@@ -469,7 +422,6 @@ export function SlideScanStatus() {
     }
   };
 
-  // ── Barcode search: call /api/slides/{barcode}, convert to pageable ──
   const handleApplyFilters = async () => {
     const trimmed = barcodeFilter.trim();
     if (!trimmed) return;
@@ -480,7 +432,6 @@ export function SlideScanStatus() {
     setSearchState("searching");
 
     try {
-      // Call the barcode lookup endpoint
       const response = await apiClient.get(
         `${BASE_URL}/api/slide-scan-status/barcode/${encodeURIComponent(trimmed)}`,
       );
@@ -498,14 +449,12 @@ export function SlideScanStatus() {
         return;
       }
 
-      // Normalise scanStatus to a tab key
       const rawStatus = (slide.scanStatus ?? "")
         .toString()
         .trim()
         .toLowerCase();
       const matchedTab = SCAN_STATUS_TO_TAB[rawStatus] ?? null;
 
-      // Build per-tab pageable data: the matched tab gets the record; others get empty
       const inProgressData =
         matchedTab === "inProgress"
           ? singleSlideToPageable(slide)
@@ -552,7 +501,6 @@ export function SlideScanStatus() {
     }
   };
 
-  // Clear search — restore unfiltered view, reset search state
   const handleClearSearch = () => {
     setBarcodeFilter("");
     const emptyFilters = { barcode: "", deviceId: "" };
@@ -574,7 +522,6 @@ export function SlideScanStatus() {
   const isSearchActive = !!appliedFilters.barcode;
   const isSearching = searchState === "searching";
 
-  // Always return a safe number (0 fallback) so the badge always renders
   const getTabCount = (key) => {
     const val = statusData[key]?.totalElements;
     return Number.isFinite(Number(val)) ? Number(val) : 0;

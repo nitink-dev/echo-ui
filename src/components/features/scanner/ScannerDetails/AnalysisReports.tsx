@@ -64,7 +64,6 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
   }, [deviceSerialNumber]);
 
   const filteredAndSortedReports = useMemo(() => {
-    // Step 1: Filter
 
     const term = searchTerm.toLowerCase();
 
@@ -77,14 +76,12 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
       );
     });
 
-    // Step 2: Sort (if user clicked a column)
 
     if (sortConfig) {
       reports = [...reports].sort((a, b) => {
         let valueA = a[sortConfig.key] || "";
         let valueB = b[sortConfig.key] || "";
 
-        // 🗓 Handle date sorting
 
         if (sortConfig.key === "createdAt") {
           const dateA = new Date(valueA).getTime();
@@ -92,7 +89,6 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
           return sortConfig.direction === "asc" ? dateA - dateB : dateB - dateA;
         }
 
-        //  Handle string comparison
         if (typeof valueA === "string") valueA = valueA.toLowerCase();
         if (typeof valueB === "string") valueB = valueB.toLowerCase();
         if (valueA < valueB) return sortConfig.direction === "asc" ? -1 : 1;

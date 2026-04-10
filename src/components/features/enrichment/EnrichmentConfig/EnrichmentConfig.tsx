@@ -26,8 +26,6 @@ import {
   sanitizeByPattern,
 } from "../../../../utils/validation.constants";
 
-// ─── IP / Port field maps ─────────────────────────────────────────────────────
-
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress"],
   lisConnector:  ["ipAddress"],
@@ -39,8 +37,6 @@ const PORT_FIELDS: Record<string, string[]> = {
   lisConnector:  ["receivingPort", "incomingPort"],
   hl7Messaging:  ["receivingPort", "outputPort"],
 };
-
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function EnrichmentToolConfig() {
   const dispatch = useAppDispatch();
@@ -55,7 +51,6 @@ export function EnrichmentToolConfig() {
     dicom: false, lis: false, enrichment: false, export: false, hl7: false, email: false,
   });
 
-  // field-level errors: key = "section.field"
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<any>({
@@ -69,13 +64,11 @@ export function EnrichmentToolConfig() {
 
   const [originalForm, setOriginalForm] = useState(form);
 
-  // email add-input state
   const [emailToInput,       setEmailToInput]       = useState("");
   const [emailToInputError,  setEmailToInputError]  = useState("");
   const [emailIbexInput,     setEmailIbexInput]     = useState("");
   const [emailIbexInputError,setEmailIbexInputError]= useState("");
 
-  // ── Fetches ───────────────────────────────────────────────────────────────
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.DICOM_RECEIVER }));
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS_CONNECTOR }));
@@ -85,7 +78,6 @@ export function EnrichmentToolConfig() {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }));
   }, [dispatch]);
 
-  // ── Sync helpers ──────────────────────────────────────────────────────────
   const syncSection = useCallback((sectionKey: string, formKey: string, newData: any) => {
     setForm((p: any) => ({ ...p, [formKey]: newData }));
     setOriginalForm((p: any) => ({ ...p, [formKey]: newData }));
@@ -161,7 +153,6 @@ export function EnrichmentToolConfig() {
     });
   }, [emailService]);
 
-  // ── Field change with sanitisation ───────────────────────────────────────
   const handleChange = useCallback((section: string, field: string, value: any) => {
     const isIP   = IP_FIELDS[section]?.includes(field);
     const isPort = PORT_FIELDS[section]?.includes(field);
@@ -184,7 +175,6 @@ export function EnrichmentToolConfig() {
     }
   }, []);
 
-  // ── Email helpers ─────────────────────────────────────────────────────────
   const addEmail = useCallback((
     which: "emailTo" | "emailIbexTo",
     inputVal: string,
@@ -206,7 +196,6 @@ export function EnrichmentToolConfig() {
     handleChange("emailService", which, arr);
   }, [form.emailService, handleChange]);
 
-  // ── Validate section before save ──────────────────────────────────────────
   const validateSection = (type: string): boolean => {
     const errors: Record<string, string> = {};
 
@@ -238,7 +227,6 @@ export function EnrichmentToolConfig() {
     return Object.keys(errors).length === 0;
   };
 
-  // ── Edit / Cancel ─────────────────────────────────────────────────────────
   const handleEdit = (key: string, enable: boolean) => {
     setEditMode((prev) => ({ ...prev, [key]: enable }));
     if (!enable) {
@@ -249,7 +237,6 @@ export function EnrichmentToolConfig() {
     }
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const getChangedFields = (current: any, original: any) => {
     const diff: any = {};
     Object.keys(current).forEach((k) => {
@@ -357,7 +344,6 @@ export function EnrichmentToolConfig() {
     }
   };
 
-  // ── renderInput ───────────────────────────────────────────────────────────
   const renderInput = (section: string, field: string, label: string, disabled: boolean) => {
     const key   = `${section}.${field}`;
     const error = fieldErrors[key];
@@ -413,7 +399,6 @@ export function EnrichmentToolConfig() {
     );
   };
 
-  // ── renderEmailList ───────────────────────────────────────────────────────
   const renderEmailList = (
     which: "emailTo" | "emailIbexTo",
     label: string,
@@ -504,7 +489,6 @@ export function EnrichmentToolConfig() {
     );
   };
 
-  // ── renderDynamicCard ─────────────────────────────────────────────────────
   const renderDynamicCard = (title: string, icon: JSX.Element, keyName: string, body: JSX.Element) => (
     <Card className="border border-gray-200 shadow-sm">
       <Collapsible defaultOpen>
@@ -555,7 +539,6 @@ export function EnrichmentToolConfig() {
     </Card>
   );
 
-  // ── JSX ───────────────────────────────────────────────────────────────────
   return (
     <div className="space-y-6 p-6 bg-white">
 

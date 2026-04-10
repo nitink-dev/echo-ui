@@ -12,15 +12,7 @@ import {
 } from '../../../ui/dialog';
 import { QAFormData, QASlideParameter } from '../../../../types/qa.types';
 
-// ─── Validation Rules ─────────────────────────────────────────────────────────
-//
-// Barcode: only alphanumeric + hyphen + underscore allowed.
-//   Blocked: $ % # ^ & * @ ! ( ) etc. — these break URL paths.
-//   e.g. allowed → "QA-2024-001", "SLIDE_001"
-//
-// Activation Code: alphanumeric + hyphen + underscore only.
-//   Activation codes are also used in API calls, so same safe-char rule applies.
-//
+
 const FIELD_RULES = {
   barcode: {
     allowedPattern: /^[a-zA-Z0-9_-]*$/,
@@ -42,7 +34,6 @@ const FIELD_RULES = {
 
 type RuleKey = keyof typeof FIELD_RULES;
 
-// ─── Props ────────────────────────────────────────────────────────────────────
 
 interface QAParameterFormProps {
   open: boolean;
@@ -54,7 +45,6 @@ interface QAParameterFormProps {
   onSave: () => void;
 }
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function QAParameterForm({
   open,
@@ -66,9 +56,6 @@ export function QAParameterForm({
   onSave,
 }: QAParameterFormProps) {
 
-  // ── Cancel fix ──────────────────────────────────────────────────────────────
-  // type="button" prevents submit-in-dialog swallowing.
-  // stopPropagation prevents parent overlay from re-intercepting the click.
   const handleCancel = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
       e.preventDefault();
@@ -78,9 +65,6 @@ export function QAParameterForm({
     [onOpenChange]
   );
 
-  // ── Input sanitisation ──────────────────────────────────────────────────────
-  // Strips disallowed chars from any value before passing to parent handler.
-  // This covers: typing, paste (Ctrl+V), drag-drop, and browser autofill.
   const sanitize = useCallback((field: RuleKey, value: string): string => {
     const rule = FIELD_RULES[field];
     return value
@@ -96,11 +80,10 @@ export function QAParameterForm({
     [onInputChange, sanitize]
   );
 
-  // Block disallowed keys at keydown level (first line of defence).
   const handleKeyDown = useCallback(
     (field: RuleKey, e: React.KeyboardEvent<HTMLInputElement>) => {
       const isControlKey = e.ctrlKey || e.metaKey || e.key.length > 1;
-      if (isControlKey) return; // allow Ctrl+C, Backspace, Arrow keys etc.
+      if (isControlKey) return; 
       const rule = FIELD_RULES[field];
       if (!rule.allowedPattern.test(e.key)) {
         e.preventDefault();
@@ -109,12 +92,11 @@ export function QAParameterForm({
     []
   );
 
-  // Intercept paste — strip invalid chars before inserting (second line of defence).
   const handlePaste = useCallback(
     (field: RuleKey, e: React.ClipboardEvent<HTMLInputElement>) => {
       const pasted = e.clipboardData.getData('text');
       const sanitized = sanitize(field, pasted);
-      if (sanitized === pasted) return; // nothing to strip, let default paste happen
+      if (sanitized === pasted) return; 
 
       e.preventDefault();
       const input = e.currentTarget;
@@ -127,7 +109,6 @@ export function QAParameterForm({
     [formData, onInputChange, sanitize]
   );
 
-  // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClick={(e) => e.stopPropagation()}>

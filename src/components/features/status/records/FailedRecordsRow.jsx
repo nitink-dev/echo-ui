@@ -1,4 +1,3 @@
-// FailedRecordsRow.jsx
 import React, { useState } from "react";
 import { CheckCircle2, XCircle, Clock, X, Eye } from "lucide-react";
 import { BASE_URL } from "../../../../utils/constants";

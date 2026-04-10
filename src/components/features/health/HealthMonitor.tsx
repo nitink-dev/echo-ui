@@ -34,7 +34,6 @@ export function HealthMonitor() {
 
   const [autoRefresh, setAutoRefresh] = useState(true);
 
-  // NEW: Live nanosecond elapsed timer
   const [elapsedNano, setElapsedNano] = useState("0 ns");
 
   useEffect(() => {
@@ -49,7 +48,7 @@ export function HealthMonitor() {
         dispatch(fetchHealthStatus());
       },
       5 * 60 * 1000,
-    ); // every 5 minutes
+    ); 
 
     return () => clearInterval(interval);
   }, [autoRefresh, dispatch]);
@@ -58,15 +57,13 @@ export function HealthMonitor() {
     dispatch(fetchHealthStatus());
   };
 
-  // NEW: continuously increasing nanosecond timer
   useEffect(() => {
     if (!lastFetched) return;
     setElapsedNano("0 Sec");
     const interval = setInterval(() => {
-      const diffMs = Date.now() - lastFetched; // milliseconds
-      //const diffNs = diffMs * 1_000_000; // convert ms → ns
+      const diffMs = Date.now() - lastFetched; 
       setElapsedNano(`${Math.floor(diffMs / 1000).toLocaleString()} Sec`);
-    }, 1); // update every millisecond
+    }, 1); 
 
     return () => clearInterval(interval);
   }, [lastFetched]);

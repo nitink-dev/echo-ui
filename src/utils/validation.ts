@@ -35,12 +35,10 @@ export const validateRequiredFields = (
 export const validateScannerForm = (formData: any): FormErrors => {
   const errors: FormErrors = {};
 
-  // AE Title validation
   if (formData.aeTitle && !validateAETitle(formData.aeTitle)) {
     errors.aeTitle = 'AE Title must contain only uppercase letters, numbers, and underscores';
   }
 
-  // Serial Number validation
   if (formData.deviceSerialNumber && formData.deviceSerialNumber.length < 3) {
     errors.deviceSerialNumber = 'Device Serial Number must be at least 3 characters long';
   }
@@ -63,7 +61,6 @@ export const validateQAParameter = (formData: any, existingBarcodes: string[], e
     errors.activationCode = 'Activation Code must be at least 6 characters long';
   }
 
-  // Check for duplicate barcode
   const isDuplicate = existingBarcodes.some(
     barcode => barcode === formData.barcode && barcode !== editingId
   );

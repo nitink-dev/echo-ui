@@ -12,16 +12,10 @@ export interface PagePermission {
   write: boolean;
 }
 
-// ─────────────────────────────────────────────────────────────
-// PLATFORM SUPER-SCOPES
-// ─────────────────────────────────────────────────────────────
 const PLATFORM_READ_SCOPES = ["platform.read"];
 const PLATFORM_WRITE_SCOPES = ["platform.write", "platform.update", "platform.create"];
 const PLATFORM_DELETE_SCOPES = ["platform.delete"];
 
-// ─────────────────────────────────────────────────────────────
-// HELPERS
-// ─────────────────────────────────────────────────────────────
 
 function matchApi(pattern: string, apiPath: string): boolean {
   if (pattern === apiPath) return true;
@@ -67,7 +61,6 @@ function userCanAccess(
   return required.every((scope) => userScopes.includes(scope));
 }
 
-// 🔥 NEW COMMON ACCESS CHECK (clean abstraction)
 function checkAccess(
   permission: ApiPermission | undefined,
   userScopes: string[],
@@ -86,10 +79,6 @@ function checkAccess(
 
   return userCanAccess(userScopes, required, isPublic, platformScopes);
 }
-
-// ─────────────────────────────────────────────────────────────
-// PUBLIC API — used by usePermissions hook
-// ─────────────────────────────────────────────────────────────
 
 export function canReadWithScopes(
   pageId: string,

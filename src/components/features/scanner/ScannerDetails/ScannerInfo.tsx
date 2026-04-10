@@ -11,10 +11,8 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
   const getDisplayDicomStore = (path: string | undefined) => {
     if (!path || typeof path !== 'string') return '';
 
-    // Split and remove empty segments (defensive against leading/trailing slashes)
     const parts = path.split('/').filter(Boolean);
 
-    // Find where 'datasets' starts and slice to the end
     const startIdx = parts.indexOf('datasets');
     return startIdx >= 0 ? parts.slice(startIdx).join('/') : parts.join('/');
   };

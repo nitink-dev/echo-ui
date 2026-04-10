@@ -44,15 +44,10 @@ export default function App() {
 
   const { canRead, canWrite, configLoaded } = usePermissions();
 
-  // ── Step 1: restore session from localStorage on mount
   useEffect(() => {
     dispatch(loadStoredSession());
   }, []);
 
-  // ── Step 2: once logged in, fetch security config + scanner list
-  // fetchSecurityConfig is also dispatched inside loginUser thunk for fresh
-  // logins. This effect handles the page-reload case where loadStoredSession
-  // sets isLoggedIn = true but securityConfig is empty.
   useEffect(() => {
     if (isLoggedIn) {
       dispatch(fetchSecurityConfig());
@@ -63,7 +58,6 @@ export default function App() {
     }
   }, [dispatch, isLoggedIn]);
 
-  // ── Step 3: refresh scanner list when navigating to the list page
   useEffect(() => {
     if (isLoggedIn && currentPage === "list") {
       dispatch(fetchScanners());
@@ -71,9 +65,6 @@ export default function App() {
   }, [currentPage]);
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
-    // Guard: don't navigate to a page the user cannot read.
-    // Skip the guard while the security config is still loading to avoid
-    // a flash-of-unauthorised for legitimate users on slow networks.
     if (configLoaded && !canRead(page)) {
       toast.error("You don't have permission to access this page.");
       return;
@@ -181,7 +172,6 @@ export default function App() {
     return breadcrumbMap[currentPage] || [];
   };
 
-  // ── Unauthorized fallback page ──
   const UnauthorizedPage = () => (
     <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
       <svg
@@ -205,10 +195,8 @@ export default function App() {
   );
 
   const renderCurrentPage = () => {
-    // While security config is still loading, don't block the UI
     if (!configLoaded) return null;
 
-    // If the user cannot read this page, show access denied
     if (!canRead(currentPage)) {
       return <UnauthorizedPage />;
     }

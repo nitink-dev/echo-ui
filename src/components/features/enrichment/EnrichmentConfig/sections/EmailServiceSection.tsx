@@ -4,12 +4,10 @@ import { Input } from '../../../../../components/ui/input';
 import { Label } from '../../../../../components/ui/label';
 import { Button } from '../../../../../components/ui/button';
 
-// ─── Email validation ─────────────────────────────────────────────────────────
 const EMAIL_REGEX = /^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$/;
 
 const isValidEmail = (email: string) => EMAIL_REGEX.test(email.trim());
 
-// ─── Reusable multi-email input ───────────────────────────────────────────────
 
 interface MultiEmailInputProps {
   label: string;
@@ -133,13 +131,9 @@ function MultiEmailInput({ label, emails, disabled, onChange }: MultiEmailInputP
   );
 }
 
-// ─── Main component ───────────────────────────────────────────────────────────
 
 export function EmailServiceSection({ data, disabled, onChange }: any) {
   return (
-    // FIX (overlap): Removed any absolute/fixed positioning assumptions.
-    // Using pb-4 bottom padding so content never gets hidden behind
-    // a sticky Save/Cancel bar rendered by the parent.
     <div className="space-y-6 pb-4">
 
       {/* Email From — single address */}

@@ -30,9 +30,6 @@ describe('scannerSlice', () => {
     vi.clearAllMocks();
   });
 
-  //
-  // 🔹 Reducer tests
-  //
   it('should return initial state', () => {
     const state = reducer(undefined, { type: 'unknown' });
     expect(state).toEqual({
@@ -91,9 +88,7 @@ describe('scannerSlice', () => {
     expect(state.items.length).toBe(0);
   });
 
-  //
-  // 🔹 Thunk tests
-  //
+  
   it('fetchScanners success', async () => {
     (scannerService.fetchAll as any).mockResolvedValue([mockScanner]);
 

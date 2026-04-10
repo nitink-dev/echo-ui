@@ -11,7 +11,6 @@ import reducer, {
 } from '../qaSlice';
 import { qaService } from '../../../api/services/qaService';
 
-// ---- Mock services ----
 vi.mock('../../../api/services/qaService', () => ({
   qaService: {
     fetchParameters: vi.fn(),
@@ -46,7 +45,6 @@ describe('qaSlice', () => {
     });
   });
 
-  // -------------------- fetchQAParameters -------------------------
   it('should handle fetchQAParameters success', async () => {
     const store = createStore();
     const mockData = {
@@ -79,7 +77,6 @@ describe('qaSlice', () => {
     expect(state.error).toBe('Fetch failed');
   });
 
-  // -------------------- fetchDicomStores --------------------------
   it('should fetch dicom stores successfully', async () => {
     const store = createStore();
     const mockResponse = { StoreA: ['DS1'], StoreB: ['DS2', 'DS3'] };
@@ -107,7 +104,6 @@ describe('qaSlice', () => {
     expect(state.error).toBe(null);
   });
 
-  // -------------------- updateDicomStore -------------------------
   it('should update dicom store address', async () => {
     const store = createStore();
 
@@ -130,7 +126,6 @@ describe('qaSlice', () => {
     expect(state.error).toBe(null);
   });
 
-  // -------------------- addQAParameter ----------------------------
   it('should add a new QA parameter', async () => {
     const store = createStore();
     const newParam = { id: '2', barcode: 'B002', activationCode: 'AC002' };
@@ -143,11 +138,9 @@ describe('qaSlice', () => {
     expect(state.qaParameters).toContainEqual(newParam);
   });
 
-  // -------------------- updateQAParameter -------------------------
   it('should update an existing QA parameter', async () => {
     const store = createStore();
 
-    // Seed store with one QA param
     store.dispatch({
       type: addQAParameter.fulfilled.type,
       payload: { id: '3', barcode: 'B003', activationCode: 'OLD' },
@@ -159,11 +152,9 @@ describe('qaSlice', () => {
     expect(state.qaParameters.find(p => p.barcode === 'B003')?.activationCode).toBe('NEW');
   });
 
-  // -------------------- deleteQAParameter -------------------------
   it('should delete a QA parameter', async () => {
     const store = createStore();
 
-    // Seed store with one QA param
     store.dispatch({
       type: addQAParameter.fulfilled.type,
       payload: { id: '4', barcode: 'B004', activationCode: 'AC004' },

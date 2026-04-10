@@ -101,7 +101,6 @@ export const useQAConfig = () => {
     setDeleteDialogOpen(true);
   };
 
-  // FIX: extracted cancel logic into its own handler so QAConfig can call it directly
   const handleDeleteCancel = () => {
     setDeleteDialogOpen(false);
     setParameterToDelete(null);
@@ -154,13 +153,13 @@ export const useQAConfig = () => {
     parameterToDelete,
     visibleActivationCodes,
     setParameterModalOpen,
-    setDeleteDialogOpen,       // FIX: was missing — needed by AlertDialog onOpenChange
+    setDeleteDialogOpen,       
     handleAddParameter,
     handleEditParameter,
     handleParameterInputChange,
     handleSaveParameter,
     handleDeleteClick,
-    handleDeleteCancel,        // FIX: new — explicit cancel handler for the Cancel button
+    handleDeleteCancel,        
     handleDeleteConfirm,
     toggleActivationCodeVisibility,
     handleSaveDicomStore

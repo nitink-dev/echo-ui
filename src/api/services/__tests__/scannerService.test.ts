@@ -2,7 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { scannerService } from '../scannerService';
 import { BASE_URL } from '../../../utils/constants';
 
-vi.mock('../apiClient');  // ← replace vi.mock('axios')
+vi.mock('../apiClient'); 
 import apiClient from '../apiClient';
 
 describe('scannerService', () => {

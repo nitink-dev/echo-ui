@@ -6,7 +6,6 @@ import reducer, {
 import { metadataService } from '../../../api/services/metadataService';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ---- Mock metadataService ----------------------------------------
 vi.mock('../../../api/services/metadataService', () => ({
   metadataService: {
     fetchHospitalMetadata: vi.fn(),
@@ -40,7 +39,6 @@ describe('metadataSlice', () => {
     });
   });
 
-  // ------------------ fetchHospitalMetadata -----------------------
   it('should handle fetchHospitalMetadata pending', async () => {
     const store = createStore();
     (metadataService.fetchHospitalMetadata as any).mockResolvedValue({
@@ -86,7 +84,6 @@ describe('metadataSlice', () => {
     expect(state.error).toBe('Rejected');
   });
 
-  // ------------------ fetchDicomStores ----------------------------
   it('should handle fetchDicomStores pending', async () => {
     const store = createStore();
     (metadataService.fetchDicomStores as any).mockResolvedValue({});

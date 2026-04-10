@@ -1,8 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { enrichmentService } from "../../api/services/enrichmentService";
 
-// --- Async Thunks --------------------------------------------------
-
 export const fetchEhTool = createAsyncThunk<
   { toolKey: string; data: any },
   { toolKey: string },
@@ -31,7 +29,6 @@ export const patchEhTool = createAsyncThunk<
   }
 });
 
-// --- Helpers -------------------------------------------------------
 
 const TOOL_KEY_TO_STATE: Record<string, keyof EhToolsState> = {
   "eh-dicom-receiver": "dicomReceiver",
@@ -42,17 +39,12 @@ const TOOL_KEY_TO_STATE: Record<string, keyof EhToolsState> = {
   "eh-email-service":  "emailService",
 };
 
-/**
- * Returns true only if `data` looks like a real config object.
- * Guards against servers returning { success: true } or {} on PATCH.
- */
 const isValidConfigData = (data: any): boolean => {
   if (!data || typeof data !== "object" || Array.isArray(data)) return false;
   const JUNK_KEYS = new Set(["success", "message", "status", "ok", "statusCode"]);
   return Object.keys(data).some((k) => !JUNK_KEYS.has(k));
 };
 
-// --- State ---------------------------------------------------------
 interface EhToolsState {
   dicomReceiver:     any;
   lisConnector:      any;
@@ -75,22 +67,10 @@ const initialState: EhToolsState = {
   error:             null,
 };
 
-// --- Slice ---------------------------------------------------------
 const ehToolsSlice = createSlice({
   name: "ehTools",
   initialState,
   reducers: {
-    /**
-     * Call this after a successful PATCH when the server returns no config data
-     * (e.g. just { message: "configuration updated successfully" }).
-     *
-     * Merges the form values that were just saved directly into the Redux store
-     * so that navigating away and back always shows the correct saved data —
-     * without needing a re-fetch and without relying on the PATCH response body.
-     *
-     * Usage in component after patchEhTool succeeds:
-     *   dispatch(updateToolState({ toolKey: "eh-dicom-receiver", data: serverFormatSnapshot }));
-     */
     updateToolState: (
       state,
       action: PayloadAction<{ toolKey: string; data: any }>
@@ -103,7 +83,6 @@ const ehToolsSlice = createSlice({
   },
   extraReducers: (builder) => {
 
-    // ===== FETCH =====
     builder.addCase(fetchEhTool.pending, (state) => {
       state.loading = true;
       state.error   = null;
@@ -116,7 +95,6 @@ const ehToolsSlice = createSlice({
         const { toolKey, data } = action.payload;
         const stateKey = TOOL_KEY_TO_STATE[toolKey];
         if (!stateKey) return;
-        // GET always returns the full object — replace unconditionally.
         state[stateKey] = data;
       }
     );
@@ -126,7 +104,6 @@ const ehToolsSlice = createSlice({
       state.error   = action.payload as string;
     });
 
-    // ===== PATCH =====
     builder.addCase(patchEhTool.pending, (state) => {
       state.loading = true;
       state.error   = null;
@@ -141,13 +118,9 @@ const ehToolsSlice = createSlice({
         if (!stateKey) return;
 
         if (!isValidConfigData(data)) {
-          // Server returned no config data (e.g. { message: "updated" }).
-          // Leave the store untouched — the component calls updateToolState
-          // with the correct form values to keep the store in sync.
           return;
         }
 
-        // Server returned real config data — merge to preserve untouched fields.
         state[stateKey] = { ...(state[stateKey] || {}), ...data };
       }
     );

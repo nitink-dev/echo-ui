@@ -1,4 +1,3 @@
-// src/components/features/scanner/ScannerForm/useScannerForm.ts
 import { useState, useEffect, useMemo } from 'react';
 import { SlideScanner } from '../../../../types/scanner.types';
 import { FormErrors } from '../../../../types/common.types';
@@ -45,7 +44,6 @@ export function useScannerForm(scanner?: SlideScanner) {
   const [errors, setErrors] = useState<FormErrors>({});
   const [isDirty, setIsDirty] = useState(false);
 
-  // Initialize form data if editing
   useEffect(() => {
     if (scanner) {
       const initialData: FormData = {
@@ -74,8 +72,8 @@ export function useScannerForm(scanner?: SlideScanner) {
       const updated = {
         ...prev,
         [field]: value,
-        ...(field === 'department' ? { dicomStore: '' } : {}), // reset DICOM store on department change
-        // If research mode is turned on, clear dicomStore
+        ...(field === 'department' ? { dicomStore: '' } : {}), 
+       
         ...(field === 'research' && value === true ? { dicomStore: '' } : {})
       };
       return updated;
@@ -87,7 +85,6 @@ export function useScannerForm(scanner?: SlideScanner) {
     }
   };
 
-  // New function to set individual field errors
   const setFieldError = (field: string, error: string) => {
     if (error) {
       setErrors(prev => ({ ...prev, [field]: error }));
@@ -100,7 +97,6 @@ export function useScannerForm(scanner?: SlideScanner) {
     }
   };
 
-  // Get only changed fields for PATCH request
   const getChangedFields = (): Partial<FormData> => {
     const changed: Partial<FormData> = {};
     
@@ -116,7 +112,6 @@ export function useScannerForm(scanner?: SlideScanner) {
   const validateForm = (): boolean => {
     const newErrors: FormErrors = {};
 
-    // Check required fields (except dicomStore if research mode is enabled)
     requiredFields.forEach((field) => {
       const value = formData[field as keyof FormData];
       if (typeof value === 'string' && !value.trim()) {
@@ -124,19 +119,16 @@ export function useScannerForm(scanner?: SlideScanner) {
       }
     });
 
-    // Validate dicomStore only if not in research mode
     if (!formData.research) {
       if (!formData.dicomStore || !formData.dicomStore.trim()) {
         newErrors.dicomStore = 'Storage Location is required when not in research mode';
       }
     }
 
-    // Validate AE Title format (alphanumeric and underscores only)
     if (formData.aeTitle && !/^[A-Z0-9_]+$/.test(formData.aeTitle)) {
       newErrors.aeTitle = 'AE Title must contain only uppercase letters, numbers, and underscores';
     }
 
-    // Validate Serial Number format
     if (formData.deviceSerialNumber && formData.deviceSerialNumber.length < 3) {
       newErrors.deviceSerialNumber = 'Device Serial Number must be at least 3 characters long';
     }
@@ -174,13 +166,11 @@ export function useScannerForm(scanner?: SlideScanner) {
   };
 
   const isFormValid = useMemo(() => {
-    // Check required fields
     const allRequiredFieldsValid = requiredFields.every(field => {
       const value = formData[field as keyof FormData];
       return typeof value === 'string' && value.trim();
     });
 
-    // Check dicomStore only if not in research mode
     const dicomStoreValid = formData.research || (formData.dicomStore && formData.dicomStore.trim());
 
     return allRequiredFieldsValid && dicomStoreValid && Object.keys(errors).length === 0;

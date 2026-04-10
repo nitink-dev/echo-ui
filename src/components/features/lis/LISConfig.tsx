@@ -20,7 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 
-// ─── Field Rules ──────────────────────────────────────────────────────────────
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -74,7 +73,6 @@ const INITIAL_FORM: FormState = {
   sendingFacility: "",
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function LisConfig() {
   const dispatch = useAppDispatch();
@@ -113,14 +111,12 @@ export function LisConfig() {
     setInitialized(true);
   }, [lisConnector, initialized]);
 
-  // ── Validation ────────────────────────────────────────────────────────────
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {
       const rule = FIELD_RULES[field];
       if (!rule) return "";
       if (rule.required && !value.trim()) return `${rule.label} is required`;
       if (value) {
-        // Use custom validate fn if provided, otherwise fall back to validPattern
         const invalid = rule.validate
           ? !rule.validate(value)
           : rule.validPattern && !rule.validPattern.test(value);
@@ -148,7 +144,6 @@ export function LisConfig() {
     return valid;
   }, [form, validateField]);
 
-  // ── Input handling ────────────────────────────────────────────────────────
   const handleChange = useCallback(
     (field: keyof FormState, value: string) => {
       const rule = FIELD_RULES[field];
@@ -198,7 +193,6 @@ export function LisConfig() {
     [form, handleChange],
   );
 
-  // ── Edit / Cancel ─────────────────────────────────────────────────────────
   const handleEdit = (enable: boolean) => {
     setEditMode(enable);
     if (!enable) {
@@ -208,7 +202,6 @@ export function LisConfig() {
     }
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const getChangedFields = (
     current: FormState,
     original: FormState,
@@ -264,7 +257,6 @@ export function LisConfig() {
     }
   };
 
-  // ── Render input ──────────────────────────────────────────────────────────
   const renderInput = (field: keyof FormState, disabled: boolean) => {
     const rule = FIELD_RULES[field];
     const label = rule?.label ?? field;

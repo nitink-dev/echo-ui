@@ -5,7 +5,7 @@ import './pipeline-progress.css';
 
 type PipelineStep = {
   label: string;
-  value: number; // percentage from 0 to 100
+  value: number; 
 };
 
 const PIPELINE_STEPS: PipelineStep[] = [

@@ -64,7 +64,6 @@ export const useEnrichmentConfig = () => {
 
   const [originalForm, setOriginalForm] = useState(form);
 
-  // Fetch all tools once
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.DICOM_RECEIVER }));
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS_CONNECTOR }));
@@ -74,7 +73,6 @@ export const useEnrichmentConfig = () => {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }));
   }, [dispatch]);
 
-  // Sync DICOM Receiver
   useEffect(() => {
     if (dicomReceiver && Object.keys(dicomReceiver).length > 0) {
       const newData = {
@@ -88,7 +86,6 @@ export const useEnrichmentConfig = () => {
     }
   }, [dicomReceiver]);
 
-  // Sync LIS Connector
   useEffect(() => {
     if (lisConnector && Object.keys(lisConnector).length > 0) {
       setForm(prev => ({ ...prev, lisConnector }));
@@ -96,7 +93,6 @@ export const useEnrichmentConfig = () => {
     }
   }, [lisConnector]);
 
-  // Sync Enrichment Service
   useEffect(() => {
     if (enrichmentService && Object.keys(enrichmentService).length > 0) {
       setForm(prev => ({ ...prev, enrichmentService }));
@@ -104,7 +100,6 @@ export const useEnrichmentConfig = () => {
     }
   }, [enrichmentService]);
 
-  // Sync Export Service
   useEffect(() => {
     if (exportService && Object.keys(exportService).length > 0) {
       setForm(prev => ({ ...prev, exportService }));
@@ -112,7 +107,6 @@ export const useEnrichmentConfig = () => {
     }
   }, [exportService]);
 
-  // Sync HL7 Connector
   useEffect(() => {
     if (hl7Connector && Object.keys(hl7Connector).length > 0) {
       setForm(prev => ({ ...prev, hl7Messaging: hl7Connector }));
@@ -120,7 +114,6 @@ export const useEnrichmentConfig = () => {
     }
   }, [hl7Connector]);
 
-  // Sync Email Service
   useEffect(() => {
     if (emailService && Object.keys(emailService).length > 0) {
       setForm(prev => ({ ...prev, emailService }));
@@ -128,13 +121,11 @@ export const useEnrichmentConfig = () => {
     }
   }, [emailService]);
 
-  // Handle edit toggle
   const handleEdit = (key: EnrichmentSection, enable: boolean) => {
     setEditMode(prev => ({ ...prev, [key]: enable }));
     if (!enable) setForm(originalForm);
   };
 
-  // Handle value change
   const handleChange = (section: keyof EnrichmentFormData, field: string, value: any) => {
     setForm(prev => ({
       ...prev,
@@ -142,14 +133,12 @@ export const useEnrichmentConfig = () => {
     }));
   };
 
-  // Handle save per section
   const handleSave = async (type: EnrichmentSection) => {
     let toolKey = '';
     let body: any = {};
     let sectionName = '';
 
     switch (type) {
-      // 🩺 DICOM Receiver
       case 'dicom':
         toolKey = ENRICHMENT_TOOLS.DICOM_RECEIVER;
         sectionName = 'DICOM Receiver';
@@ -163,7 +152,6 @@ export const useEnrichmentConfig = () => {
         };
         break;
 
-      // 🧩 LIS Connector
       case 'lis':
         toolKey = ENRICHMENT_TOOLS.LIS_CONNECTOR;
         sectionName = 'LIS Connector';
@@ -172,7 +160,6 @@ export const useEnrichmentConfig = () => {
         body = { ...lisDiff };
         break;
 
-      // 🧠 Enrichment Service
       case 'enrichment':
         toolKey = ENRICHMENT_TOOLS.ENRICHMENT_SERVICE;
         sectionName = 'Enrichment Service';
@@ -181,7 +168,6 @@ export const useEnrichmentConfig = () => {
         body = { ...enrichDiff };
         break;
 
-      // 📤 Export Service
       case 'export':
         toolKey = ENRICHMENT_TOOLS.EXPORT_SERVICE;
         sectionName = 'Export Service';
@@ -195,7 +181,6 @@ export const useEnrichmentConfig = () => {
         };
         break;
 
-      // 🧬 HL7 Messaging
       case 'hl7':
         toolKey = ENRICHMENT_TOOLS.HL7_CONNECTOR;
         sectionName = 'HL7 Connector';
@@ -204,7 +189,6 @@ export const useEnrichmentConfig = () => {
         body = { ...hl7Diff };
         break;
 
-      // 📧 Email Service
       case 'email':
         toolKey = ENRICHMENT_TOOLS.EMAIL_SERVICE;
         sectionName = 'Email Service';

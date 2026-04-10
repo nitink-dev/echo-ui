@@ -10,7 +10,7 @@ Object.defineProperty(window, "matchMedia", {
     matches: false,
     media: query,
     onchange: null,
-    addListener: () => {}, // deprecated
+    addListener: () => {}, 
     removeListener: () => {},
     addEventListener: () => {},
     removeEventListener: () => {},

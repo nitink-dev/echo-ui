@@ -7,7 +7,6 @@ import { beforeEach, describe, expect, test, vi } from 'vitest';
 
 vi.mock('../../../../store/slices/qaSlice');
 
-// Mock sonner toast API
 vi.mock('sonner', () => ({
   toast: {
     success: vi.fn(),
@@ -35,7 +34,6 @@ describe('useQAConfig Hook', () => {
       },
     });
 
-    // Vitest mock return values
     (qaSlice.fetchQAParameters as vi.Mock).mockReturnValue({
       type: 'fetchQAParameters',
     });

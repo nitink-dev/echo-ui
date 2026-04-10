@@ -6,7 +6,6 @@ import ehToolsReducer from "./slices/ehToolsSlice";
 import authReducer from "./slices/authSlice";
 import healthReducer from './slices/healthSlice';
 
-// Configure the Redux store with all slices
 
 export const store = configureStore({
   reducer: {
@@ -19,6 +18,5 @@ export const store = configureStore({
   },
 });
 
-// Types for use in hooks
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

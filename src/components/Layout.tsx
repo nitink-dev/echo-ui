@@ -207,7 +207,6 @@ export function Layout({
 }: LayoutProps) {
   const dispatch = useAppDispatch();
 
-  // Read username from store so the header always shows the real user
   const username = useSelector((state: any) => state.auth.user) as
     | string
     | null;

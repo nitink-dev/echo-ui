@@ -16,11 +16,6 @@ const initialState: ScannerState = {
   error: null,
 };
 
-//
-// ✅ Async Thunks
-//
-
-// Fetch all scanners
 export const fetchScanners = createAsyncThunk<SlideScanner[]>(
   'scanners/fetchScanners',
   async (_, { rejectWithValue }) => {
@@ -36,12 +31,11 @@ export const fetchScanners = createAsyncThunk<SlideScanner[]>(
   }
 );
 
-// Add new scanner
 export const addScanner = createAsyncThunk<SlideScanner, Omit<SlideScanner, 'id'>>(
   'scanners/addScanner',
   async (scanner, { rejectWithValue }) => {
     try {
-      const response = await scannerService.create(scanner); //apiClient.post('/api/scanners', scanner);
+      const response = await scannerService.create(scanner); 
       return response;
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
@@ -50,14 +44,12 @@ export const addScanner = createAsyncThunk<SlideScanner, Omit<SlideScanner, 'id'
   }
 );
 
-// Update existing scanner using PATCH (only changed fields)
 export const updateScanner = createAsyncThunk<SlideScanner, Partial<SlideScanner> & { deviceSerialNumber: string }>(
   'scanners/updateScanner',
   async (scannerUpdate, { rejectWithValue }) => {
     try {
       const { deviceSerialNumber, ...updateFields } = scannerUpdate;
       
-      // Use PATCH to only send changed fields
       const response = await apiClient.patch(
         BASE_URL + `/api/scanners/${deviceSerialNumber}`,
         updateFields
@@ -71,13 +63,12 @@ export const updateScanner = createAsyncThunk<SlideScanner, Partial<SlideScanner
   }
 );
 
-// Delete a scanner (using deviceSerialNumber instead of id)
 export const deleteScanner = createAsyncThunk<string, string>(
   'scanners/deleteScanner',
   async (serialNumber, { rejectWithValue }) => {
     try {
       await scannerService.delete(serialNumber);
-      return serialNumber; // return serial number for reducer
+      return serialNumber; 
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
       return rejectWithValue(errorMessage);
@@ -85,15 +76,13 @@ export const deleteScanner = createAsyncThunk<string, string>(
   }
 );
 
-// Check if scanner exists by serial number
 export const checkScannerExists = createAsyncThunk<boolean, string>(
   'scanners/checkExists',
   async (serialNumber, { rejectWithValue }) => {
     try {
       const response = await apiClient.get(BASE_URL + `/api/scanners/${serialNumber}`);
-      return !!response.data; // Returns true if scanner exists
+      return !!response.data; 
     } catch (err: any) {
-      // If 404, scanner doesn't exist
       if (err.response?.status === 404) {
         return false;
       }
@@ -103,16 +92,12 @@ export const checkScannerExists = createAsyncThunk<boolean, string>(
   }
 );
 
-//
-// 🧩 Slice
-//
 const scannerSlice = createSlice({
   name: 'scanners',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch
       .addCase(fetchScanners.pending, (state) => {
         state.loading = true;
         state.error = null;
@@ -128,13 +113,11 @@ const scannerSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // Add
       .addCase(addScanner.fulfilled, (state, action: PayloadAction<SlideScanner>) => {
         console.log("➕ Scanner added:", action.payload);
         state.items.push(action.payload);
       })
 
-      // Update (match by deviceSerialNumber) - now using PATCH
       .addCase(updateScanner.fulfilled, (state, action: PayloadAction<SlideScanner>) => {
         const index = state.items.findIndex(
           (s) => s.deviceSerialNumber === action.payload.deviceSerialNumber
@@ -145,7 +128,6 @@ const scannerSlice = createSlice({
         }
       })
 
-      // Delete (match by deviceSerialNumber)
       .addCase(deleteScanner.fulfilled, (state, action: PayloadAction<string>) => {
         const deletedSerial = action.payload;
         state.items = state.items.filter(

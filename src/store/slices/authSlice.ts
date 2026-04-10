@@ -3,14 +3,6 @@ import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { authService, SecurityConfigEntry } from "../../api/services/authService";
 import { Role } from "../../config/roleConfig";
 
-// ─────────────────────────────────────────────────────────────
-// 🔧 DEV ONLY: Set a static role for local testing.
-//    "ROLE_ADMIN"     → full access
-//    "ROLE_DEVELOPER" → full access (same as admin)
-//    "ROLE_OPERATOR"  → RW scanner + read-only apps
-//    "ROLE_VIEWER"    → read-only scanner, no apps
-//    Set to null to use the real role from backend login.
-// ─────────────────────────────────────────────────────────────
 const DEV_STATIC_ROLE: Role | null = null; // ← set to a Role string to override
 
 interface AuthState {
@@ -35,15 +27,13 @@ const initialState: AuthState = {
   error: null,
 };
 
-// ✅ Thunk: Login — backend sets SESSION cookie, we store role + scopes
 export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (payload: { username: string; password: string }, { rejectWithValue, dispatch }) => {
     try {
       const data = await authService.login(payload);
-      // After successful login, immediately fetch the security config
       dispatch(fetchSecurityConfig());
-      return data; // { username, roles: [...], scopes: [...] }
+      return data;
     } catch (err: any) {
       return rejectWithValue(
         err.response?.data?.message || "Login failed. Please try again."
@@ -58,7 +48,6 @@ export const fetchSecurityConfig = createAsyncThunk(
     try {
       return await authService.fetchSecurityConfig();
     } catch (err: any) {
-      // Non-fatal — fall back to role-only permission checks
       return rejectWithValue(
         err.response?.data?.message || "Could not load security config."
       );
@@ -111,14 +100,12 @@ const authSlice = createSlice({
         state.user       = user;
         state.role       = DEV_STATIC_ROLE ?? storedRole;
         state.scopes     = storedScopes ? JSON.parse(storedScopes) : [];
-        // securityConfig will be re-fetched via the effect in App.tsx
       }
     },
   },
 
   extraReducers: (builder) => {
     builder
-      // ── Login ──────────────────────────────────────────────
       .addCase(loginUser.pending, (state) => {
         state.loading = true;
         state.error   = null;
@@ -147,7 +134,6 @@ const authSlice = createSlice({
         state.isLoggedIn = false;
       })
 
-      // ── Security Config ────────────────────────────────────
       .addCase(fetchSecurityConfig.fulfilled, (state, action: PayloadAction<SecurityConfigEntry[]>) => {
         state.securityConfig       = action.payload;
         state.securityConfigLoaded = true;
@@ -158,7 +144,6 @@ const authSlice = createSlice({
         state.securityConfigLoaded = true;
       })
 
-      // ── Logout ─────────────────────────────────────────────
       .addCase(logoutUser.pending, (state) => {
         state.loading = true;
       })

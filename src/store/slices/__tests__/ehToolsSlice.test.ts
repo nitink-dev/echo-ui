@@ -6,7 +6,6 @@ import reducer, {
 import { enrichmentService } from "../../../api/services/enrichmentService";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 
-// Mock enrichmentService
 vi.mock("../../../api/services/enrichmentService", () => ({
   enrichmentService: {
     fetchTool: vi.fn(),

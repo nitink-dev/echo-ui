@@ -19,7 +19,6 @@ const mockedAuthService = authService as unknown as {
   login: ReturnType<typeof vi.fn>;
 };
 
-// Mock localStorage
 const localStorageMock = (() => {
   let store: Record<string, string> = {};
   return {
@@ -53,7 +52,7 @@ describe('authSlice', () => {
       isLoggedIn: false,
       token: null,
       user: null,
-      role: null,       // ← added
+      role: null,       
       loading: false,
       error: null
     });
@@ -64,7 +63,7 @@ describe('authSlice', () => {
       isLoggedIn: true,
       token: 'token123',
       user: 'nitin_mukesh',
-      role: null,       // ← added
+      role: null,       
       loading: false,
       error: null
     };
@@ -102,7 +101,7 @@ describe('authSlice', () => {
 
       const state = store.getState();
 
-      expect(state.isLoggedIn).toBe(true);  // ← fixed: was false
+      expect(state.isLoggedIn).toBe(true); 
       expect(state.token).toBe('jwt-token');
       expect(state.user).toBe('nitin_mukesh');
       expect(state.error).toBeNull();

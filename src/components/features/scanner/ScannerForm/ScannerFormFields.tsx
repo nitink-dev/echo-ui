@@ -13,7 +13,6 @@ import {
   sanitizeByPattern,
 } from '../../../../utils/validation.constants';
 
-// Allowed: A-Z, a-z, 0-9, underscore, hyphen
 const SERIAL_ALLOWED_PATTERN = /^[a-zA-Z0-9_-]$/;
 const sanitizeSerial = (value: string) =>
   value.split('').filter((ch) => SERIAL_ALLOWED_PATTERN.test(ch)).join('');
@@ -44,14 +43,13 @@ export function ScannerFormFields({
   checkingSerialNumber = false,
 }: ScannerFormFieldsProps) {
 
-  // ── Device Serial Number handlers ─────────────────────────────────────────
   const handleSerialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onInputChange('deviceSerialNumber', sanitizeSerial(e.target.value));
   };
 
   const handleSerialKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
-    if (isCtrl) return; // allow Backspace, Delete, arrows, Ctrl+C/V, etc.
+    if (isCtrl) return; 
     if (!SERIAL_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
   };
 
@@ -68,7 +66,6 @@ export function ScannerFormFields({
     }
   };
 
-  // ── IP field handler ───────────────────────────────────────────────────────
   const handleIpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = sanitizeByPattern(e.target.value, IP_ALLOWED_PATTERN);
     onInputChange('ipAddress', sanitized);
@@ -93,7 +90,6 @@ export function ScannerFormFields({
     }
   };
 
-  // ── Port field handler ─────────────────────────────────────────────────────
   const handlePortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = sanitizeByPattern(e.target.value, PORT_ALLOWED_PATTERN);
     onInputChange('port', sanitized);
@@ -118,7 +114,6 @@ export function ScannerFormFields({
     }
   };
 
-  // ── Inline validation messages (in addition to parent-supplied errors) ─────
   const ipInlineError =
     formData.ipAddress && !isValidIP(formData.ipAddress) ? IP_ERROR_MESSAGE : '';
 
@@ -136,7 +131,6 @@ export function ScannerFormFields({
           <Input
             id="name"
             value={formData.name}
-             // onChange={(e) => onInputChange('name', e.target.value)}
             onChange={(e) => {
               const value = e.target.value;
 
@@ -161,7 +155,6 @@ export function ScannerFormFields({
           <Input
             id="aeTitle"
             value={formData.aeTitle}
-            //onChange={(e) => onInputChange('aeTitle', e.target.value.toUpperCase())}
             onChange={(e) => {
               const value = e.target.value.toUpperCase();
 

@@ -14,7 +14,6 @@ export const normalizeToArray = (value: any): string[] => {
       const cur = current[key];
       const orig = original?.[key];
   
-      // Normalize arrays to string for comparison
       if (Array.isArray(cur) || Array.isArray(orig)) {
         const curStr = Array.isArray(cur) ? cur.join(',') : (cur || '').toString();
         const origStr = Array.isArray(orig) ? orig.join(',') : (orig || '').toString();

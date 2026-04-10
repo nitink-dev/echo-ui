@@ -6,7 +6,6 @@ import reducer, {
 import { healthService } from '../../../api/services/healthService';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// ---- Mock healthService -------------------------------------------
 vi.mock('../../../api/services/healthService', () => ({
   healthService: {
     fetchHealthStatus: vi.fn(),
@@ -62,11 +61,11 @@ describe('healthSlice', () => {
     (healthService.fetchHealthStatus as any).mockResolvedValue({
       thirdParties: [
         { name: 'Auth Service', status: 'UP' },
-        { name: 'Database Service', status: 'DOWN' }, // blocked
+        { name: 'Database Service', status: 'DOWN' }, 
       ],
       microservices: [
         { name: 'Order Service', status: 'UP' },
-        { name: 'Delete Service', status: 'DOWN' }, // blocked
+        { name: 'Delete Service', status: 'DOWN' },
       ],
       dependencies: {
         kafka: 'UP',
@@ -83,7 +82,6 @@ describe('healthSlice', () => {
     expect(state.loading).toBe(false);
     expect(state.error).toBeUndefined();
 
-    // blocked services filtered out
     expect(state.thirdParties).toHaveLength(1);
     expect(state.thirdParties[0].name).toBe('Auth Service');
 

@@ -1,5 +1,4 @@
 
-// components/AutocompleteInput.tsx
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { Search, X, ChevronDown } from 'lucide-react';
 import { Input } from '../../ui/input';
@@ -11,9 +10,7 @@ interface AutocompleteInputProps {
   placeholder?: string;
   noOptionsText?: string;
   loading?: boolean;
-  /** If true, suggestions dropdown is completely disabled (plain input) */
   disableSuggestions?: boolean;
-  /** Optional className to style the wrapper */
   className?: string;
 }
 
@@ -28,11 +25,10 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   className,
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [activeIndex, setActiveIndex] = useState<number>(-1); // for keyboard navigation
+  const [activeIndex, setActiveIndex] = useState<number>(-1); 
   const wrapperRef = useRef<HTMLDivElement>(null);
   const listRef = useRef<HTMLUListElement>(null);
 
-  /** Derived, memoized filtered options */
   const filteredOptions = useMemo(() => {
     const q = value.trim().toLowerCase();
     if (!q) return options;
@@ -73,7 +69,6 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   const handleKeyDown: React.KeyboardEventHandler<HTMLInputElement> = (e) => {
     if (disableSuggestions) return;
 
-    // Basic keyboard controls for the dropdown
     switch (e.key) {
       case 'ArrowDown': {
         e.preventDefault();
@@ -84,7 +79,6 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
         if (filteredOptions.length === 0) return;
         setActiveIndex((prev) => {
           const next = prev < filteredOptions.length - 1 ? prev + 1 : 0;
-          // Scroll into view
           const item = listRef.current?.children.item(next) as HTMLElement | null;
           item?.scrollIntoView({ block: 'nearest' });
           return next;
@@ -196,7 +190,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
                       type="button"
                       role="option"
                       aria-selected={isActive}
-                      onMouseDown={(e) => e.preventDefault()} // keep input focus
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleSelect(option)}
                       className={`w-full text-left px-3 py-2 text-sm cursor-pointer font-mono hover:bg-gray-100 ${
                         isActive ? 'bg-gray-100' : ''

@@ -20,7 +20,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 
-// ─── Thunks ───────────────────────────────────────────────────────────────────
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -48,7 +47,6 @@ export const patchSynapse = createAsyncThunk<
   }
 });
 
-// ─── Field Rules ──────────────────────────────────────────────────────────────
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -101,7 +99,6 @@ const INITIAL_FORM: FormState = {
   synapseVmDetails: "",
 };
 
-// ─── Component ────────────────────────────────────────────────────────────────
 
 export function SynapseConfig() {
   const dispatch = useAppDispatch();
@@ -119,7 +116,6 @@ export function SynapseConfig() {
   const { canWrite } = usePermissions();
   const canEditSynapse = canWrite("synapse");
 
-  // Fetch on every mount — fixes blank name after navigation
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
@@ -147,7 +143,6 @@ export function SynapseConfig() {
     loadData();
   }, [dispatch]);
 
-  // ── Validation ────────────────────────────────────────────────────────────
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {
       const rule = FIELD_RULES[field];
@@ -181,7 +176,6 @@ export function SynapseConfig() {
     return valid;
   }, [form, validateField]);
 
-  // ── Input handling ────────────────────────────────────────────────────────
   const handleChange = useCallback(
     (field: keyof FormState, value: string) => {
       const rule = FIELD_RULES[field];
@@ -231,7 +225,6 @@ export function SynapseConfig() {
     [form, handleChange],
   );
 
-  // ── Edit / Cancel ─────────────────────────────────────────────────────────
   const handleEdit = (enable: boolean) => {
     setEditMode(enable);
     if (!enable) {
@@ -241,7 +234,6 @@ export function SynapseConfig() {
     }
   };
 
-  // ── Save ──────────────────────────────────────────────────────────────────
   const getChangedFields = (
     current: FormState,
     original: FormState,
@@ -297,7 +289,6 @@ export function SynapseConfig() {
     }
   };
 
-  // ── Render input ──────────────────────────────────────────────────────────
   const renderInput = (field: keyof FormState, disabled: boolean) => {
     const rule = FIELD_RULES[field];
     const label = rule?.label ?? field;

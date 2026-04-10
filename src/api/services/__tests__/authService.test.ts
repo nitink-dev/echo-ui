@@ -2,10 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { authService } from '../authService';
 import { BASE_URL } from '../../../utils/constants';
 
-// Mock apiClient directly — NOT axios
 vi.mock('../apiClient');
 
-// Import AFTER vi.mock so we get the mocked version
 import apiClient from '../apiClient';
 
 describe('authService', () => {
@@ -22,7 +20,6 @@ describe('authService', () => {
 
       const mockToken = 'jwt-token-123';
 
-      // apiClient.post is already a vi.fn() from the mock
       vi.mocked(apiClient.post).mockResolvedValue({ data: mockToken });
 
       const result = await authService.login(payload);

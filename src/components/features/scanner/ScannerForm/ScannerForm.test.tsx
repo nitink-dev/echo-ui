@@ -16,7 +16,6 @@ vi.mock('../../../../store/slices/scannerSlice', () => ({
 
 vi.mock('../../../../api/services/apiClient');
 
-// Mock useScannerForm so we can control isDirty
 const mockUseScannerForm = vi.fn();
 vi.mock('./useScannerForm', () => ({
   useScannerForm: (...args: any[]) => mockUseScannerForm(...args),
@@ -80,7 +79,6 @@ describe('ScannerForm Component', () => {
       },
     });
     vi.clearAllMocks();
-    // Default: form is clean
     mockUseScannerForm.mockReturnValue(makeFormHook());
   });
 
@@ -187,7 +185,6 @@ describe('ScannerForm Component', () => {
   });
 
   test('shows cancel confirmation dialog when form is dirty', async () => {
-    // Set isDirty: true so clicking Cancel opens the dialog
     mockUseScannerForm.mockReturnValue(makeFormHook({ isDirty: true }));
 
     renderWithProvider(

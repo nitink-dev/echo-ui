@@ -1,6 +1,5 @@
 import React from "react";
 import { Microscope, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
-import { ScanRecordRow } from "./ScanRecordRow"; // reuse your existing row component
 import { RunningRecordsRow } from "./records/RunningRecordsRow";
 
 export const StatusPanel = ({

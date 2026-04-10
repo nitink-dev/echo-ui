@@ -56,14 +56,6 @@ export default defineConfig({
   server: {
     port: 3001,
     open: true,
-    // proxy: {
-    //   '/api': {
-    //     target: 'http://10.201.8.208:8081', // to be replaced with env variable in production
-    //     changeOrigin: true,
-    //     secure: false,
-    //     cookieDomainRewrite: 'localhost', // to be removed in production
-    //   },
-    // },
   },
   test: {
     globals: true,

@@ -5,7 +5,7 @@ import { BASE_URL } from "../../utils/constants";
 const activeToasts = new Set<string>();
 
 function showErrorToast(message: string, toastId: string) {
-  if (activeToasts.has(toastId)) return; // already visible hai
+  if (activeToasts.has(toastId)) return; 
 
   activeToasts.add(toastId);
   toast.error(message, {
@@ -22,7 +22,6 @@ const apiClient = axios.create({
   headers: { "Content-Type": "application/json" },
 });
 
-// REQUEST INTERCEPTOR
 apiClient.interceptors.request.use((config) => {
   const xsrfToken = document.cookie
     .split("; ")
@@ -50,14 +49,12 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
   504: "Gateway timeout. Please try again.",
 };
 
-const LOGIN_PATH = "/login"; // ← apna login route yahan set karo
+const LOGIN_PATH = "/login"; 
 
-// RESPONSE INTERCEPTOR
 apiClient.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    // ── Source tag: URL se component identify karo ─────────────────────────
     const url = error.config?.url ?? "unknown";
 
     const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
@@ -67,16 +64,13 @@ apiClient.interceptors.response.use(
     if (error.response) {
       const status: number = error.response.status;
 
-      // ── 401 → Session expire ho gaya, login pe redirect karo ───────────
       if (status === 401) {
-        // Agar already login page pe hai toh infinite loop avoid karo
         if (window.location.pathname !== LOGIN_PATH) {
           showErrorToast(
             "Session expired. Please log in again.",
             "session-expired"
           );
 
-          // Toast dikhne ka waqt do, phir redirect karo
           setTimeout(() => {
             window.location.href = LOGIN_PATH;
           }, 1500);
@@ -96,14 +90,12 @@ apiClient.interceptors.response.use(
         HTTP_ERROR_MESSAGES[status] ||
         `Unexpected error (${status}).`;
 
-      // Toast ID = status + endpoint to prevent duplicates for same error type
       const toastId = `${status}-${sourcePath}`;
       const displayMessage = `[${sourcePath}] ${baseMessage}`;
 
       showErrorToast(displayMessage, toastId);
 
     } else if (error.request) {
-      // Network error
       showErrorToast(
         "Network error — server unreachable. Please check your connection.",
         "network-error"

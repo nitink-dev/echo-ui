@@ -5,8 +5,8 @@ interface LoginRequest {
 }
 export interface LoginResponse {
   username: string;
-  roles: string[];   // e.g. ["ROLE_DEVELOPER"]
-  scopes: string[];  // e.g. ["platform.read", "platform.write", ...]
+  roles: string[];   
+  scopes: string[];  
 }
 
 
