@@ -51,6 +51,12 @@ const HTTP_ERROR_MESSAGES: Record<number, string> = {
 
 const LOGIN_PATH = "/login"; 
 
+let onUnauthorized: () => void = () => {};
+
+export function setUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler;
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
 
@@ -65,17 +71,10 @@ apiClient.interceptors.response.use(
       const status: number = error.response.status;
 
       if (status === 401) {
-        if (window.location.pathname !== LOGIN_PATH) {
-          showErrorToast(
-            "Session expired. Please log in again.",
-            "session-expired"
-          );
-
-          setTimeout(() => {
-            window.location.href = LOGIN_PATH;
-          }, 1500);
-        }
-
+        showErrorToast("Session expired. Please log in again.", "session-expired");
+        setTimeout(() => {
+          onUnauthorized();
+        }, 1500); // toast dikhne ka time
         return Promise.reject(error);
       }
 

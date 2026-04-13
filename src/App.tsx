@@ -16,6 +16,7 @@ import { Toaster } from "./components/ui/sonner";
 import { useAppDispatch } from "./hooks";
 import { usePermissions } from "./hooks/usePermissions";
 import {
+  clearAuthState,
   fetchSecurityConfig,
   loadStoredSession,
 } from "./store/slices/authSlice";
@@ -28,6 +29,7 @@ import {
 import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
+import { setUnauthorizedHandler } from "./api/services/apiClient";
 
 export default function App() {
   const dispatch = useAppDispatch();
@@ -50,13 +52,21 @@ export default function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      dispatch(fetchSecurityConfig());
+      //dispatch(fetchSecurityConfig());
       dispatch(fetchScanners());
       const curr =
         (localStorage.getItem("currentPage") as PageType) || "health-status";
       setCurrentPage(curr);
     }
   }, [dispatch, isLoggedIn]);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      dispatch(clearAuthState()); // Redux state clear
+      // currentPage automatically "login" ho jayega kyunki isLoggedIn false hoga
+    });
+  }, [dispatch]);
+
 
   useEffect(() => {
     if (isLoggedIn && currentPage === "list") {
