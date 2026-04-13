@@ -164,6 +164,7 @@ export function ScannerTable({
                 } as SlideScanner;
                 await dispatch(updateScanner(payload)).unwrap();
               } catch (err) {
+                connectedMap[key] = !(scanner.connected ?? false);
                 toast.error("Failed to update scanner:" + (err as any).message);
               }
             };

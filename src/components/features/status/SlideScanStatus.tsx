@@ -283,16 +283,7 @@ export function SlideScanStatus() {
       eventSourceRef.current = null;
     }
 
-    const xsrfToken = document.cookie
-      .split("; ")
-      .find((row) => row.startsWith("XSRF-TOKEN="))
-      ?.split("=")[1];
-
-    const tokenParam = xsrfToken
-      ? `?_xsrf=${encodeURIComponent(decodeURIComponent(xsrfToken))}`
-      : "";
-
-    const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress${tokenParam}`;
+    const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress`;
 
     try {
       const eventSource = new EventSource(url, { withCredentials: true });

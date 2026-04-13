@@ -22,6 +22,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
+import apiClient from "../../../../api/services/apiClient";
 
 interface AnalysisReportsProps {
   deviceSerialNumber: string;
@@ -46,11 +47,11 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
   useEffect(() => {
     const fetchReports = async () => {
       try {
-        const response = await fetch(
+        const response = await apiClient.get(
           `${BASE_URL}/api/scanners/${deviceSerialNumber}/reports`,
         );
-        if (!response.ok) throw new Error("Failed to fetch reports");
-        const data: AnalysisReport[] = await response.json();
+        if (!response) throw new Error("Failed to fetch reports");
+        const data: AnalysisReport[] = await response.data;
         setAnalysisReports(data);
       } catch (err) {
         const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
