@@ -74,7 +74,7 @@ apiClient.interceptors.response.use(
         showErrorToast("Session expired. Please log in again.", "session-expired");
         setTimeout(() => {
           onUnauthorized();
-        }, 1500); // toast dikhne ka time
+        }, 1500);
         return Promise.reject(error);
       }
 

@@ -25,6 +25,7 @@ import {
   EMAIL_ERROR_MESSAGE,
   sanitizeByPattern,
 } from "../../../../utils/validation.constants";
+import { useRefetchOnFocus } from "../../../../hooks/useRefetchOnFocus";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress"],
@@ -77,6 +78,15 @@ export function EnrichmentToolConfig() {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.HL7_CONNECTOR }));
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }));
   }, [dispatch]);
+
+  useRefetchOnFocus([
+    () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.DICOM_RECEIVER }),
+    () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS_CONNECTOR }),
+    () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.ENRICHMENT_SERVICE }),
+    () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EXPORT_SERVICE }),
+    () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.HL7_CONNECTOR }),
+    () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE })
+  ]);
 
   const syncSection = useCallback((sectionKey: string, formKey: string, newData: any) => {
     setForm((p: any) => ({ ...p, [formKey]: newData }));

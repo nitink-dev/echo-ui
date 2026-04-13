@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { CheckCircle2, XCircle, Clock, X, Eye } from "lucide-react";
 import { BASE_URL } from "../../../../utils/constants";
+import apiClient from "../../../../api/services/apiClient";
 
 export function FailedRecordsRow({ record, index }) {
   const [showPopup, setShowPopup] = useState(false);
@@ -20,13 +21,13 @@ export function FailedRecordsRow({ record, index }) {
     setLoading(true);
     setError(null);
     try {
-      const response = await fetch(
+      const response = await apiClient.get(
         `${BASE_URL}/api/slide-scan-status/barcode/${record.slideBarcode}/details`
       );
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
+      // if (!response.ok) {
+      //   throw new Error(`HTTP error! status: ${response.status}`);
+      // }
+      const data = await response.data;
       setDetailsData(data);
       setShowPopup(true);
     } catch (err) {
