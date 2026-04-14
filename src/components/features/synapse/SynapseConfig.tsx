@@ -19,6 +19,7 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 
 
 export const fetchSynapse = createAsyncThunk<
@@ -142,6 +143,8 @@ export function SynapseConfig() {
     };
     loadData();
   }, [dispatch]);
+
+  useRefetchOnFocus([() => fetchSynapse()]);
 
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {

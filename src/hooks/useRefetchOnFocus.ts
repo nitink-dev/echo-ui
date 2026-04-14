@@ -1,18 +1,30 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useAppDispatch } from "./index";
-import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export function useRefetchOnFocus(fetchActions: (() => any)[]) {
   const dispatch = useAppDispatch();
+  const actionsRef = useRef(fetchActions);
+  actionsRef.current = fetchActions;
 
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === "visible") {
-        fetchActions.forEach((action) => dispatch(action()));
-      }
+    const refetch = () => {
+      actionsRef.current.forEach((action) => dispatch(action()));
     };
 
-    document.addEventListener("visibilitychange", handleVisibilityChange);
-    return () => document.removeEventListener("visibilitychange", handleVisibilityChange);
+    // Tab pe wapas aao
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") refetch();
+    };
+
+    // Internet/backend wapas aaye
+    const handleOnline = () => refetch();
+
+    document.addEventListener("visibilitychange", handleVisibility);
+    window.addEventListener("online", handleOnline);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("online", handleOnline);
+    };
   }, []);
 }
