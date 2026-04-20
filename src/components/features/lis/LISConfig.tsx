@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../../hooks";
 import { usePermissions } from "../../../hooks/usePermissions";
+import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 import { fetchEhTool, patchEhTool } from "../../../store/slices/ehToolsSlice";
 import {
   IP_ALLOWED_PATTERN,
@@ -20,10 +21,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 
-
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
-    label: "LIS Connector App Name",
+    label: "LIS App Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
@@ -31,21 +31,22 @@ const FIELD_RULES: Record<string, FieldRule> = {
     required: true,
   },
   ipAddress: {
-    label: "LIS Connector IP Address",
+    label: "LIS IP Address",
     allowedPattern: IP_ALLOWED_PATTERN,
     validate: isValidIP,
     errorMessage: IP_ERROR_MESSAGE,
     required: true,
   },
-  receivingPort: {
-    label: "LIS Port",
-    allowedPattern: PORT_ALLOWED_PATTERN,
-    validate: isValidPort,
-    errorMessage: PORT_ERROR_MESSAGE,
-    required: true,
+  receivingFacility: {
+    label: "LIS Facility",
+    allowedPattern: /^[a-zA-Z0-9 _-]*$/,
+    validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
+    errorMessage:
+      "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
+    required: false,
   },
   incomingPort: {
-    label: "LIS Connector Port",
+    label: "LIS Port",
     allowedPattern: PORT_ALLOWED_PATTERN,
     validate: isValidPort,
     errorMessage: PORT_ERROR_MESSAGE,
@@ -56,23 +57,22 @@ const FIELD_RULES: Record<string, FieldRule> = {
 type FormState = {
   applicationName: string;
   ipAddress: string;
-  receivingPort: string;
+  // receivingPort: string;
   incomingPort: string;
   receivingFacility: string;
-  receivingAppName: string;
-  sendingFacility: string;
+  // receivingAppName: string;
+  // sendingFacility: string;
 };
 
 const INITIAL_FORM: FormState = {
   applicationName: "",
   ipAddress: "",
-  receivingPort: "",
+  // receivingPort: "",
   incomingPort: "",
   receivingFacility: "",
-  receivingAppName: "",
-  sendingFacility: "",
+  // receivingAppName: "",
+  // sendingFacility: "",
 };
-
 
 export function LisConfig() {
   const dispatch = useAppDispatch();
@@ -94,17 +94,19 @@ export function LisConfig() {
     dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }));
   }, [dispatch]);
 
+  useRefetchOnFocus([() => fetchEhTool({ toolKey: "eh-lis-connector" })]);
+
   useEffect(() => {
     if (!lisConnector || Object.keys(lisConnector).length === 0 || initialized)
       return;
     const newData: FormState = {
-      applicationName: lisConnector.appName || lisConnector.name || "",
+      applicationName: lisConnector.receivingAppName || lisConnector.name || "",
       ipAddress: lisConnector.ipAddress || "",
-      receivingPort: lisConnector.port?.toString() || "",
+      //receivingPort: lisConnector.port?.toString() || "",
       incomingPort: lisConnector["incoming-port"]?.toString() || "",
       receivingFacility: lisConnector.receivingFacility || "",
-      receivingAppName: lisConnector.receivingAppName || "",
-      sendingFacility: lisConnector.sendingFacility || "",
+      //receivingAppName: lisConnector.receivingAppName || "",
+      //sendingFacility: lisConnector.sendingFacility || "",
     };
     setForm(newData);
     setOriginalForm(newData);
@@ -232,17 +234,12 @@ export function LisConfig() {
     const body: any = {};
     if (changes.applicationName) body.appName = changes.applicationName;
     if (changes.ipAddress) body.ipAddress = changes.ipAddress;
-    if (changes.receivingPort) body.port = parseInt(changes.receivingPort, 10);
+    //if (changes.receivingPort) body.port = parseInt(changes.receivingPort, 10);
     if (changes.incomingPort)
       body["incoming-port"] = parseInt(changes.incomingPort, 10);
     if (changes.receivingFacility !== undefined)
       body.receivingFacility = changes.receivingFacility;
-    if (changes.receivingAppName !== undefined)
-      body.receivingAppName = changes.receivingAppName;
-    if (changes.sendingFacility !== undefined)
-      body.sendingFacility = changes.sendingFacility;
-
-    try {
+     try {
       await dispatch(
         patchEhTool({ toolKey: "eh-lis-connector", body }),
       ).unwrap();
@@ -252,7 +249,8 @@ export function LisConfig() {
       setErrors({});
       setTouched({});
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast.error("Update failed: " + errorMessage);
     }
   };
@@ -311,7 +309,7 @@ export function LisConfig() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
               <Database className="h-5 w-5 text-[#007BFF]" />
-              LIS Connector
+              LIS
             </CardTitle>
           </CardHeader>
 
@@ -319,7 +317,7 @@ export function LisConfig() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {renderInput("applicationName", !editMode)}
               {renderInput("ipAddress", !editMode)}
-              {renderInput("receivingPort", !editMode)}
+              {renderInput("receivingFacility", !editMode)}
               {renderInput("incomingPort", !editMode)}
             </div>
 

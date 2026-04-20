@@ -6,7 +6,8 @@ interface LoginRequest {
 export interface LoginResponse {
   username: string;
   roles: string[];   
-  scopes: string[];  
+  scopes: string[]; 
+  displayName: string; 
 }
 
 

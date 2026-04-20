@@ -1,13 +1,27 @@
-import React from 'react';
-import { BarChart3, Plus } from 'lucide-react';
-import { Button } from '../../../ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../../ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '../../../ui/alert-dialog';
-import { DicomStoreConfig } from './DicomStoreConfig';
-import { QAParameterTable } from './QAParameterTable';
-import { useQAConfig } from './useQAConfig';
-import { QAParameterForm } from './QAParameterForm';
-import { usePermissions } from '../../../../hooks/usePermissions';
+import { BarChart3, Plus } from "lucide-react";
+import { usePermissions } from "../../../../hooks/usePermissions";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "../../../ui/alert-dialog";
+import { Button } from "../../../ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "../../../ui/card";
+import { DicomStoreConfig } from "./DicomStoreConfig";
+import { QAParameterForm } from "./QAParameterForm";
+import { QAParameterTable } from "./QAParameterTable";
+import { useQAConfig } from "./useQAConfig";
 
 export function QAConfig() {
   const {
@@ -31,19 +45,21 @@ export function QAConfig() {
     handleDeleteCancel,
     handleDeleteConfirm,
     toggleActivationCodeVisibility,
-    handleSaveDicomStore
+    handleSaveDicomStore,
   } = useQAConfig();
 
-  const { canWrite, canDelete: canDeletePermission } = usePermissions();
+  const { canWrite } = usePermissions();
   const canAdd = canWrite("qa-analysis");
-  const canDelete = canDeletePermission("qa-analysis");
-    
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Slide Image Analysis</h1>
-        <p className="text-gray-600 mt-1">Manage QA parameters and DICOM store configuration</p>
+        <h1 className="text-2xl font-semibold text-gray-900">
+          Slide Image Analysis
+        </h1>
+        <p className="text-gray-600 mt-1">
+          Manage QA parameters and DICOM store configuration
+        </p>
       </div>
 
       <Card>
@@ -54,10 +70,15 @@ export function QAConfig() {
                 <BarChart3 className="h-5 w-5" />
                 QA Slide Parameters
               </CardTitle>
-              <CardDescription>Manage barcode and activation code pairs for QA slides</CardDescription>
+              <CardDescription>
+                Manage barcode and activation code pairs for QA slides
+              </CardDescription>
             </div>
             {canAdd && (
-              <Button onClick={handleAddParameter} className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                onClick={handleAddParameter}
+                className="bg-blue-600 hover:bg-blue-700"
+              >
                 <Plus className="h-4 w-4 mr-2" />
                 Add New
               </Button>
@@ -103,8 +124,8 @@ export function QAConfig() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete QA Parameter</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to delete the QA parameter with barcode "{parameterToDelete?.barcode}"?
-              This action cannot be undone.
+              Are you sure you want to delete the QA parameter with barcode "
+              {parameterToDelete?.barcode}"? This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

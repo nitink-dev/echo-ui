@@ -7,13 +7,13 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 import apiClient from "../../../api/services/apiClient";
 import { BASE_URL } from "../../../utils/constants";
 import AutocompleteInput from "./AutocompleteInput";
 import { StatusPanel } from "./StatusPanel";
 import { StatusPanelCompleted } from "./StatusPanelCompleted";
 import { StatusPanelFailed } from "./StatusPanelFailed";
-import { toast } from "sonner";
 
 const TABS = [
   {
@@ -82,7 +82,7 @@ const singleSlideToPageable = (slide) => ({
   content: [slide],
   totalElements: 1,
   totalPages: 1,
-  page: 0, 
+  page: 0,
   size: pageSize,
   hasNext: false,
   hasPrevious: false,
@@ -92,12 +92,11 @@ const emptyPageable = () => ({
   content: [],
   totalElements: 0,
   totalPages: 1,
-  page: 0, 
+  page: 0,
   size: pageSize,
   hasNext: false,
   hasPrevious: false,
 });
-
 
 const normalisePageable = (data) => {
   if (!data) return data;
@@ -297,8 +296,10 @@ export function SlideScanStatus() {
       eventSource.addEventListener("slide_scan_status", (event) => {
         try {
           updateInProgressWithSSE(JSON.parse(event.data));
-        } catch (e ) {
-          toast.error("SSE parse error:" + (e instanceof Error ?   e.message : String(e)));
+        } catch (e) {
+          toast.error(
+            "SSE parse error:" + (e instanceof Error ? e.message : String(e)),
+          );
         }
       });
 
@@ -306,7 +307,9 @@ export function SlideScanStatus() {
         try {
           updateInProgressWithSSE(JSON.parse(event.data));
         } catch (e) {
-          toast.error("SSE parse error: " + (e instanceof Error ? e.message : String(e)));
+          toast.error(
+            "SSE parse error: " + (e instanceof Error ? e.message : String(e)),
+          );
         }
       };
 

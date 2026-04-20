@@ -33,8 +33,8 @@ import {
 } from "../../../ui/table";
 
 import { useDispatch } from "react-redux";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { toast } from "sonner";
+import { usePermissions } from "../../../../hooks/usePermissions";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -164,7 +164,7 @@ export function ScannerTable({
                 } as SlideScanner;
                 await dispatch(updateScanner(payload)).unwrap();
               } catch (err) {
-                connectedMap[key] = !(scanner.connected ?? false);
+                connectedMap[key] = !scanner.connected;
                 toast.error("Failed to update scanner:" + (err as any).message);
               }
             };

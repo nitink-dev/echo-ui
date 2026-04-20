@@ -2,6 +2,7 @@ import { format } from "date-fns";
 import { ArrowUpDown, Calendar, Download, FileText } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner@2.0.3";
+import apiClient from "../../../../api/services/apiClient";
 import { AnalysisReport } from "../../../../types/scanner.types";
 import { BASE_URL } from "../../../../utils/constants";
 import { downloadFile } from "../../../../utils/helpers";
@@ -22,7 +23,6 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
-import apiClient from "../../../../api/services/apiClient";
 
 interface AnalysisReportsProps {
   deviceSerialNumber: string;
@@ -50,11 +50,11 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
         const response = await apiClient.get(
           `${BASE_URL}/api/scanners/${deviceSerialNumber}/reports`,
         );
-        if (!response) throw new Error("Failed to fetch reports");
-        const data: AnalysisReport[] = await response.data;
+        const data = response.data as AnalysisReport[];
         setAnalysisReports(data);
       } catch (err) {
-        const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
+        const errorMessage =
+          err instanceof Error ? err.message : "Unknown error occurred";
         toast.error("Unable to fetch analysis reports: " + errorMessage);
       } finally {
         setLoading(false);
@@ -65,7 +65,6 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
   }, [deviceSerialNumber]);
 
   const filteredAndSortedReports = useMemo(() => {
-
     const term = searchTerm.toLowerCase();
 
     let reports = analysisReports.filter((report: any) => {
@@ -77,12 +76,10 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
       );
     });
 
-
     if (sortConfig) {
       reports = [...reports].sort((a, b) => {
         let valueA = a[sortConfig.key] || "";
         let valueB = b[sortConfig.key] || "";
-
 
         if (sortConfig.key === "createdAt") {
           const dateA = new Date(valueA).getTime();
@@ -125,8 +122,11 @@ export function AnalysisReports({ deviceSerialNumber }: AnalysisReportsProps) {
       downloadFile(url, filename);
       toast.success(`Analysis report downloaded as ${format.toUpperCase()}`);
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
-      toast.error("File not found - Unable to download report: " + errorMessage);
+      const errorMessage =
+        err instanceof Error ? err.message : "Unknown error occurred";
+      toast.error(
+        "File not found - Unable to download report: " + errorMessage,
+      );
     }
   };
 

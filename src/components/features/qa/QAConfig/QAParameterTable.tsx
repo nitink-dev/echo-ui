@@ -1,8 +1,15 @@
-import React from 'react';
-import { Plus, Edit, Trash2, Eye, EyeOff } from 'lucide-react';
-import { Button } from '../../../ui/button';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../../ui/table';
-import { QASlideParameter } from '../../../../types/qa.types';
+import { Edit, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
+import { usePermissions } from "../../../../hooks/usePermissions";
+import { QASlideParameter } from "../../../../types/qa.types";
+import { Button } from "../../../ui/button";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "../../../ui/table";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -19,20 +26,35 @@ export function QAParameterTable({
   onAddParameter,
   onEditParameter,
   onDeleteParameter,
-  onToggleVisibility
+  onToggleVisibility,
 }: QAParameterTableProps) {
   if (!qaParameters || qaParameters.length === 0) {
+    const { canWrite } = usePermissions();
+    const canAdd = canWrite("qa-analysis");
     return (
       <div className="text-center py-12">
-        <div className="text-gray-400 text-lg mb-2">No QA parameters configured</div>
-        <p className="text-gray-600 mb-4">Add barcode and activation code pairs to get started</p>
-        <Button onClick={onAddParameter} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="h-4 w-4 mr-2" />
-          Add First Parameter
-        </Button>
+        <div className="text-gray-400 text-lg mb-2">
+          No QA parameters configured
+        </div>
+        <p className="text-gray-600 mb-4">
+          Add barcode and activation code pairs to get started
+        </p>
+        {canAdd && (
+          <Button
+            onClick={onAddParameter}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add First Parameter
+          </Button>
+        )}
       </div>
     );
   }
+
+  const { canWrite, canDelete: canDeleteFn } = usePermissions();
+  const canEdit = canWrite("qa-analysis");
+  const canDelete = canDeleteFn("qa-analysis");
 
   return (
     <Table>
@@ -40,7 +62,9 @@ export function QAParameterTable({
         <TableRow>
           <TableHead>QA Slide Barcode</TableHead>
           <TableHead>Activation Code</TableHead>
-          <TableHead className="w-[220px]">Actions</TableHead>
+          {canEdit || canDelete ? (
+            <TableHead className="w-[220px]">Actions</TableHead>
+          ) : null}
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -48,7 +72,9 @@ export function QAParameterTable({
           <TableRow key={parameter.id}>
             <TableCell className="font-mono">{parameter.barcode}</TableCell>
             <TableCell className="font-mono relative flex items-center gap-2">
-              {visibleActivationCodes[parameter.id] ? parameter.activationCode : '******'}
+              {visibleActivationCodes[parameter.id]
+                ? parameter.activationCode
+                : "******"}
               <button
                 type="button"
                 onClick={() => onToggleVisibility(parameter.id)}
@@ -61,26 +87,31 @@ export function QAParameterTable({
                 )}
               </button>
             </TableCell>
+
             <TableCell>
               <div className="flex gap-1 flex-wrap">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onEditParameter(parameter)}
-                  className="min-w-0"
-                  title="Edit Parameter"
-                >
-                  <Edit className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => onDeleteParameter(parameter)}
-                  className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
-                  title="Delete Parameter"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                {canEdit && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEditParameter(parameter)}
+                    className="min-w-0"
+                    title="Edit Parameter"
+                  >
+                    <Edit className="h-4 w-4" />
+                  </Button>
+                )}
+                {canDelete && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onDeleteParameter(parameter)}
+                    className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
+                    title="Delete Parameter"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                )}
               </div>
             </TableCell>
           </TableRow>

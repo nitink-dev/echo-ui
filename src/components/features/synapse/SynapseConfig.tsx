@@ -5,6 +5,7 @@ import { toast } from "sonner";
 import apiClient from "../../../api/services/apiClient";
 import { useAppDispatch } from "../../../hooks";
 import { usePermissions } from "../../../hooks/usePermissions";
+import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 import {
   IP_ALLOWED_PATTERN,
   IP_ERROR_MESSAGE,
@@ -19,8 +20,6 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
-
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -48,10 +47,9 @@ export const patchSynapse = createAsyncThunk<
   }
 });
 
-
 const FIELD_RULES: Record<string, FieldRule> = {
-  applicationName: {
-    label: "Name of Application",
+  imsName: {
+    label: "IMS Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
@@ -66,7 +64,7 @@ const FIELD_RULES: Record<string, FieldRule> = {
     required: true,
   },
   receivingPort: {
-    label: "Synapse Port",
+    label: "IMS Port",
     allowedPattern: PORT_ALLOWED_PATTERN,
     validate: isValidPort,
     errorMessage: PORT_ERROR_MESSAGE,
@@ -80,6 +78,30 @@ const FIELD_RULES: Record<string, FieldRule> = {
       "Only letters, digits, spaces and path characters (/ \\ : _ - .) are allowed (max 260 chars)",
     required: true,
   },
+  networkFolder2: {
+    label: "Network Folder Location 2",
+    allowedPattern: /^[a-zA-Z0-9 /\\:_\-.]*$/,
+    validPattern: /^[a-zA-Z0-9 /\\:_\-.]{1,260}$/,
+    errorMessage:
+      "Only letters, digits, spaces and path characters (/ \\ : _ - .) are allowed (max 260 chars)",
+    required: false,
+  },
+  applicationName: {
+    label: "Application Name",
+    allowedPattern: /^[a-zA-Z0-9 _-]*$/,
+    validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
+    errorMessage:
+      "Only letters, numbers, spaces, hyphens and underscores are allowed (max 100 chars)",
+    required: false,
+  },
+  receivingFacility: {
+    label: "Application Facility",
+    allowedPattern: /^[a-zA-Z0-9 _-]*$/,
+    validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
+    errorMessage:
+      "Only letters, numbers, spaces, hyphens and underscores are allowed (max 100 chars)",
+    required: false,
+  },
 };
 
 type FormState = {
@@ -87,8 +109,9 @@ type FormState = {
   ipAddress: string;
   receivingPort: string;
   networkFolder: string;
-  synapsePluginUrl: string;
-  synapseVmDetails: string;
+  receivingFacility: string;
+  imsName: string;
+  networkFolder2: string;
 };
 
 const INITIAL_FORM: FormState = {
@@ -96,10 +119,10 @@ const INITIAL_FORM: FormState = {
   ipAddress: "",
   receivingPort: "",
   networkFolder: "",
-  synapsePluginUrl: "",
-  synapseVmDetails: "",
+  receivingFacility: "",
+  imsName: "",
+  networkFolder2: "",
 };
-
 
 export function SynapseConfig() {
   const dispatch = useAppDispatch();
@@ -128,14 +151,16 @@ export function SynapseConfig() {
             ipAddress: result.ipAddress || "",
             receivingPort: result["receive-port"]?.toString() || "",
             networkFolder: result.synapseServerFolder || "",
-            synapsePluginUrl: result.synapsePluginUrl || "",
-            synapseVmDetails: result.synapseVmDetails || "",
+            receivingFacility: result.receivingFacility || "",
+            imsName: result.imsName || "",
+            networkFolder2: result.networkFolder2 || "",
           };
           setForm(newData);
           setOriginalForm(newData);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+        const errorMessage =
+          error instanceof Error ? error.message : "Unknown error occurred";
         toast.error("Failed to load Synapse configuration: " + errorMessage);
       } finally {
         setLoading(false);
@@ -145,7 +170,6 @@ export function SynapseConfig() {
   }, [dispatch]);
 
   useRefetchOnFocus([() => fetchSynapse()]);
-
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {
       const rule = FIELD_RULES[field];
@@ -271,11 +295,11 @@ export function SynapseConfig() {
     if (changes.receivingPort)
       body["receive-port"] = parseInt(changes.receivingPort, 10);
     if (changes.networkFolder) body.synapseServerFolder = changes.networkFolder;
-    if (changes.synapsePluginUrl !== undefined)
-      body.synapsePluginUrl = changes.synapsePluginUrl;
-    if (changes.synapseVmDetails !== undefined)
-      body.synapseVmDetails = changes.synapseVmDetails;
 
+    if (changes.receivingFacility)
+      body.receivingFacility = changes.receivingFacility;
+    if (changes.imsName) body.imsName = changes.imsName;
+    if (changes.networkFolder2) body.networkFolder2 = changes.networkFolder2;
     setLoading(true);
     try {
       await dispatch(patchSynapse({ body })).unwrap();
@@ -285,7 +309,8 @@ export function SynapseConfig() {
       setErrors({});
       setTouched({});
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+      const errorMessage =
+        error instanceof Error ? error.message : "Unknown error occurred";
       toast.error("Update failed: " + errorMessage);
     } finally {
       setLoading(false);
@@ -338,15 +363,13 @@ export function SynapseConfig() {
   return (
     <div className="space-y-6 p-6 bg-gray-50 min-h-screen">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
-          Synapse Details
-        </h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">IMS Details</h1>
 
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
               <Cloud className="h-5 w-5 text-[#007BFF]" />
-              Synapse
+              IMS
             </CardTitle>
           </CardHeader>
 
@@ -356,6 +379,9 @@ export function SynapseConfig() {
               {renderInput("ipAddress", !editMode)}
               {renderInput("receivingPort", !editMode)}
               {renderInput("networkFolder", !editMode)}
+              {renderInput("receivingFacility", !editMode)}
+              {renderInput("imsName", !editMode)}
+              {renderInput("networkFolder2", !editMode)}
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">

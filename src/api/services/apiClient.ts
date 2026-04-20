@@ -67,6 +67,11 @@ apiClient.interceptors.response.use(
       .replace(/^\/api\//, "")
       .split("?")[0];
 
+    // Skip toast errors for login-related endpoints
+    if (sourcePath.includes("login") || sourcePath.includes("auth/login")) {
+      return Promise.reject(error);
+    }
+
     if (error.response) {
       const status: number = error.response.status;
 
@@ -95,14 +100,23 @@ apiClient.interceptors.response.use(
       showErrorToast(displayMessage, toastId);
 
     } else if (error.request) {
-      showErrorToast(
-        "Network error — server unreachable. Please check your connection.",
-        "network-error"
-      );
+      // Skip toast errors for login-related endpoints
+      if (!sourcePath.includes("login") && !sourcePath.includes("auth/login")) {
+        showErrorToast(
+          "Network error — server unreachable. Please check your connection.",
+          "network-error"
+        );
+      }
     } else if (error.code === "ECONNABORTED") {
-      showErrorToast("The request timed out. Please try again.", `timeout-${sourcePath}`);
+      // Skip toast errors for login-related endpoints
+      if (!sourcePath.includes("login") && !sourcePath.includes("auth/login")) {
+        showErrorToast("The request timed out. Please try again.", `timeout-${sourcePath}`);
+      }
     } else {
-      showErrorToast(error.message || "An unexpected error occurred.", `unknown-${sourcePath}`);
+      // Skip toast errors for login-related endpoints
+      if (!sourcePath.includes("login") && !sourcePath.includes("auth/login")) {
+        showErrorToast(error.message || "An unexpected error occurred.", `unknown-${sourcePath}`);
+      }
     }
 
     return Promise.reject(error);

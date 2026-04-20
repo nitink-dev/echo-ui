@@ -26,7 +26,6 @@ export function LoginPage() {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
-      toast.error("Please enter both username and password");
       return;
     }
 
@@ -34,10 +33,9 @@ export function LoginPage() {
 
     try {
       const response = await dispatch(loginUser(formData)).unwrap();
-      toast.success(`Welcome, ${response.username}!`);
+      toast.success(`Welcome, ${response.displayName}!`);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
-      toast.error("Login error: " + errorMessage);
+      // Error handling removed - no toast error shown
     } finally {
       setLoading(false);
     }

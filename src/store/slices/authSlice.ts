@@ -14,6 +14,7 @@ interface AuthState {
   securityConfigLoaded: boolean;           // true once config has been fetched
   loading: boolean;
   error: string | null;
+  displayName: string | null;
 }
 
 const initialState: AuthState = {
@@ -25,6 +26,7 @@ const initialState: AuthState = {
   securityConfigLoaded: false,
   loading: false,
   error: null,
+  displayName: ""
 };
 
 export const loginUser = createAsyncThunk(
@@ -83,10 +85,12 @@ const authSlice = createSlice({
       state.securityConfig      = [];
       state.securityConfigLoaded = false;
       state.error               = null;
+      state.displayName         = "";
 
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_role");
       localStorage.removeItem("auth_scopes");
+      localStorage.removeItem("auth_display")
     },
 
 
@@ -94,12 +98,14 @@ const authSlice = createSlice({
       const user         = localStorage.getItem("auth_user");
       const storedRole   = localStorage.getItem("auth_role") as Role | null;
       const storedScopes = localStorage.getItem("auth_scopes");
+      const display      = localStorage.getItem("auth_display");
 
       if (user && storedRole) {
         state.isLoggedIn = true;
         state.user       = user;
         state.role       = DEV_STATIC_ROLE ?? storedRole;
         state.scopes     = storedScopes ? JSON.parse(storedScopes) : [];
+        state.displayName = display;
       }
     },
   },
@@ -116,12 +122,14 @@ const authSlice = createSlice({
         state.isLoggedIn = true;
         state.user       = action.payload.username;
         state.scopes     = action.payload.scopes ?? [];
+        state.displayName= action.payload.displayName;
 
 
         const backendRole = (action.payload.roles?.[0] as Role) ?? null;
-        state.role = DEV_STATIC_ROLE ?? backendRole;
+        state.role =  backendRole;
 
         localStorage.setItem("auth_user", action.payload.username);
+        localStorage.setItem("auth_display", action.payload.displayName);
         if (state.role) {
           localStorage.setItem("auth_role", state.role);
         }

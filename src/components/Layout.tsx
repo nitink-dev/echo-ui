@@ -66,7 +66,7 @@ const navigationItems: NavigationItem[] = [
     id: "clinical-apps",
     children: [
       { label: "LIS", icon: Activity, id: "lis" },
-      { label: "Synapse Pacs", icon: Settings, id: "synapse" },
+      { label: "IMS", icon: Settings, id: "synapse" },
       { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis" },
       { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool" },
       { label: "Health Status", icon: MonitorCheckIcon, id: "health-status" },
@@ -207,7 +207,7 @@ export function Layout({
 }: LayoutProps) {
   const dispatch = useAppDispatch();
 
-  const username = useSelector((state: any) => state.auth.user) as
+  const username = useSelector((state: any) => state.auth.displayName) as
     | string
     | null;
 

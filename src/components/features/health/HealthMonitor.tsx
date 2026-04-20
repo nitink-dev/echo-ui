@@ -48,7 +48,7 @@ export function HealthMonitor() {
         dispatch(fetchHealthStatus());
       },
       5 * 60 * 1000,
-    ); 
+    );
 
     return () => clearInterval(interval);
   }, [autoRefresh, dispatch]);
@@ -61,9 +61,9 @@ export function HealthMonitor() {
     if (!lastFetched) return;
     setElapsedNano("0 Sec");
     const interval = setInterval(() => {
-      const diffMs = Date.now() - lastFetched; 
+      const diffMs = Date.now() - lastFetched;
       setElapsedNano(`${Math.floor(diffMs / 1000).toLocaleString()} Sec`);
-    }, 1); 
+    }, 1);
 
     return () => clearInterval(interval);
   }, [lastFetched]);
@@ -270,7 +270,7 @@ export function HealthMonitor() {
               <div className="flex items-center justify-between">
                 <CardTitle className="flex items-center gap-2 text-lg">
                   <Server className="h-5 w-5 text-blue-600" />
-                  Enrichment Tool Services
+                  Integrated Services
                   <span className="text-sm font-normal text-gray-600">
                     ({microservices?.length || 0} services)
                   </span>
