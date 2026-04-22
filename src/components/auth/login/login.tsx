@@ -8,6 +8,7 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { extractApiErrorMessage } from "../../../api/services/apiClient";
 
 export function LoginPage() {
   const dispatch = useDispatch<AppDispatch>();
@@ -18,6 +19,9 @@ export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
+  const [errorMessage, setErrorMessage] = useState<string | null>(null); // ✅ NEW
+
+
   const handleChange = (field: string, value: string) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -26,17 +30,28 @@ export function LoginPage() {
     e.preventDefault();
 
     if (!formData.username || !formData.password) {
+      setErrorMessage("Please enter both username and password.");
       return;
     }
 
     setLoading(true);
+    setErrorMessage(null);
+
 
     try {
       const response = await dispatch(loginUser(formData)).unwrap();
       toast.success(`Welcome, ${response.displayName}!`);
     } catch (error) {
-      // Error handling removed - no toast error shown
-    } finally {
+      const message = extractApiErrorMessage(error);
+
+      if (
+        typeof message === "string" &&
+        (message.toLowerCase().includes("unauthorized") || message.toLowerCase().includes("unexpected"))
+      ) {
+        setErrorMessage("Invalid username or password.");
+      } else {
+        setErrorMessage(message);
+      }    } finally {
       setLoading(false);
     }
   };

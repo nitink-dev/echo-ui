@@ -88,19 +88,26 @@ apiClient.interceptors.response.use(
 
   (error) => {
     const url: string = error.config?.url ?? "unknown";
+
     const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
       .replace(/^\/api\//, "")
       .split("?")[0];
 
-    const isAuthPath =
-      sourcePath.includes("login") || sourcePath.includes("auth/login");
-    if (isAuthPath) return Promise.reject(error);
+    const isLoginRequest =
+      sourcePath === "login" || sourcePath === "auth/login";
 
     if (error.response) {
       const status: number = error.response.status;
 
+      if (isLoginRequest) {
+        return Promise.reject(error);
+      }
+
       if (status === 401) {
-        showErrorToast("Session expired. Please log in again.", "session-expired");
+        showErrorToast(
+          "Session expired. Please log in again.",
+          "session-expired"
+        );
         setTimeout(() => onUnauthorized(), 1500);
       }
 
