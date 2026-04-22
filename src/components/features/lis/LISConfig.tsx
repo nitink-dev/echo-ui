@@ -1,10 +1,11 @@
-import { Database, Edit, Save, X } from "lucide-react";
+import { AlertTriangle, Database, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../../hooks";
 import { usePermissions } from "../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
+import { extractApiErrorMessage } from "../../../api/services/apiClient";
 import { fetchEhTool, patchEhTool } from "../../../store/slices/ehToolsSlice";
 import {
   IP_ALLOWED_PATTERN,
@@ -57,21 +58,15 @@ const FIELD_RULES: Record<string, FieldRule> = {
 type FormState = {
   applicationName: string;
   ipAddress: string;
-  // receivingPort: string;
   incomingPort: string;
   receivingFacility: string;
-  // receivingAppName: string;
-  // sendingFacility: string;
 };
 
 const INITIAL_FORM: FormState = {
   applicationName: "",
   ipAddress: "",
-  // receivingPort: "",
   incomingPort: "",
   receivingFacility: "",
-  // receivingAppName: "",
-  // sendingFacility: "",
 };
 
 export function LisConfig() {
@@ -88,10 +83,18 @@ export function LisConfig() {
   const [errors, setErrors] = useState<
     Partial<Record<keyof FormState, string>>
   >({});
+
+  const [cardError, setCardError] = useState<string | null>(null);
+
   const { canWrite } = usePermissions();
   const canEditLis = canWrite("lis");
+
   useEffect(() => {
-    dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }));
+    dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))
+      .unwrap()
+      .catch((err: unknown) => {
+        setCardError(extractApiErrorMessage(err));
+      });
   }, [dispatch]);
 
   useRefetchOnFocus([() => fetchEhTool({ toolKey: "eh-lis-connector" })]);
@@ -102,15 +105,13 @@ export function LisConfig() {
     const newData: FormState = {
       applicationName: lisConnector.receivingAppName || lisConnector.name || "",
       ipAddress: lisConnector.ipAddress || "",
-      //receivingPort: lisConnector.port?.toString() || "",
       incomingPort: lisConnector["incoming-port"]?.toString() || "",
       receivingFacility: lisConnector.receivingFacility || "",
-      //receivingAppName: lisConnector.receivingAppName || "",
-      //sendingFacility: lisConnector.sendingFacility || "",
     };
     setForm(newData);
     setOriginalForm(newData);
     setInitialized(true);
+    setCardError(null);
   }, [lisConnector, initialized]);
 
   const validateField = useCallback(
@@ -202,6 +203,7 @@ export function LisConfig() {
       setErrors({});
       setTouched({});
     }
+    setCardError(null);
   };
 
   const getChangedFields = (
@@ -234,12 +236,14 @@ export function LisConfig() {
     const body: any = {};
     if (changes.applicationName) body.appName = changes.applicationName;
     if (changes.ipAddress) body.ipAddress = changes.ipAddress;
-    //if (changes.receivingPort) body.port = parseInt(changes.receivingPort, 10);
     if (changes.incomingPort)
       body["incoming-port"] = parseInt(changes.incomingPort, 10);
     if (changes.receivingFacility !== undefined)
       body.receivingFacility = changes.receivingFacility;
-     try {
+
+    setCardError(null);
+
+    try {
       await dispatch(
         patchEhTool({ toolKey: "eh-lis-connector", body }),
       ).unwrap();
@@ -248,10 +252,8 @@ export function LisConfig() {
       setEditMode(false);
       setErrors({});
       setTouched({});
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      toast.error("Update failed: " + errorMessage);
+    } catch (error: unknown) {
+      setCardError(extractApiErrorMessage(error));
     }
   };
 
@@ -312,6 +314,22 @@ export function LisConfig() {
               LIS
             </CardTitle>
           </CardHeader>
+
+          {/* Error banner between header and content */}
+          {cardError && (
+            <div className="mx-6 mb-2 flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+              <span className="flex-1">{cardError}</span>
+              <button
+                type="button"
+                onClick={() => setCardError(null)}
+                className="ml-2 text-red-400 hover:text-red-600"
+                aria-label="Dismiss error"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

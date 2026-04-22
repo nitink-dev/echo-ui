@@ -5,8 +5,7 @@ import { BASE_URL } from "../../utils/constants";
 const activeToasts = new Set<string>();
 
 function showErrorToast(message: string, toastId: string) {
-  if (activeToasts.has(toastId)) return; 
-
+  if (activeToasts.has(toastId)) return;
   activeToasts.add(toastId);
   toast.error(message, {
     id: toastId,
@@ -34,90 +33,100 @@ apiClient.interceptors.request.use((config) => {
   return config;
 });
 
-const HTTP_ERROR_MESSAGES: Record<number, string> = {
-  400: "Bad request. Please check the data you submitted.",
-  401: "You are not authenticated. Please log in and try again.",
-  403: "Access denied. You don't have permission to perform this action.",
-  404: "The requested resource was not found.",
-  408: "The request timed out. Please try again.",
-  409: "A conflict occurred. The resource may already exist.",
-  422: "The submitted data is invalid or could not be processed.",
-  429: "Too many requests. Please slow down and try again later.",
-  500: "An internal server error occurred. Please try again later.",
-  502: "The server received an invalid response from an upstream service.",
-  503: "The service is temporarily unavailable. Please try again shortly.",
-  504: "Gateway timeout. Please try again.",
-};
-
-const LOGIN_PATH = "/login"; 
-
 let onUnauthorized: () => void = () => {};
 
 export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
+export function extractApiErrorMessage(error: unknown): string {
+  if (axios.isAxiosError(error)) {
+    const status: number | undefined = error.response?.status;
+    const serverMessage =
+      error.response?.data?.message ||
+      error.response?.data?.error ||
+      error.response?.data?.errorDescription ||
+      null;
+
+    if (serverMessage) return serverMessage;
+
+    const HTTP_ERROR_MESSAGES: Record<number, string> = {
+      400: "Bad request. Please check the data you submitted.",
+      403: "You don't have permission to perform this action.",
+      404: "The requested resource was not found.",
+      408: "The request timed out. Please try again.",
+      409: "A conflict occurred. The resource may already exist.",
+      422: "The submitted data is invalid or could not be processed.",
+      429: "Too many requests. Please slow down and try again later.",
+      500: "An internal server error occurred. Please try again later.",
+      502: "The server received an invalid response from an upstream service.",
+      503: "The service is temporarily unavailable. Please try again shortly.",
+      504: "Gateway timeout. Please try again.",
+    };
+
+    if (status && HTTP_ERROR_MESSAGES[status]) {
+      return HTTP_ERROR_MESSAGES[status];
+    }
+
+    if (!error.response && error.request) {
+      return "Network error — server unreachable. Please check your connection.";
+    }
+
+    if (error.code === "ECONNABORTED") {
+      return "The request timed out. Please try again.";
+    }
+
+    return `Unexpected error${status ? ` (${status})` : ""}.`;
+  }
+
+  if (error instanceof Error) return error.message;
+  return "An unexpected error occurred.";
+}
+
 apiClient.interceptors.response.use(
   (response) => response,
 
   (error) => {
-    const url = error.config?.url ?? "unknown";
-
+    const url: string = error.config?.url ?? "unknown";
     const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
       .replace(/^\/api\//, "")
       .split("?")[0];
 
-    // Skip toast errors for login-related endpoints
-    if (sourcePath.includes("login") || sourcePath.includes("auth/login")) {
-      return Promise.reject(error);
-    }
+    const isAuthPath =
+      sourcePath.includes("login") || sourcePath.includes("auth/login");
+    if (isAuthPath) return Promise.reject(error);
 
     if (error.response) {
       const status: number = error.response.status;
 
       if (status === 401) {
         showErrorToast("Session expired. Please log in again.", "session-expired");
-        setTimeout(() => {
-          onUnauthorized();
-        }, 1500);
-        return Promise.reject(error);
+        setTimeout(() => onUnauthorized(), 1500);
       }
 
-      const serverMessage =
-        error.response.data?.message ||
-        error.response.data?.error ||
-        error.response.data?.errorDescription ||
-        null;
-
-      const baseMessage =
-        serverMessage ||
-        HTTP_ERROR_MESSAGES[status] ||
-        `Unexpected error (${status}).`;
-
-      const toastId = `${status}-${sourcePath}`;
-      const displayMessage = `[${sourcePath}] ${baseMessage}`;
-
-      showErrorToast(displayMessage, toastId);
-
-    } else if (error.request) {
-      // Skip toast errors for login-related endpoints
-      if (!sourcePath.includes("login") && !sourcePath.includes("auth/login")) {
-        showErrorToast(
-          "Network error — server unreachable. Please check your connection.",
-          "network-error"
-        );
-      }
-    } else if (error.code === "ECONNABORTED") {
-      // Skip toast errors for login-related endpoints
-      if (!sourcePath.includes("login") && !sourcePath.includes("auth/login")) {
-        showErrorToast("The request timed out. Please try again.", `timeout-${sourcePath}`);
-      }
-    } else {
-      // Skip toast errors for login-related endpoints
-      if (!sourcePath.includes("login") && !sourcePath.includes("auth/login")) {
-        showErrorToast(error.message || "An unexpected error occurred.", `unknown-${sourcePath}`);
-      }
+      return Promise.reject(error);
     }
+
+    if (error.request) {
+      showErrorToast(
+        "Network error — server unreachable. Please check your connection.",
+        "network-error"
+      );
+      return Promise.reject(error);
+    }
+
+    if (error.code === "ECONNABORTED") {
+      showErrorToast(
+        "The request timed out. Please try again.",
+        `timeout-${sourcePath}`
+      );
+      return Promise.reject(error);
+    }
+
+    showErrorToast(
+      error.message || "An unexpected error occurred.",
+      `unknown-${sourcePath}`
+    );
 
     return Promise.reject(error);
   }

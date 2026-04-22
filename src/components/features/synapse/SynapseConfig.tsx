@@ -1,8 +1,8 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Cloud, Edit, Save, X } from "lucide-react";
+import { AlertTriangle, Cloud, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import apiClient from "../../../api/services/apiClient";
+import apiClient, { extractApiErrorMessage } from "../../../api/services/apiClient";
 import { useAppDispatch } from "../../../hooks";
 import { usePermissions } from "../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
@@ -137,12 +137,15 @@ export function SynapseConfig() {
     Partial<Record<keyof FormState, string>>
   >({});
 
+  const [cardError, setCardError] = useState<string | null>(null);
+
   const { canWrite } = usePermissions();
   const canEditSynapse = canWrite("synapse");
 
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
+      setCardError(null);
       try {
         const result = await dispatch(fetchSynapse()).unwrap();
         if (result && Object.keys(result).length > 0) {
@@ -158,10 +161,8 @@ export function SynapseConfig() {
           setForm(newData);
           setOriginalForm(newData);
         }
-      } catch (error) {
-        const errorMessage =
-          error instanceof Error ? error.message : "Unknown error occurred";
-        toast.error("Failed to load Synapse configuration: " + errorMessage);
+      } catch (error: unknown) {
+        setCardError(extractApiErrorMessage(error));
       } finally {
         setLoading(false);
       }
@@ -170,6 +171,7 @@ export function SynapseConfig() {
   }, [dispatch]);
 
   useRefetchOnFocus([() => fetchSynapse()]);
+
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {
       const rule = FIELD_RULES[field];
@@ -259,6 +261,7 @@ export function SynapseConfig() {
       setErrors({});
       setTouched({});
     }
+    setCardError(null);
   };
 
   const getChangedFields = (
@@ -295,12 +298,14 @@ export function SynapseConfig() {
     if (changes.receivingPort)
       body["receive-port"] = parseInt(changes.receivingPort, 10);
     if (changes.networkFolder) body.synapseServerFolder = changes.networkFolder;
-
     if (changes.receivingFacility)
       body.receivingFacility = changes.receivingFacility;
     if (changes.imsName) body.imsName = changes.imsName;
     if (changes.networkFolder2) body.networkFolder2 = changes.networkFolder2;
+
+    setCardError(null);
     setLoading(true);
+
     try {
       await dispatch(patchSynapse({ body })).unwrap();
       toast.success("Synapse configuration updated successfully");
@@ -308,10 +313,8 @@ export function SynapseConfig() {
       setEditMode(false);
       setErrors({});
       setTouched({});
-    } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error occurred";
-      toast.error("Update failed: " + errorMessage);
+    } catch (error: unknown) {
+      setCardError(extractApiErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -372,6 +375,22 @@ export function SynapseConfig() {
               IMS
             </CardTitle>
           </CardHeader>
+
+          {/* Error banner between header and content */}
+          {cardError && (
+            <div className="mx-6 mb-2 flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+              <span className="flex-1">{cardError}</span>
+              <button
+                type="button"
+                onClick={() => setCardError(null)}
+                className="ml-2 text-red-400 hover:text-red-600"
+                aria-label="Dismiss error"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          )}
 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

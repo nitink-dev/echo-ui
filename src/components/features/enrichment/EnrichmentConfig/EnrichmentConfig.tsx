@@ -1,6 +1,7 @@
 import {
   Activity,
   AlertCircle,
+  AlertTriangle,
   Cloud,
   Database,
   Edit,
@@ -17,6 +18,7 @@ import { toast } from "sonner";
 import { useAppDispatch } from "../../../../hooks";
 import { usePermissions } from "../../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../../hooks/useRefetchOnFocus";
+import { extractApiErrorMessage } from "../../../../api/services/apiClient";
 import {
   fetchEhTool,
   patchEhTool,
@@ -56,6 +58,17 @@ const PORT_FIELDS: Record<string, string[]> = {
   hl7Messaging: ["receivingPort"],
 };
 
+const SECTION_FORM_KEY: Record<string, string> = {
+  dicom: "dicomReceiver",
+  lis: "lisConnector",
+  enrichment: "enrichmentService",
+  export: "exportService",
+  hl7: "hl7Messaging",
+  email: "emailService",
+};
+
+type CardErrors = Record<string, string | null>;
+
 export function EnrichmentToolConfig() {
   const dispatch = useAppDispatch();
   const {
@@ -88,6 +101,18 @@ export function EnrichmentToolConfig() {
     hl7: false,
     email: false,
   });
+
+  const [cardErrors, setCardErrors] = useState<CardErrors>({
+    dicom: null,
+    lis: null,
+    enrichment: null,
+    export: null,
+    hl7: null,
+    email: null,
+  });
+
+  const setCardError = (key: string, msg: string | null) =>
+    setCardErrors((prev) => ({ ...prev, [key]: msg }));
 
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
@@ -125,13 +150,24 @@ export function EnrichmentToolConfig() {
   const [emailIbexInput, setEmailIbexInput] = useState("");
   const [emailIbexInputError, setEmailIbexInputError] = useState("");
 
+
   useEffect(() => {
-    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.DICOM_RECEIVER }));
-    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS_CONNECTOR }));
-    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.ENRICHMENT_SERVICE }));
-    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EXPORT_SERVICE }));
-    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.HL7_CONNECTOR }));
-    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }));
+    const tools = [
+      { key: ENRICHMENT_TOOLS.DICOM_RECEIVER, card: "dicom" },
+      { key: ENRICHMENT_TOOLS.LIS_CONNECTOR, card: "lis" },
+      { key: ENRICHMENT_TOOLS.ENRICHMENT_SERVICE, card: "enrichment" },
+      { key: ENRICHMENT_TOOLS.EXPORT_SERVICE, card: "export" },
+      { key: ENRICHMENT_TOOLS.HL7_CONNECTOR, card: "hl7" },
+      { key: ENRICHMENT_TOOLS.EMAIL_SERVICE, card: "email" },
+    ];
+
+    tools.forEach(({ key, card }) => {
+      dispatch(fetchEhTool({ toolKey: key }))
+        .unwrap()
+        .catch((err: unknown) => {
+          setCardError(card, extractApiErrorMessage(err));
+        });
+    });
   }, [dispatch]);
 
   useRefetchOnFocus([
@@ -143,11 +179,13 @@ export function EnrichmentToolConfig() {
     () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }),
   ]);
 
+
   const syncSection = useCallback(
     (sectionKey: string, formKey: string, newData: any) => {
       setForm((p: any) => ({ ...p, [formKey]: newData }));
       setOriginalForm((p: any) => ({ ...p, [formKey]: newData }));
       setInitializedSections((p) => ({ ...p, [sectionKey]: true }));
+      setCardError(sectionKey, null);
     },
     [],
   );
@@ -180,7 +218,8 @@ export function EnrichmentToolConfig() {
       ipAddress: lisConnector["lis.ipAddress"] || lisConnector.ipAddress || "",
       receivingPort:
         lisConnector["lis.port"]?.toString() ||
-        lisConnector.port?.toString() ||"",
+        lisConnector.port?.toString() ||
+        "",
       sendingFacility: lisConnector.sendingFacility || "",
     });
   }, [lisConnector]);
@@ -244,6 +283,7 @@ export function EnrichmentToolConfig() {
       emailIbexTo: toArr(emailService.emailIbexTo),
     });
   }, [emailService]);
+
 
   const handleChange = useCallback(
     (section: string, field: string, value: any) => {
@@ -360,6 +400,7 @@ export function EnrichmentToolConfig() {
       setEmailIbexInput("");
       setEmailIbexInputError("");
     }
+    setCardError(key, null);
   };
 
   const getChangedFields = (current: any, original: any) => {
@@ -379,14 +420,6 @@ export function EnrichmentToolConfig() {
     return diff;
   };
 
-  const SECTION_FORM_KEY: Record<string, string> = {
-    dicom: "dicomReceiver",
-    lis: "lisConnector",
-    enrichment: "enrichmentService",
-    export: "exportService",
-    hl7: "hl7Messaging",
-    email: "emailService",
-  };
 
   const handleSave = async (type: string) => {
     if (!validateSection(type)) {
@@ -434,8 +467,9 @@ export function EnrichmentToolConfig() {
         body = {
           ...(d.applicationName && { appName: d.applicationName }),
           ...(d.ipAddress && { ipAddress: d.ipAddress }),
-          ...(d.receivingPort && { port: parseInt(d.receivingPort) }),         
-          ...(d.sendingFacility !== undefined && {sendingFacility: d.sendingFacility,
+          ...(d.receivingPort && { port: parseInt(d.receivingPort) }),
+          ...(d.sendingFacility !== undefined && {
+            sendingFacility: d.sendingFacility,
           }),
         };
         break;
@@ -492,8 +526,11 @@ export function EnrichmentToolConfig() {
         body = {
           ...(d.applicationName && { appName: d.applicationName }),
           ...(d.ipAddress && { ipAddress: d.ipAddress }),
-          ...(d.receivingPort && { "receive-port": parseInt(d.receivingPort) }),
-          ...(d.sendingFacility !== undefined && {sendingFacility: d.sendingFacility,
+          ...(d.receivingPort && {
+            "receive-port": parseInt(d.receivingPort),
+          }),
+          ...(d.sendingFacility !== undefined && {
+            sendingFacility: d.sendingFacility,
           }),
         };
         break;
@@ -529,6 +566,8 @@ export function EnrichmentToolConfig() {
       }
     }
 
+    setCardError(type, null);
+
     try {
       await dispatch(patchEhTool({ toolKey, body })).unwrap();
       toast.success(`${sectionName} updated successfully`);
@@ -536,11 +575,11 @@ export function EnrichmentToolConfig() {
       setOriginalForm((prev: any) => ({ ...prev, [fk]: { ...form[fk] } }));
       setEditMode((prev) => ({ ...prev, [type]: false }));
       setFieldErrors({});
-    } catch (error) {
-      console.error("Update error:", error);
-      toast.error("Update failed. Try again.");
+    } catch (error: unknown) {
+      setCardError(type, extractApiErrorMessage(error));
     }
   };
+
 
   const renderInput = (
     section: string,
@@ -570,7 +609,8 @@ export function EnrichmentToolConfig() {
             const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
             if (isCtrl) return;
             if (isIP && !IP_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
-            if (isPort && !PORT_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+            if (isPort && !PORT_ALLOWED_PATTERN.test(e.key))
+              e.preventDefault();
           }}
           onPaste={(e) => {
             if (disabled || (!isIP && !isPort)) return;
@@ -723,6 +763,29 @@ export function EnrichmentToolConfig() {
     );
   };
 
+  /**
+   * Error banner rendered between the card header and the form fields.
+   * Dismissed by clicking ×, which also clears the error from state.
+   */
+  const renderErrorBanner = (cardKey: string) => {
+    const msg = cardErrors[cardKey];
+    if (!msg) return null;
+    return (
+      <div className="mx-6 mb-2 flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
+        <span className="flex-1">{msg}</span>
+        <button
+          type="button"
+          onClick={() => setCardError(cardKey, null)}
+          className="ml-2 text-red-400 hover:text-red-600"
+          aria-label="Dismiss error"
+        >
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+    );
+  };
+
   const renderDynamicCard = (
     title: string,
     icon: JSX.Element,
@@ -738,6 +801,10 @@ export function EnrichmentToolConfig() {
             </CardTitle>
           </CardHeader>
         </CollapsibleTrigger>
+
+        {/* Error banner sits between header and collapsible content */}
+        {renderErrorBanner(keyName)}
+
         <CollapsibleContent>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{body}</div>
@@ -781,6 +848,7 @@ export function EnrichmentToolConfig() {
       </Collapsible>
     </Card>
   );
+
 
   return (
     <div className="space-y-6 p-6 bg-white">

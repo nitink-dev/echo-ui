@@ -13,18 +13,13 @@ export interface PagePermission {
 }
 
 const PLATFORM_READ_SCOPES = ["platform.read"];
-const PLATFORM_WRITE_SCOPES = ["platform.write", "platform.update", "platform.create"];
-const PLATFORM_DELETE_SCOPES = ["platform.delete"];
-
 
 function matchApi(pattern: string, apiPath: string): boolean {
   if (pattern === apiPath) return true;
-
   if (pattern.endsWith("/**")) {
     const prefix = pattern.slice(0, -3);
     return apiPath.startsWith(prefix);
   }
-
   return false;
 }
 
@@ -48,16 +43,26 @@ function userCanAccess(
   userScopes: string[],
   required: string[],
   isPublic: boolean,
-  platformScopes: string[]
+  platformBypassScopes: string[]
 ): boolean {
   if (isPublic) return true;
-  if (!required || required.length === 0) return true;
 
-  const hasPlatformScope = platformScopes.some((s) =>
-    userScopes.includes(s)
-  );
-  if (hasPlatformScope) return true;
 
+  if (!required || required.length === 0) {
+
+    return platformBypassScopes.length === 0
+      ? false
+      : platformBypassScopes.some((s) => userScopes.includes(s));
+  }
+
+  if (
+    platformBypassScopes.length > 0 &&
+    platformBypassScopes.some((s) => userScopes.includes(s))
+  ) {
+    return true;
+  }
+
+  // Otherwise every required scope must be present.
   return required.every((scope) => userScopes.includes(scope));
 }
 
@@ -65,19 +70,14 @@ function checkAccess(
   permission: ApiPermission | undefined,
   userScopes: string[],
   securityConfig: SecurityConfigEntry[],
-  platformScopes: string[]
+  platformBypassScopes: string[]
 ): boolean {
   if (!permission) return false;
 
   const { api, method } = permission;
+  const { required, isPublic } = getRequiredScopes(api, method, securityConfig);
 
-  const { required, isPublic } = getRequiredScopes(
-    api,
-    method,
-    securityConfig
-  );
-
-  return userCanAccess(userScopes, required, isPublic, platformScopes);
+  return userCanAccess(userScopes, required, isPublic, platformBypassScopes);
 }
 
 export function canReadWithScopes(
@@ -95,7 +95,7 @@ export function canReadWithScopes(
     mapping.read,
     userScopes,
     securityConfig,
-    PLATFORM_READ_SCOPES
+    PLATFORM_READ_SCOPES 
   );
 }
 
@@ -110,12 +110,7 @@ export function canWriteWithScopes(
   const mapping = PAGE_API_MAP[pageId];
   if (!mapping?.write) return false;
 
-  return checkAccess(
-    mapping.write,
-    userScopes,
-    securityConfig,
-    PLATFORM_WRITE_SCOPES
-  );
+  return checkAccess(mapping.write, userScopes, securityConfig, []);
 }
 
 export function canDeleteWithScopes(
@@ -129,10 +124,5 @@ export function canDeleteWithScopes(
   const mapping = PAGE_API_MAP[pageId];
   if (!mapping?.delete) return false;
 
-  return checkAccess(
-    mapping.delete,
-    userScopes,
-    securityConfig,
-    PLATFORM_DELETE_SCOPES
-  );
+  return checkAccess(mapping.delete, userScopes, securityConfig, []);
 }
