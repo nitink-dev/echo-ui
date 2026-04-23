@@ -40,6 +40,7 @@ export function setUnauthorizedHandler(handler: () => void) {
 }
 
 export function extractApiErrorMessage(error: unknown): string {
+  // Preserved from old file: handle plain string errors early
   if (typeof error === "string" && error.trim().length > 0) {
     return error;
   }
@@ -49,6 +50,7 @@ export function extractApiErrorMessage(error: unknown): string {
     const data = error.response?.data;
 
     if (data) {
+      // Preserved from old file: includes errorMessage field in addition to the new file's fields
       const serverMessage =
         data.message ||
         data.error ||
