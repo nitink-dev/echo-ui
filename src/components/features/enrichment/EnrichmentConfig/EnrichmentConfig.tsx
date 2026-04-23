@@ -150,7 +150,6 @@ export function EnrichmentToolConfig() {
   const [emailIbexInput, setEmailIbexInput] = useState("");
   const [emailIbexInputError, setEmailIbexInputError] = useState("");
 
-
   useEffect(() => {
     const tools = [
       { key: ENRICHMENT_TOOLS.DICOM_RECEIVER, card: "dicom" },
@@ -178,7 +177,6 @@ export function EnrichmentToolConfig() {
     () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.HL7_CONNECTOR }),
     () => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }),
   ]);
-
 
   const syncSection = useCallback(
     (sectionKey: string, formKey: string, newData: any) => {
@@ -283,7 +281,6 @@ export function EnrichmentToolConfig() {
       emailIbexTo: toArr(emailService.emailIbexTo),
     });
   }, [emailService]);
-
 
   const handleChange = useCallback(
     (section: string, field: string, value: any) => {
@@ -419,7 +416,6 @@ export function EnrichmentToolConfig() {
     });
     return diff;
   };
-
 
   const handleSave = async (type: string) => {
     if (!validateSection(type)) {
@@ -579,7 +575,6 @@ export function EnrichmentToolConfig() {
       setCardError(type, extractApiErrorMessage(error));
     }
   };
-
 
   const renderInput = (
     section: string,
@@ -763,21 +758,26 @@ export function EnrichmentToolConfig() {
     );
   };
 
-  /**
-   * Error banner rendered between the card header and the form fields.
-   * Dismissed by clicking ×, which also clears the error from state.
-   */
   const renderErrorBanner = (cardKey: string) => {
     const msg = cardErrors[cardKey];
     if (!msg) return null;
     return (
-      <div className="mx-6 mb-2 flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-        <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-        <span className="flex-1">{msg}</span>
+      <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm">
+        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
+          <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold text-red-700 leading-none mb-1">
+            Request Failed
+          </p>
+          <p className="text-sm text-red-600 leading-snug break-words">
+            {msg}
+          </p>
+        </div>
         <button
           type="button"
           onClick={() => setCardError(cardKey, null)}
-          className="ml-2 text-red-400 hover:text-red-600"
+          className="shrink-0 rounded-md p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
           aria-label="Dismiss error"
         >
           <X className="h-4 w-4" />
@@ -802,7 +802,6 @@ export function EnrichmentToolConfig() {
           </CardHeader>
         </CollapsibleTrigger>
 
-        {/* Error banner sits between header and collapsible content */}
         {renderErrorBanner(keyName)}
 
         <CollapsibleContent>
@@ -848,7 +847,6 @@ export function EnrichmentToolConfig() {
       </Collapsible>
     </Card>
   );
-
 
   return (
     <div className="space-y-6 p-6 bg-white">
