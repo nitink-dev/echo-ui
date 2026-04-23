@@ -198,6 +198,7 @@ export function SlideScanStatus() {
     } catch (error) {
       setStatusData((prev) => ({
         ...prev,
+        [statusKey]: emptyPageable(), 
         loading: { ...prev.loading, [statusKey]: false },
         error: { ...prev.error, [statusKey]: error.message || "Unknown error" },
       }));

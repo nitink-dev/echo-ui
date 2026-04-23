@@ -110,6 +110,7 @@ const scannerSlice = createSlice({
       })
       .addCase(fetchScanners.rejected, (state, action) => {
         state.loading = false;
+        state.items = [];
         state.error = action.payload as string;
       })
 
