@@ -30,7 +30,18 @@ export const fetchSynapse = createAsyncThunk<
     const res = await apiClient.get("/api/enrichment/tools/synapse");
     return res.data;
   } catch (err: any) {
-    return rejectWithValue(err.response?.data || err.message);
+    const data = err?.response?.data;
+    if (data) {
+      if (typeof data === "string") return rejectWithValue(data);
+      const msg =
+        data.message ||
+        data.error ||
+        data.errorDescription ||
+        data.errorMessage ||
+        null;
+      if (msg) return rejectWithValue(msg);
+    }
+    return rejectWithValue(err.message || "An unexpected error occurred.");
   }
 });
 
@@ -43,7 +54,18 @@ export const patchSynapse = createAsyncThunk<
     const res = await apiClient.patch("/api/enrichment/tools/synapse", body);
     return res.data;
   } catch (err: any) {
-    return rejectWithValue(err.response?.data || err.message);
+    const data = err?.response?.data;
+    if (data) {
+      if (typeof data === "string") return rejectWithValue(data);
+      const msg =
+        data.message ||
+        data.error ||
+        data.errorDescription ||
+        data.errorMessage ||
+        null;
+      if (msg) return rejectWithValue(msg);
+    }
+    return rejectWithValue(err.message || "An unexpected error occurred.");
   }
 });
 
@@ -376,15 +398,23 @@ export function SynapseConfig() {
             </CardTitle>
           </CardHeader>
 
-          {/* Error banner between header and content */}
           {cardError && (
-            <div className="mx-6 mb-2 flex items-start gap-3 rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-              <span className="flex-1">{cardError}</span>
+            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-red-700 leading-none mb-1">
+                  Request Failed
+                </p>
+                <p className="text-sm text-red-600 leading-snug break-words">
+                  {cardError}
+                </p>
+              </div>
               <button
                 type="button"
                 onClick={() => setCardError(null)}
-                className="ml-2 text-red-400 hover:text-red-600"
+                className="shrink-0 rounded-md p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
                 aria-label="Dismiss error"
               >
                 <X className="h-4 w-4" />

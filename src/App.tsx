@@ -50,7 +50,7 @@ export default function App() {
     dispatch(loadStoredSession());
   }, []);
 
-  // ── 2. 401 → clear auth → LoginPage renders automatically ──
+
   useEffect(() => {
     setUnauthorizedHandler(() => {
       dispatch(logoutUser());
@@ -59,7 +59,7 @@ export default function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      //dispatch(fetchSecurityConfig());
+
       dispatch(fetchScanners());
       const curr =
         (localStorage.getItem("currentPage") as PageType) || "health-status";
@@ -80,7 +80,7 @@ export default function App() {
     }
     localStorage.setItem(
       "currentPage",
-      page.match("login") ? "health-status" : page,
+      page.match("login") ? "list" : page,
     );
     setCurrentPage(page);
     setSelectedScanner(scanner || null);
@@ -278,7 +278,7 @@ export default function App() {
       <Toaster
         position="top-right"
         richColors
-        visibleToasts={3}
+        visibleToasts={1}
         expand={true}
         toastOptions={{
           duration: 4000,

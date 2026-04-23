@@ -101,9 +101,9 @@ describe('healthSlice', () => {
   it('should handle fetchHealthStatus failure', async () => {
     const store = createStore();
 
-    (healthService.fetchHealthStatus as any).mockRejectedValue({
-      response: { data: 'Service unavailable' },
-    });
+    (healthService.fetchHealthStatus as any).mockRejectedValue(
+      new Error('Service unavailable')
+    );
 
     await store.dispatch(fetchHealthStatus());
 

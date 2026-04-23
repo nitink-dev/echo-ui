@@ -8,7 +8,7 @@ vi.mock('../../../api/services/authService', () => ({
 
 import reducer, {
   loginUser,
-  logout,
+  clearAuthState,
   loadStoredSession
 } from '../authSlice';
 
@@ -50,11 +50,14 @@ describe('authSlice', () => {
 
     expect(state).toEqual({
       isLoggedIn: false,
-      token: null,
       user: null,
-      role: null,       
+      role: null,
+      scopes: [],
+      securityConfig: [],
+      securityConfigLoaded: false,
       loading: false,
-      error: null
+      error: null,
+      displayName: ""
     });
   });
 
@@ -63,34 +66,40 @@ describe('authSlice', () => {
       isLoggedIn: true,
       token: 'token123',
       user: 'nitin_mukesh',
-      role: null,       
+      role: 'ROLE_ADMIN',       
+      scopes: [],
+      securityConfig: [],
+      securityConfigLoaded: false,
       loading: false,
-      error: null
+      error: null,
+      displayName: 'Nitin Mukesh'
     };
 
-    const state = reducer(loggedInState, logout());
+    const state = reducer(loggedInState, clearAuthState());
 
     expect(state.isLoggedIn).toBe(false);
-    expect(localStorage.removeItem).toHaveBeenCalledWith('auth_token');
-    expect(localStorage.removeItem).toHaveBeenCalledWith('auth_user');
   });
 
   it('should load stored session from localStorage', () => {
-    localStorageMock.setItem('auth_token', 'stored-token');
     localStorageMock.setItem('auth_user', 'stored-user');
+    localStorageMock.setItem('auth_role', 'ROLE_ADMIN');
+    localStorageMock.setItem('auth_scopes', JSON.stringify(['platform.read']));
+    localStorageMock.setItem('auth_display', 'Stored User');
 
     const state = reducer(undefined, loadStoredSession());
 
     expect(state.isLoggedIn).toBe(true);
-    expect(state.token).toBe('stored-token');
     expect(state.user).toBe('stored-user');
+    expect(state.role).toBe('ROLE_ADMIN');
   });
 
   describe('loginUser thunk', () => {
     it('should handle login success', async () => {
       mockedAuthService.login.mockResolvedValue({
-        token: 'jwt-token',
-        username: 'nitin_mukesh'
+        username: 'nitin_mukesh',
+        displayName: 'Nitin Mukesh',
+        scopes: ['platform.read'],
+        roles: ['ROLE_ADMIN']
       });
 
       const store = configureStore({ reducer });
@@ -102,8 +111,8 @@ describe('authSlice', () => {
       const state = store.getState();
 
       expect(state.isLoggedIn).toBe(true); 
-      expect(state.token).toBe('jwt-token');
       expect(state.user).toBe('nitin_mukesh');
+      expect(state.displayName).toBe('Nitin Mukesh');
       expect(state.error).toBeNull();
     });
 

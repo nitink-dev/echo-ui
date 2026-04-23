@@ -1,9 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import axios from 'axios';
+
+vi.mock('../apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  }
+}));
+
 import { qaService } from '../qaService';
 import { QASlideParameter } from '../../../types';
 import { BASE_URL } from '../../../utils/constants';
-vi.mock('../apiClient');
 import apiClient from '../apiClient';
 
 describe('qaService', () => {

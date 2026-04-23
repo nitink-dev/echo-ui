@@ -1,7 +1,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { enrichmentService } from '../enrichmentService';
 
-vi.mock('../apiClient'); 
+vi.mock('../apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  }
+}));
+
+import { enrichmentService } from '../enrichmentService';
 import apiClient from '../apiClient';
 
 describe('enrichmentService', () => {

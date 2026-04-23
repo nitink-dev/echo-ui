@@ -1,6 +1,21 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { enrichmentService } from "../../api/services/enrichmentService";
 
+function extractSliceError(err: any): string {
+  const data = err?.response?.data;
+  if (data) {
+    if (typeof data === "string") return data;
+    return (
+      data.message ||
+      data.error ||
+      data.errorDescription ||
+      data.errorMessage ||
+      JSON.stringify(data)
+    );
+  }
+  return err?.message || "An unexpected error occurred.";
+}
+
 export const fetchEhTool = createAsyncThunk<
   { toolKey: string; data: any },
   { toolKey: string },
@@ -11,7 +26,7 @@ export const fetchEhTool = createAsyncThunk<
     const data = res.data?.data || res.data?.[toolKey] || res.data;
     return { toolKey, data };
   } catch (err: any) {
-    return rejectWithValue(err.response?.data || err.message);
+    return rejectWithValue(extractSliceError(err));
   }
 });
 
@@ -25,18 +40,17 @@ export const patchEhTool = createAsyncThunk<
     const data = res.data?.data || res.data?.[toolKey] || res.data;
     return { toolKey, data };
   } catch (err: any) {
-    return rejectWithValue(err.response?.data || err.message);
+    return rejectWithValue(extractSliceError(err));
   }
 });
 
-
 const TOOL_KEY_TO_STATE: Record<string, keyof EhToolsState> = {
   "eh-dicom-receiver": "dicomReceiver",
-  "eh-lis-connector":  "lisConnector",
+  "eh-lis-connector": "lisConnector",
   "eh-dicom-enricher": "enrichmentService",
   "eh-export-service": "exportService",
-  "eh-hl7-connector":  "hl7Connector",
-  "eh-email-service":  "emailService",
+  "eh-hl7-connector": "hl7Connector",
+  "eh-email-service": "emailService",
 };
 
 const isValidConfigData = (data: any): boolean => {
@@ -46,25 +60,25 @@ const isValidConfigData = (data: any): boolean => {
 };
 
 interface EhToolsState {
-  dicomReceiver:     any;
-  lisConnector:      any;
+  dicomReceiver: any;
+  lisConnector: any;
   enrichmentService: any;
-  exportService:     any;
-  hl7Connector:      any;
-  emailService:      any;
-  loading:           boolean;
-  error:             string | null;
+  exportService: any;
+  hl7Connector: any;
+  emailService: any;
+  loading: boolean;
+  error: string | null;
 }
 
 const initialState: EhToolsState = {
-  dicomReceiver:     null,
-  lisConnector:      null,
+  dicomReceiver: null,
+  lisConnector: null,
   enrichmentService: null,
-  exportService:     null,
-  hl7Connector:      null,
-  emailService:      null,
-  loading:           false,
-  error:             null,
+  exportService: null,
+  hl7Connector: null,
+  emailService: null,
+  loading: false,
+  error: null,
 };
 
 const ehToolsSlice = createSlice({
@@ -82,10 +96,9 @@ const ehToolsSlice = createSlice({
     },
   },
   extraReducers: (builder) => {
-
     builder.addCase(fetchEhTool.pending, (state) => {
       state.loading = true;
-      state.error   = null;
+      state.error = null;
     });
 
     builder.addCase(
@@ -101,12 +114,12 @@ const ehToolsSlice = createSlice({
 
     builder.addCase(fetchEhTool.rejected, (state, action) => {
       state.loading = false;
-      state.error   = action.payload as string;
+      state.error = action.payload as string;
     });
 
     builder.addCase(patchEhTool.pending, (state) => {
       state.loading = true;
-      state.error   = null;
+      state.error = null;
     });
 
     builder.addCase(
@@ -127,7 +140,7 @@ const ehToolsSlice = createSlice({
 
     builder.addCase(patchEhTool.rejected, (state, action) => {
       state.loading = false;
-      state.error   = action.payload as string;
+      state.error = action.payload as string;
     });
   },
 });

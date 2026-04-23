@@ -1,10 +1,18 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+vi.mock('../apiClient', () => ({
+  default: {
+    get: vi.fn(),
+    post: vi.fn(),
+    put: vi.fn(),
+    patch: vi.fn(),
+    delete: vi.fn(),
+  }
+}));
+
 import axios from 'axios';
 import { metadataService } from '../metadataService';
 import { BASE_URL } from '../../../utils/constants';
-
-
-vi.mock('../apiClient');
 import apiClient from '../apiClient';
 
 describe('metadataService', () => {
