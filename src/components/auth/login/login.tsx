@@ -98,54 +98,27 @@ export function LoginPage() {
               </div>
 
               {/* Password Field */}
-              <div className="space-y-2">
-                <Label
-                  htmlFor="password"
-                  className="text-sm font-medium text-gray-700"
-                >
-                  Password
-                </Label>
-                <div className="relative flex items-center">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
-                  <Input
-                    id="password"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Enter your password"
-                    value={formData.password}
-                    onChange={(e) => handleChange("password", e.target.value)}
-                    className="pl-10 pr-10"
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="mt-4 right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                  >
-                    {showPassword ? (
-                      <EyeOff className="h-5 w-5" />
-                    ) : (
-                      <Eye className="h-5 w-5" />
-                    )}
-                  </button>
-                </div>
-              </div>
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none z-10" />
+              <input
+                id="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Enter your password"
+                value={formData.password}
+                onChange={(e) => handleChange("password", e.target.value)}
+                autoComplete="new-password"
+                style={{ paddingLeft: '40px', paddingRight: '40px' }}
+                className="flex h-10 w-full rounded-md border border-input bg-background py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring placeholder:text-muted-foreground"
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', zIndex: 20, background: 'transparent', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+              >
+                {showPassword ? <EyeOff className="h-5 w-5 text-gray-400" /> : <Eye className="h-5 w-5 text-gray-400" />}
+              </button>
+            </div>
 
-              {/* Remember Me & Forgot Password */}
-              <div className="flex items-center justify-between text-sm">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-                  />
-                  <span className="text-gray-600">Remember me</span>
-                </label>
-                <a
-                  href="#"
-                  className="text-blue-600 hover:text-blue-700 font-medium"
-                >
-                  Forgot password?
-                </a>
-              </div>
 
               {/* Submit Button */}
               <Button
