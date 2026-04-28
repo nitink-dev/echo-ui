@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { setUnauthorizedHandler } from "./api/services/apiClient";
@@ -31,14 +31,30 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 
+const VALID_PAGES: PageType[] = [
+  "list", "add", "edit", "view", "lis", "synapse",
+  "qa-analysis", "enrichment-tool", "health-status", "slide-status",
+];
+
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007BFF]" />
+    </div>
+  );
+}
+
 export default function App() {
   const dispatch = useAppDispatch();
-  const [currentPage, setCurrentPage] = useState<PageType>(
-    (localStorage.getItem("currentPage") as PageType) || "health-status",
-  );
-  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(
-    null,
-  );
+
+  const getInitialPage = (): PageType => {
+    const saved = localStorage.getItem("currentPage") as PageType;
+    return saved && VALID_PAGES.includes(saved) ? saved : "health-status";
+  };
+
+  const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
+  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
+  const isNavigating = useRef(false);
 
   const scanners = useSelector((state: any) => state.scanners.items);
   const loading = useSelector((state: any) => state.scanners.loading);
@@ -50,7 +66,6 @@ export default function App() {
     dispatch(loadStoredSession());
   }, []);
 
-
   useEffect(() => {
     setUnauthorizedHandler(() => {
       dispatch(logoutUser());
@@ -59,13 +74,17 @@ export default function App() {
 
   useEffect(() => {
     if (isLoggedIn) {
-
       dispatch(fetchScanners());
-      const curr =
-        (localStorage.getItem("currentPage") as PageType) || "health-status";
-      setCurrentPage(curr);
+      const saved = localStorage.getItem("currentPage") as PageType;
+      const page = saved && VALID_PAGES.includes(saved) ? saved : "health-status";
+      if (page !== "view" && page !== "edit") {
+        setCurrentPage(page);
+      } else {
+        setCurrentPage("list");
+        localStorage.setItem("currentPage", "list");
+      }
     }
-  }, [dispatch, isLoggedIn]);
+  }, [isLoggedIn]);
 
   useEffect(() => {
     if (isLoggedIn && currentPage === "list") {
@@ -73,16 +92,37 @@ export default function App() {
     }
   }, [currentPage]);
 
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (isNavigating.current) return;
+      const page = (event.state?.page as PageType) || "health-status";
+      const safePage: PageType =
+        page === "view" || page === "edit" ? "list" : page;
+      localStorage.setItem("currentPage", safePage);
+      setCurrentPage(safePage);
+      setSelectedScanner(null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isLoggedIn]);
+
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
     if (configLoaded && !canRead(page)) {
       toast.error("You don't have permission to access this page.");
       return;
     }
-    localStorage.setItem(
-      "currentPage",
-      page.match("login") ? "list" : page,
-    );
-    setCurrentPage(page);
+
+    const storePage = page === "login" ? "list" : page;
+    localStorage.setItem("currentPage", storePage);
+
+    isNavigating.current = true;
+    window.history.pushState({ page: storePage }, "", window.location.pathname);
+    isNavigating.current = false;
+
+    setCurrentPage(storePage as PageType);
     setSelectedScanner(scanner || null);
   };
 
@@ -131,7 +171,7 @@ export default function App() {
   };
 
   const handleSaveScanner = async (
-    scannerData: SlideScanner | Partial<SlideScanner>,
+    scannerData: SlideScanner | Partial<SlideScanner>
   ) => {
     try {
       const sanitizedData = sanitizeFormData(scannerData);
@@ -141,8 +181,8 @@ export default function App() {
           updateScanner(
             sanitizedData as Partial<SlideScanner> & {
               deviceSerialNumber: string;
-            },
-          ),
+            }
+          )
         );
         toast.success("Scanner updated successfully");
       } else {
@@ -215,13 +255,20 @@ export default function App() {
   );
 
   const renderCurrentPage = () => {
-    if (!configLoaded) return null;
+    if (!configLoaded) {
+      return <PageLoader />;
+    }
 
     if (!canRead(currentPage)) {
       return <UnauthorizedPage />;
     }
 
-    const pageComponents: Record<string, JSX.Element | null> = {
+    if ((currentPage === "view" || currentPage === "edit") && !selectedScanner) {
+      setTimeout(() => navigateToPage("list"), 0);
+      return <PageLoader />;
+    }
+
+    const pageComponents: Record<string, JSX.Element> = {
       list: (
         <ScannerList
           scanners={scanners}
@@ -241,20 +288,19 @@ export default function App() {
       ) : (
         <UnauthorizedPage />
       ),
-      edit:
-        canWrite("list") && selectedScanner ? (
-          <ScannerForm
-            scanner={selectedScanner}
-            onSave={handleSaveScanner}
-            onCancel={handleCancelForm}
-            isEdit={true}
-          />
-        ) : (
-          <UnauthorizedPage />
-        ),
-      view: selectedScanner ? (
-        <ScannerDetails scanner={selectedScanner} onBack={handleBackToList} />
-      ) : null,
+      edit: canWrite("list") ? (
+        <ScannerForm
+          scanner={selectedScanner!}
+          onSave={handleSaveScanner}
+          onCancel={handleCancelForm}
+          isEdit={true}
+        />
+      ) : (
+        <UnauthorizedPage />
+      ),
+      view: (
+        <ScannerDetails scanner={selectedScanner!} onBack={handleBackToList} />
+      ),
       lis: <LisConfig appType="lis" />,
       synapse: <SynapseConfig appType="synapse" />,
       "qa-analysis": <QAConfig />,
@@ -306,4 +352,3 @@ export default function App() {
     </div>
   );
 }
-
