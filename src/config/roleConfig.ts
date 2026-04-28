@@ -1,4 +1,3 @@
-// roleConfig.ts
 import { SecurityConfigEntry } from "../api/services/authService";
 import { PAGE_API_MAP, ApiPermission } from "./pageApiMap";
 

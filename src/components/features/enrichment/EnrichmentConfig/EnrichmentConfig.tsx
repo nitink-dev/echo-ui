@@ -768,10 +768,7 @@ export function EnrichmentToolConfig() {
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-semibold text-red-700 leading-none mb-1">
-            Request Failed
-          </p>
-          <p className="text-sm text-red-600 leading-snug break-words">
-            {msg}
+            Request Failed : {msg}
           </p>
         </div>
         <button

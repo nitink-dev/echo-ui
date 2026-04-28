@@ -6,6 +6,7 @@ const activeToasts = new Set<string>();
 
 function showErrorToast(message: string, toastId: string) {
   if (activeToasts.has(toastId)) return;
+
   activeToasts.add(toastId);
   toast.error(message, {
     id: toastId,
@@ -18,8 +19,11 @@ const apiClient = axios.create({
   baseURL: BASE_URL,
   timeout: 20000,
   withCredentials: true,
-  headers: { "Content-Type": "application/json" },
+  headers: {
+    "Content-Type": "application/json",
+  },
 });
+
 
 apiClient.interceptors.request.use((config) => {
   const xsrfToken = document.cookie
@@ -30,8 +34,10 @@ apiClient.interceptors.request.use((config) => {
   if (xsrfToken) {
     config.headers["X-XSRF-TOKEN"] = decodeURIComponent(xsrfToken);
   }
+
   return config;
 });
+
 
 let onUnauthorized: () => void = () => {};
 
@@ -39,38 +45,39 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler;
 }
 
+
 export function extractApiErrorMessage(error: unknown): string {
-  // Preserved from old file: handle plain string errors early
   if (typeof error === "string" && error.trim().length > 0) {
     return error;
   }
 
   if (axios.isAxiosError(error)) {
-    const status: number | undefined = error.response?.status;
+    const status = error.response?.status;
     const data = error.response?.data;
 
     if (data) {
-      // Preserved from old file: includes errorMessage field in addition to the new file's fields
       const serverMessage =
         data.message ||
         data.error ||
         data.errorDescription ||
-        data.errorMessage ||
-        null;
-      if (serverMessage && typeof serverMessage === "string") return serverMessage;
+        data.errorMessage;
+
+      if (typeof serverMessage === "string") {
+        return serverMessage;
+      }
     }
 
     const HTTP_ERROR_MESSAGES: Record<number, string> = {
-      400: "Bad request. Please check the data you submitted.",
-      403: "You don't have permission to perform this action.",
-      404: "The requested resource was not found.",
-      408: "The request timed out. Please try again.",
-      409: "A conflict occurred. The resource may already exist.",
-      422: "The submitted data is invalid or could not be processed.",
-      429: "Too many requests. Please slow down and try again later.",
-      500: "An internal server error occurred. Please try again later.",
-      502: "The server received an invalid response from an upstream service.",
-      503: "The service is temporarily unavailable. Please try again shortly.",
+      400: "Bad request. Please check the submitted data.",
+      403: "You do not have permission to perform this action.",
+      404: "Requested resource not found.",
+      408: "Request timed out. Please try again.",
+      409: "Conflict detected. Please refresh and retry.",
+      422: "Invalid data provided.",
+      429: "Too many requests. Please try later.",
+      500: "Internal server error. Please try again later.",
+      502: "Bad gateway. Please try again later.",
+      503: "Service temporarily unavailable.",
       504: "Gateway timeout. Please try again.",
     };
 
@@ -79,19 +86,23 @@ export function extractApiErrorMessage(error: unknown): string {
     }
 
     if (!error.response && error.request) {
-      return "Network error — server unreachable. Please check your connection.";
+      return "Network error. Server unreachable.";
     }
 
     if (error.code === "ECONNABORTED") {
-      return "The request timed out. Please try again.";
+      return "Request timed out. Please try again.";
     }
 
     return `Unexpected error${status ? ` (${status})` : ""}.`;
   }
 
-  if (error instanceof Error) return error.message;
+  if (error instanceof Error) {
+    return error.message;
+  }
+
   return "An unexpected error occurred.";
 }
+
 
 apiClient.interceptors.response.use(
   (response) => response,
@@ -99,19 +110,21 @@ apiClient.interceptors.response.use(
   (error) => {
     const url: string = error.config?.url ?? "unknown";
 
-    const sourcePath = (url.startsWith("http") ? new URL(url).pathname : url)
+    const sourcePath = (
+      url.startsWith("http") ? new URL(url).pathname : url
+    )
       .replace(/^\/api\//, "")
       .split("?")[0];
 
-    const isLoginRequest =
-      sourcePath === "login" || sourcePath === "auth/login";
+    const isLoginRequest = sourcePath.includes("login");
+    console.log("isLoginRequest:", isLoginRequest);
+
+    if (isLoginRequest) {
+      return Promise.reject(error);
+    }
 
     if (error.response) {
-      const status: number = error.response.status;
-
-      if (isLoginRequest) {
-        return Promise.reject(error);
-      }
+      const status = error.response.status;
 
       if (status === 401) {
         showErrorToast(

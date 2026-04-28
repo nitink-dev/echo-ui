@@ -1,7 +1,6 @@
-import React from 'react';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { QAConfig } from './QAConfig';
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { beforeEach, describe, expect, test, vi } from "vitest";
+import { QAConfig } from "./QAConfig";
 
 /* =========================================================
    MOCK: usePermissions
@@ -9,7 +8,7 @@ import { QAConfig } from './QAConfig';
    - QAConfig uses canWrite
    - QAParameterTable uses canWrite + canDelete
 ========================================================= */
-vi.mock('../../../../hooks/usePermissions', () => ({
+vi.mock("../../../../hooks/usePermissions", () => ({
   usePermissions: () => ({
     canWrite: () => true,
     canDelete: () => true,
@@ -22,14 +21,14 @@ vi.mock('../../../../hooks/usePermissions', () => ({
 ========================================================= */
 const mockHandleAddParameter = vi.fn();
 
-vi.mock('./useQAConfig', () => ({
+vi.mock("./useQAConfig", () => ({
   useQAConfig: () => ({
     qaParameters: [
-      { id: '1', barcode: 'QA-001', activationCode: 'ACT-001' },
-      { id: '2', barcode: 'QA-002', activationCode: 'ACT-002' },
+      { id: "1", barcode: "QA-001", activationCode: "ACT-001" },
+      { id: "2", barcode: "QA-002", activationCode: "ACT-002" },
     ],
-    dicomStores: ['store1', 'store2'],
-    dicomStoreAddress: 'store1',
+    dicomStores: ["store1", "store2"],
+    dicomStoreAddress: "store1",
 
     parameterModalOpen: false,
     editingParameter: null,
@@ -57,44 +56,39 @@ vi.mock('./useQAConfig', () => ({
 /* =========================================================
    TESTS
 ========================================================= */
-describe('QAConfig Component', () => {
+describe("QAConfig Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  test('renders QA configuration page heading', () => {
+  test("renders QA configuration page heading", () => {
     render(<QAConfig />);
-    expect(
-      screen.getByText('Slide Image Analysis')
-    ).toBeInTheDocument();
+    expect(screen.getByText("Slide Image Analysis")).toBeInTheDocument();
   });
 
-  test('renders QA parameters in table', () => {
+  test("renders QA parameters in table", () => {
     render(<QAConfig />);
-    expect(screen.getByText('QA-001')).toBeInTheDocument();
-    expect(screen.getByText('QA-002')).toBeInTheDocument();
+    expect(screen.getByText("QA-001")).toBeInTheDocument();
+    expect(screen.getByText("QA-002")).toBeInTheDocument();
   });
 
-  test('shows Add New button when user has permission', () => {
+  test("shows Add New button when user has permission", () => {
     render(<QAConfig />);
-    expect(screen.getByText('Add New')).toBeInTheDocument();
+    expect(screen.getByText("Add New")).toBeInTheDocument();
   });
 
-  test('calls handleAddParameter when Add New is clicked', async () => {
+  test("calls handleAddParameter when Add New is clicked", async () => {
     render(<QAConfig />);
 
-    fireEvent.click(screen.getByText('Add New'));
+    fireEvent.click(screen.getByText("Add New"));
 
     await waitFor(() => {
       expect(mockHandleAddParameter).toHaveBeenCalled();
     });
   });
 
-  test('renders DICOM store configuration section', () => {
+  test("renders DICOM store configuration section", () => {
     render(<QAConfig />);
-    expect(
-      screen.getByText('DICOM Store for QA')
-    ).toBeInTheDocument();
+    expect(screen.getByText("DICOM Store for QA")).toBeInTheDocument();
   });
 });
-``

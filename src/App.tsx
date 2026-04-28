@@ -16,11 +16,7 @@ import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { Toaster } from "./components/ui/sonner";
 import { useAppDispatch } from "./hooks";
 import { usePermissions } from "./hooks/usePermissions";
-import {
-  fetchSecurityConfig,
-  loadStoredSession,
-  logoutUser,
-} from "./store/slices/authSlice";
+import { loadStoredSession, logoutUser } from "./store/slices/authSlice";
 import {
   addScanner,
   deleteScanner,
@@ -32,8 +28,16 @@ import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 
 const VALID_PAGES: PageType[] = [
-  "list", "add", "edit", "view", "lis", "synapse",
-  "qa-analysis", "enrichment-tool", "health-status", "slide-status",
+  "list",
+  "add",
+  "edit",
+  "view",
+  "lis",
+  "synapse",
+  "qa-analysis",
+  "enrichment-tool",
+  "health-status",
+  "slide-status",
 ];
 
 function PageLoader() {
@@ -53,7 +57,9 @@ export default function App() {
   };
 
   const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
-  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
+  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(
+    null,
+  );
   const isNavigating = useRef(false);
 
   const scanners = useSelector((state: any) => state.scanners.items);
@@ -76,7 +82,8 @@ export default function App() {
     if (isLoggedIn) {
       dispatch(fetchScanners());
       const saved = localStorage.getItem("currentPage") as PageType;
-      const page = saved && VALID_PAGES.includes(saved) ? saved : "health-status";
+      const page =
+        saved && VALID_PAGES.includes(saved) ? saved : "health-status";
       if (page !== "view" && page !== "edit") {
         setCurrentPage(page);
       } else {
@@ -171,7 +178,7 @@ export default function App() {
   };
 
   const handleSaveScanner = async (
-    scannerData: SlideScanner | Partial<SlideScanner>
+    scannerData: SlideScanner | Partial<SlideScanner>,
   ) => {
     try {
       const sanitizedData = sanitizeFormData(scannerData);
@@ -181,8 +188,8 @@ export default function App() {
           updateScanner(
             sanitizedData as Partial<SlideScanner> & {
               deviceSerialNumber: string;
-            }
-          )
+            },
+          ),
         );
         toast.success("Scanner updated successfully");
       } else {
@@ -263,7 +270,10 @@ export default function App() {
       return <UnauthorizedPage />;
     }
 
-    if ((currentPage === "view" || currentPage === "edit") && !selectedScanner) {
+    if (
+      (currentPage === "view" || currentPage === "edit") &&
+      !selectedScanner
+    ) {
       setTimeout(() => navigateToPage("list"), 0);
       return <PageLoader />;
     }
