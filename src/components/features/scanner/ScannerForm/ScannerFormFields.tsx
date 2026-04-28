@@ -262,7 +262,7 @@ export function ScannerFormFields({
               id="dicomStore"
               value={formData.dicomStore || ''}
               onChange={(e) => onInputChange('dicomStore', e.target.value)}
-              disabled={formData.research}
+              //disabled={formData.research}
               className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${formData.research ? 'opacity-50 cursor-not-allowed bg-gray-100' : ''
                 } ${errors.dicomStore ? 'border-red-500 focus:border-red-500' : ''}`}
             >

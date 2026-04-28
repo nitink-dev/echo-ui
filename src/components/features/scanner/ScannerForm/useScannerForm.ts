@@ -36,7 +36,7 @@ const initialFormData: FormData = {
   connected: false
 };
 
-const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber'];
+const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber', 'dicomStore'];
 
 export function useScannerForm(scanner?: SlideScanner) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
