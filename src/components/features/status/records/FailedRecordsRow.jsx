@@ -23,7 +23,7 @@ export function FailedRecordsRow({ record, index }) {
     setError(null);
     try {
       const response = await apiClient.get(
-        `${BASE_URL}/api/slide-scan-status/barcode/${record.slideBarcode}/details`
+        `${BASE_URL}/api/slide-scan-status/barcode/${record.slideBarcode}/details?seriesId=${record.seriesId}`
       );
       const data = await response.data;
       setDetailsData(data);

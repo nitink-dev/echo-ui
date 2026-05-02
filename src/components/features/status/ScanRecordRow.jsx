@@ -6,6 +6,7 @@ export function ScanRecordRow({ record, index }) {
     completed: { color: "text-green-600", bg: "bg-green-50", icon: CheckCircle2 },
     failed: { color: "text-red-600", bg: "bg-red-50", icon: XCircle },
     "in-progress": { color: "text-blue-600", bg: "bg-blue-50", icon: Clock },
+    "warning completed": { color: "text-orange-600", bg: "bg-orange-50", icon: CheckCircle2 },
   };
 
   const config = statusConfig[record.scanStatus] || statusConfig.failed;

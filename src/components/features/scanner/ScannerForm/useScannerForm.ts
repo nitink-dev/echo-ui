@@ -74,7 +74,6 @@ export function useScannerForm(scanner?: SlideScanner) {
         [field]: value,
         ...(field === 'department' ? { dicomStore: '' } : {}), 
        
-        ...(field === 'research' && value === true ? { dicomStore: '' } : {})
       };
       return updated;
     });
@@ -171,9 +170,7 @@ export function useScannerForm(scanner?: SlideScanner) {
       return typeof value === 'string' && value.trim();
     });
 
-    const dicomStoreValid = formData.research || (formData.dicomStore && formData.dicomStore.trim());
-
-    return allRequiredFieldsValid && dicomStoreValid && Object.keys(errors).length === 0;
+    return allRequiredFieldsValid && Object.keys(errors).length === 0;
   }, [formData, errors]);
 
   return {
