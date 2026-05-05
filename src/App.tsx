@@ -26,6 +26,7 @@ import {
 import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
+import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
 
 const VALID_PAGES: PageType[] = [
   "list",
@@ -65,6 +66,9 @@ export default function App() {
   const scanners = useSelector((state: any) => state.scanners.items);
   const loading = useSelector((state: any) => state.scanners.loading);
   const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+  const currentUser = useSelector((state: any) => state.auth.user);
+
+  useCrossTabAuth(currentUser);
 
   const { canRead, canWrite, configLoaded } = usePermissions();
 

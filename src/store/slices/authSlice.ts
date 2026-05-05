@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { authService, SecurityConfigEntry } from "../../api/services/authService";
 import { Role } from "../../config/roleConfig";
+import { broadcastUserLogin } from "../../hooks/useCrossTabAuth";
 
 const DEV_STATIC_ROLE: Role | null = null;
 
@@ -144,6 +145,8 @@ const authSlice = createSlice({
           localStorage.setItem("auth_role", state.role);
         }
         localStorage.setItem("auth_scopes", JSON.stringify(state.scopes));
+        
+        broadcastUserLogin(action.payload.username);
       })
 
       .addCase(loginUser.rejected, (state, action) => {
