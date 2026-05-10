@@ -20,8 +20,8 @@ export const PAGE_API_MAP: Record<string, PageApiConfig> = {
 
   add: {
     read: [
-      { api: "/api/scanners",                    method: "GET" },
-      { api: "/api/hospital-metadata/**",        method: "GET" },
+      { api: "/api/scanners",                      method: "GET" },
+      { api: "/api/hospital-metadata/**",          method: "GET" },
       { api: "/api/scanners/datasets/dicomStores", method: "GET" },
     ],
     write: [{ api: "/api/scanners", method: "POST" }],
@@ -29,8 +29,8 @@ export const PAGE_API_MAP: Record<string, PageApiConfig> = {
 
   edit: {
     read: [
-      { api: "/api/scanners/**",                 method: "GET" },
-      { api: "/api/hospital-metadata/**",        method: "GET" },
+      { api: "/api/scanners/**",                   method: "GET" },
+      { api: "/api/hospital-metadata/**",          method: "GET" },
       { api: "/api/scanners/datasets/dicomStores", method: "GET" },
     ],
     write:  [{ api: "/api/scanners/**", method: "PATCH"  }],
@@ -53,14 +53,14 @@ export const PAGE_API_MAP: Record<string, PageApiConfig> = {
 
   "qa-analysis": {
     read: [
-      { api: "/api/slides",                method: "GET" },
-      { api: "/api/slides/**",             method: "GET" },
-      { api: "/api/slide-analysis/**",     method: "GET" },
+      { api: "/api/slides",                   method: "GET" },
+      { api: "/api/slides/**",                method: "GET" },
+      { api: "/api/slide-analysis/**",        method: "GET" },
       { api: "/api/slide-analysis/device/**", method: "GET" },
     ],
     write: [
-      { api: "/api/slides/**",          method: "PATCH" },
-      { api: "/api/slides/**",          method: "POST"  },
+      { api: "/api/slides/**",           method: "PATCH" },
+      { api: "/api/slides/**",           method: "POST"  },
       { api: "/api/path-qa/dicom-store", method: "PATCH" },
     ],
     delete: [{ api: "/api/slides/**", method: "DELETE" }],
@@ -77,9 +77,9 @@ export const PAGE_API_MAP: Record<string, PageApiConfig> = {
 
   "slide-status": {
     read: [
-      { api: "/api/slide-scan-status/**",              method: "GET" },
+      { api: "/api/slide-scan-status/**",                 method: "GET" },
       { api: "/api/slide-scan-status/stream/in-progress", method: "GET" },
-      { api: "/api/slide-scan-status/barcode/**",      method: "GET" },
+      { api: "/api/slide-scan-status/barcode/**",         method: "GET" },
     ],
   },
 };
