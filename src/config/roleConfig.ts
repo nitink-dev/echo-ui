@@ -7,49 +7,40 @@ export type Role =
   | "ROLE_OPERATOR"
   | "ROLE_VIEWER";
 
-export interface PagePermission {
-  read: boolean;
-  write: boolean;
-}
+const ALWAYS_PUBLIC_API_PREFIXES: string[] = [
+  "/api/health/status",
+];
 
-const PLATFORM_READ_SCOPES = ["platform.read"];
-const PLATFORM_WRITE_SCOPES = ["platform.create", "platform.update"];
-const PLATFORM_DELETE_SCOPES = ["platform.delete"];
+function findBestMatch(
+  apiPath: string,
+  method: string,
+  securityConfig: SecurityConfigEntry[]
+): SecurityConfigEntry | undefined {
+  let best: SecurityConfigEntry | undefined;
+  let bestScore = -1;
 
-const SPECIFIC_SCOPE_MAP: Record<string, { write?: string[]; delete?: string[] }> = {
-  list: {
-    write: ["scanner.update"],
-    delete: ["scanner.update"],
-  },
-  add: {
-    write: ["scanner.update"],
-  },
-  edit: {
-    write: ["scanner.update"],
-    delete: ["scanner.update"],
-  },
-  lis: {
-    write: ["config.update", "config.path-qa-store.update"],
-  },
-  synapse: {
-    write: ["config.update"],
-  },
-  "qa-analysis": {
-    write: ["qa-slide.update"],
-    delete: ["qa-slide.update"],
-  },
-  "enrichment-tool": {
-    write: ["config.update"],
-  },
-};
+  for (const entry of securityConfig) {
+    if (!entry.methods.includes(method.toUpperCase())) continue;
 
-function matchApi(pattern: string, apiPath: string): boolean {
-  if (pattern === apiPath) return true;
-  if (pattern.endsWith("/**")) {
-    const prefix = pattern.slice(0, -3);
-    return apiPath.startsWith(prefix);
+    const pattern = entry.api;
+    let score = -1;
+
+    if (pattern === apiPath) {
+      score = 1000;
+    } else if (pattern.endsWith("/**")) {
+      const prefix = pattern.slice(0, -3);
+      if (apiPath.startsWith(prefix)) {
+        score = prefix.length;
+      }
+    }
+
+    if (score > bestScore) {
+      bestScore = score;
+      best = entry;
+    }
   }
-  return false;
+
+  return best;
 }
 
 function getRequiredScopes(
@@ -57,11 +48,7 @@ function getRequiredScopes(
   method: string,
   securityConfig: SecurityConfigEntry[]
 ): { required: string[]; isPublic: boolean } {
-  const entry = securityConfig.find((cfg) => {
-    if (!cfg.methods.includes(method.toUpperCase())) return false;
-    return matchApi(cfg.api, apiPath);
-  });
-
+  const entry = findBestMatch(apiPath, method, securityConfig);
   return {
     required: entry?.requiredScopes ?? [],
     isPublic: entry?.isPublic ?? false,
@@ -71,38 +58,31 @@ function getRequiredScopes(
 function userCanAccess(
   userScopes: string[],
   required: string[],
-  isPublic: boolean,
-  platformBypassScopes: string[],
-  specificBypassScopes: string[]
+  isPublic: boolean
 ): boolean {
   if (isPublic) return true;
-
-  const allBypassScopes = [...platformBypassScopes, ...specificBypassScopes];
-
-  if (!required || required.length === 0) {
-    return allBypassScopes.some((s) => userScopes.includes(s));
-  }
-
-  if (allBypassScopes.some((s) => userScopes.includes(s))) {
-    return true;
-  }
-
-  return required.every((scope) => userScopes.includes(scope));
+  if (required.length === 0) return false;
+  return required.some((scope) => userScopes.includes(scope));
 }
 
 function checkAccess(
   permission: ApiPermission | undefined,
   userScopes: string[],
-  securityConfig: SecurityConfigEntry[],
-  platformBypassScopes: string[],
-  specificBypassScopes: string[]
+  securityConfig: SecurityConfigEntry[]
 ): boolean {
   if (!permission) return false;
-
   const { api, method } = permission;
   const { required, isPublic } = getRequiredScopes(api, method, securityConfig);
+  return userCanAccess(userScopes, required, isPublic);
+}
 
-  return userCanAccess(userScopes, required, isPublic, platformBypassScopes, specificBypassScopes);
+function isPagePublicByMap(pageId: string): boolean {
+  const mapping = PAGE_API_MAP[pageId];
+  if (!mapping) return false;
+  const { api } = mapping.read;
+  return ALWAYS_PUBLIC_API_PREFIXES.some((prefix) =>
+    api === prefix || api.startsWith(prefix)
+  );
 }
 
 export function canReadWithScopes(
@@ -111,18 +91,12 @@ export function canReadWithScopes(
   securityConfig: SecurityConfigEntry[],
   configLoaded: boolean
 ): boolean {
-  if (!configLoaded || !securityConfig?.length) return false;
-
   const mapping = PAGE_API_MAP[pageId];
   if (!mapping) return false;
-
-  return checkAccess(
-    mapping.read,
-    userScopes,
-    securityConfig,
-    PLATFORM_READ_SCOPES,
-    []
-  );
+  if (!configLoaded || !securityConfig?.length) {
+    return isPagePublicByMap(pageId);
+  }
+  return checkAccess(mapping.read, userScopes, securityConfig);
 }
 
 export function canWriteWithScopes(
@@ -132,19 +106,9 @@ export function canWriteWithScopes(
   configLoaded: boolean
 ): boolean {
   if (!configLoaded || !securityConfig?.length) return false;
-
   const mapping = PAGE_API_MAP[pageId];
   if (!mapping?.write) return false;
-
-  const specificScopes = SPECIFIC_SCOPE_MAP[pageId]?.write ?? [];
-
-  return checkAccess(
-    mapping.write,
-    userScopes,
-    securityConfig,
-    PLATFORM_WRITE_SCOPES,
-    specificScopes
-  );
+  return checkAccess(mapping.write, userScopes, securityConfig);
 }
 
 export function canDeleteWithScopes(
@@ -154,17 +118,7 @@ export function canDeleteWithScopes(
   configLoaded: boolean
 ): boolean {
   if (!configLoaded || !securityConfig?.length) return false;
-
   const mapping = PAGE_API_MAP[pageId];
   if (!mapping?.delete) return false;
-
-  const specificScopes = SPECIFIC_SCOPE_MAP[pageId]?.delete ?? [];
-
-  return checkAccess(
-    mapping.delete,
-    userScopes,
-    securityConfig,
-    PLATFORM_DELETE_SCOPES,
-    specificScopes
-  );
+  return checkAccess(mapping.delete, userScopes, securityConfig);
 }
