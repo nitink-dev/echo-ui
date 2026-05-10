@@ -66,22 +66,32 @@ function userCanAccess(
 }
 
 function checkAccess(
-  permission: ApiPermission | undefined,
+  permission: ApiPermission,
   userScopes: string[],
   securityConfig: SecurityConfigEntry[]
 ): boolean {
-  if (!permission) return false;
   const { api, method } = permission;
   const { required, isPublic } = getRequiredScopes(api, method, securityConfig);
   return userCanAccess(userScopes, required, isPublic);
 }
 
+function checkAnyAccess(
+  permissions: ApiPermission[],
+  userScopes: string[],
+  securityConfig: SecurityConfigEntry[]
+): boolean {
+  return permissions.some((permission) =>
+    checkAccess(permission, userScopes, securityConfig)
+  );
+}
+
 function isPagePublicByMap(pageId: string): boolean {
   const mapping = PAGE_API_MAP[pageId];
   if (!mapping) return false;
-  const { api } = mapping.read;
-  return ALWAYS_PUBLIC_API_PREFIXES.some((prefix) =>
-    api === prefix || api.startsWith(prefix)
+  return mapping.read.some(({ api }) =>
+    ALWAYS_PUBLIC_API_PREFIXES.some(
+      (prefix) => api === prefix || api.startsWith(prefix)
+    )
   );
 }
 
@@ -96,7 +106,7 @@ export function canReadWithScopes(
   if (!configLoaded || !securityConfig?.length) {
     return isPagePublicByMap(pageId);
   }
-  return checkAccess(mapping.read, userScopes, securityConfig);
+  return checkAnyAccess(mapping.read, userScopes, securityConfig);
 }
 
 export function canWriteWithScopes(
@@ -107,8 +117,8 @@ export function canWriteWithScopes(
 ): boolean {
   if (!configLoaded || !securityConfig?.length) return false;
   const mapping = PAGE_API_MAP[pageId];
-  if (!mapping?.write) return false;
-  return checkAccess(mapping.write, userScopes, securityConfig);
+  if (!mapping?.write?.length) return false;
+  return checkAnyAccess(mapping.write, userScopes, securityConfig);
 }
 
 export function canDeleteWithScopes(
@@ -119,6 +129,6 @@ export function canDeleteWithScopes(
 ): boolean {
   if (!configLoaded || !securityConfig?.length) return false;
   const mapping = PAGE_API_MAP[pageId];
-  if (!mapping?.delete) return false;
-  return checkAccess(mapping.delete, userScopes, securityConfig);
+  if (!mapping?.delete?.length) return false;
+  return checkAnyAccess(mapping.delete, userScopes, securityConfig);
 }
