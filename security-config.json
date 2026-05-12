@@ -1,0 +1,361 @@
+[
+    {
+        "api": "/api/auth/login",
+        "methods": [
+            "POST",
+            "OPTIONS"
+        ],
+        "isPublic": true,
+        "requiredScopes": []
+    },
+    {
+        "api": "/api/auth/logout",
+        "methods": [
+            "POST",
+            "OPTIONS"
+        ],
+        "isPublic": true,
+        "requiredScopes": []
+    },
+    {
+        "api": "/api/health/status",
+        "methods": [
+            "GET",
+            "OPTIONS"
+        ],
+        "isPublic": true,
+        "requiredScopes": []
+    },
+    {
+        "api": "/actuator/health",
+        "methods": [
+            "GET",
+            "OPTIONS"
+        ],
+        "isPublic": true,
+        "requiredScopes": []
+    },
+    {
+        "api": "/api/auth/config",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "auth.config.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/config/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "config.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/config/**",
+        "methods": [
+            "PATCH"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "config.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/config/path-qa/dicom-store",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "config.path-qa-store.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/enrichment/tools/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "enrichment.tools.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/enrichment/tools/eh-lis-connector",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "enrichment.tools.eh-lis-connector.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/enrichment/tools/synapse",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "enrichment.tools.synapse.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/enrichment/tools/**",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "enrichment.tools.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/hospital-metadata/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "hospital.metadata.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/slides",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "qa-slides.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/slides/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "qa-slide.barcode.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/slides/**",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "qa-slide.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/slides/**",
+        "methods": [
+            "POST"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "qa-slide.create",
+            "platform.create"
+        ]
+    },
+    {
+        "api": "/api/slides/**",
+        "methods": [
+            "DELETE"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "qa-slide.delete",
+            "platform.delete"
+        ]
+    },
+    {
+        "api": "/api/slide-analysis/device/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "slide-reports.device.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/slide-analysis/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "slide-reports.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/scanners/datasets/dicomStores",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "dicom-store.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/scanners",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scanners.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/scanners/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scanner.device.read",
+            "scanner.reports.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/scanners",
+        "methods": [
+            "POST"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scanner.create",
+            "platform.create"
+        ]
+    },
+    {
+        "api": "/api/scanners/**",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scanner.update",
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/scanners/**",
+        "methods": [
+            "DELETE"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scanner.delete",
+            "platform.delete"
+        ]
+    },
+    {
+        "api": "/api/slide-scan-status/stream/in-progress",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scan.stream.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/slide-scan-status/barcode/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scan.barcode.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/slide-scan-status/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "scan.status.read",
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/**",
+        "methods": [
+            "GET"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "platform.read"
+        ]
+    },
+    {
+        "api": "/api/**",
+        "methods": [
+            "POST"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "platform.create"
+        ]
+    },
+    {
+        "api": "/api/**",
+        "methods": [
+            "PATCH",
+            "PUT"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "platform.update"
+        ]
+    },
+    {
+        "api": "/api/**",
+        "methods": [
+            "DELETE"
+        ],
+        "isPublic": false,
+        "requiredScopes": [
+            "platform.delete"
+        ]
+    }
+]
