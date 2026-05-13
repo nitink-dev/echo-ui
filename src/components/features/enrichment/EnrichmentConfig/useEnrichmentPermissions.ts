@@ -1,5 +1,5 @@
 import { usePermissions } from "../../../../auth/permissions/usePermissions";
-import { BASE_URL } from "../../../../api/services/enrichmentService";
+import { SERVICE_URL } from "../../../../api/services/enrichmentService";
 
 export const useEnrichmentPermissions = () => {
   const { canPatch, canPut } =
@@ -8,10 +8,10 @@ export const useEnrichmentPermissions = () => {
   return {
     canEdit:
       canPatch(
-        BASE_URL
+        SERVICE_URL
       ) ||
       canPut(
-        BASE_URL
+        SERVICE_URL
       ),
   };
 };
