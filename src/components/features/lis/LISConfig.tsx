@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../../hooks";
-import { usePermissions } from "../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 import { extractApiErrorMessage } from "../../../api/services/apiClient";
 import { fetchEhTool, patchEhTool } from "../../../store/slices/ehToolsSlice";
@@ -21,6 +20,7 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { usePermissions } from "../../../auth/permissions/usePermissions";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -86,8 +86,8 @@ export function LisConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { canWrite } = usePermissions();
-  const canEditLis = canWrite("lis");
+  const { canPatch, canPut } = usePermissions();
+  const canEditLis = canPatch("/api/enrichment/tools/eh-lis-connector");
 
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))

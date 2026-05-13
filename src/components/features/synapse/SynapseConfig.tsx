@@ -4,7 +4,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import apiClient, { extractApiErrorMessage } from "../../../api/services/apiClient";
 import { useAppDispatch } from "../../../hooks";
-import { usePermissions } from "../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 import {
   IP_ALLOWED_PATTERN,
@@ -20,6 +19,7 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { usePermissions } from "../../../auth/permissions/usePermissions";
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -161,8 +161,8 @@ export function SynapseConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { canWrite } = usePermissions();
-  const canEditSynapse = canWrite("synapse");
+  const { canPatch, canPut } = usePermissions();
+  const canEditSynapse = canPatch("/api/enrichment/tools/synapse") || canPut("/api/enrichment/tools/synapse");
 
   useEffect(() => {
     const loadData = async () => {
