@@ -1,14 +1,18 @@
 import apiClient from "./apiClient";
 
+
+export const BASE_URL = "/api/enrichment/tools";
+
 export const enrichmentService = {
+ 
   fetchTool: async (toolKey: string) => {
-    const res = await apiClient.get(`/api/enrichment/tools/${toolKey}`);
+    const res = await apiClient.get(`${BASE_URL}/${toolKey}`);
     const data = res.data?.data || res.data?.[toolKey] || res.data;
     return { toolKey, data };
   },
 
   patchTool: async (toolKey: string, body: any) => {
-    const res = await apiClient.patch(`/api/enrichment/tools/${toolKey}`, body);
+    const res = await apiClient.patch(`${BASE_URL}/${toolKey}`, body);
     const data = res.data?.data || res.data?.[toolKey] || res.data;
     return { toolKey, data };
   }

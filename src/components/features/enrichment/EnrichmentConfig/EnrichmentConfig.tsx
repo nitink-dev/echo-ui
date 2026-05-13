@@ -45,6 +45,7 @@ import { Input } from "../../../ui/input";
 import { Label } from "../../../ui/label";
 import { Switch } from "../../../ui/switch";
 import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { useEnrichmentPermissions } from "./useEnrichmentPermissions";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress", "samIpAddress"],
@@ -81,8 +82,8 @@ export function EnrichmentToolConfig() {
     loading,
   } = useSelector((s: any) => s.ehTools || {});
 
-  const { canPatch, canPut } = usePermissions();
-  const canEdit = canPatch("/api/enrichment/tools") || canPut("/api/enrichment/tools");
+
+ const { canEdit } = useEnrichmentPermissions();
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false,
