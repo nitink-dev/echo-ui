@@ -144,8 +144,8 @@ const authSlice = createSlice({
         if (state.role) {
           localStorage.setItem("auth_role", state.role);
         }
+
         localStorage.setItem("auth_scopes", JSON.stringify(state.scopes));
-        
         broadcastUserLogin(action.payload.username);
       })
 

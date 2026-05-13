@@ -29,16 +29,8 @@ import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
 
 const VALID_PAGES: PageType[] = [
-  "list",
-  "add",
-  "edit",
-  "view",
-  "lis",
-  "synapse",
-  "qa-analysis",
-  "enrichment-tool",
-  "health-status",
-  "slide-status",
+  "list", "add", "edit", "view", "lis", "synapse",
+  "qa-analysis", "enrichment-tool", "health-status", "slide-status",
 ];
 
 function PageLoader() {
@@ -53,19 +45,23 @@ export default function App() {
   const dispatch = useAppDispatch();
 
   const getInitialPage = (): PageType => {
-    const saved = localStorage.getItem("currentPage") as PageType;
-    return saved && VALID_PAGES.includes(saved) ? saved : "health-status";
+    const user = localStorage.getItem("auth_user");
+    if (!user) return "health-status";
+
+    const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
+      return saved && VALID_PAGES.includes(saved)
+        ? saved
+        : "health-status";
   };
 
   const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
-  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(
-    null,
-  );
+  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
   const isNavigating = useRef(false);
 
   const scanners = useSelector((state: any) => state.scanners.items);
   const loading = useSelector((state: any) => state.scanners.loading);
   const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
+
   const currentUser = useSelector((state: any) => state.auth.user);
 
   useCrossTabAuth(currentUser);
@@ -86,13 +82,12 @@ export default function App() {
     if (isLoggedIn) {
       dispatch(fetchScanners());
       const saved = localStorage.getItem("currentPage") as PageType;
-      const page =
-        saved && VALID_PAGES.includes(saved) ? saved : "health-status";
+      const page = saved && VALID_PAGES.includes(saved) ? saved : "health-status";
       if (page !== "view" && page !== "edit") {
         setCurrentPage(page);
       } else {
         setCurrentPage("list");
-        localStorage.setItem("currentPage", "list");
+        localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, "list");
       }
     }
   }, [isLoggedIn]);
@@ -111,7 +106,7 @@ export default function App() {
       const page = (event.state?.page as PageType) || "health-status";
       const safePage: PageType =
         page === "view" || page === "edit" ? "list" : page;
-      localStorage.setItem("currentPage", safePage);
+      localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, safePage);
       setCurrentPage(safePage);
       setSelectedScanner(null);
     };
@@ -122,12 +117,12 @@ export default function App() {
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
     if (configLoaded && !canRead(page)) {
-      toast.error("You don't have permission to access this page.");
+      console.log("You don't have permission to access this page.", page);
       return;
     }
 
     const storePage = page === "login" ? "list" : page;
-    localStorage.setItem("currentPage", storePage);
+    localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, storePage);
 
     isNavigating.current = true;
     window.history.pushState({ page: storePage }, "", window.location.pathname);
@@ -182,7 +177,7 @@ export default function App() {
   };
 
   const handleSaveScanner = async (
-    scannerData: SlideScanner | Partial<SlideScanner>,
+    scannerData: SlideScanner | Partial<SlideScanner>
   ) => {
     try {
       const sanitizedData = sanitizeFormData(scannerData);
@@ -192,8 +187,8 @@ export default function App() {
           updateScanner(
             sanitizedData as Partial<SlideScanner> & {
               deviceSerialNumber: string;
-            },
-          ),
+            }
+          )
         );
         toast.success("Scanner updated successfully");
       } else {
@@ -274,10 +269,7 @@ export default function App() {
       return <UnauthorizedPage />;
     }
 
-    if (
-      (currentPage === "view" || currentPage === "edit") &&
-      !selectedScanner
-    ) {
+    if ((currentPage === "view" || currentPage === "edit") && !selectedScanner) {
       setTimeout(() => navigateToPage("list"), 0);
       return <PageLoader />;
     }

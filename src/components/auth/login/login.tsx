@@ -121,8 +121,8 @@ export function LoginPage() {
                   Password
                 </Label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 pointer-events-none z-10" />
-                  <input
+                  <Lock className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
+                  <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
@@ -130,7 +130,8 @@ export function LoginPage() {
                     onChange={(e) => handleChange("password", e.target.value)}
                     autoComplete="new-password"
                     style={{ paddingLeft: "40px", paddingRight: "40px" }}
-                    className="flex h-10 w-full  h-10 pl-10
+                    className="
+                      flex h-10 pl-10 w-full
                       border border-gray-300
                       focus:border-blue-500
                       focus:ring-2 focus:ring-blue-500

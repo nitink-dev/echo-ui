@@ -1392,6 +1392,10 @@
     background-color: var(--color-orange-500);
   }
 
+  .bg-orange-100 {
+    background-color: var(--color-orange-100);
+  }
+
   .bg-popover {
     background-color: var(--popover);
   }
@@ -1767,6 +1771,10 @@
 
   .text-red-800 {
     color: var(--color-red-800);
+  }
+
+  .text-orange-500 {
+    color: var(--color-orange-500);
   }
 
   .text-secondary-foreground {

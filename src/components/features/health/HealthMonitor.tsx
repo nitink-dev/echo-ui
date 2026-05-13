@@ -231,7 +231,7 @@ export function HealthMonitor() {
             <CardContent className="py-4">
               <div className="flex items-center gap-2 text-sm">
                 <Clock className="h-4 w-4 text-blue-600" />
-                <span className="font-medium text-gray-700">System Time:</span>
+                <span className="font-medium text-gray-700">System Updated At:</span>
                 <span className="text-gray-900">
                   {formatTimestamp(timestamp)}
                 </span>

@@ -36,7 +36,7 @@ const initialFormData: FormData = {
   connected: false
 };
 
-const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber', 'dicomStore'];
+const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
 
 export function useScannerForm(scanner?: SlideScanner) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -118,12 +118,6 @@ export function useScannerForm(scanner?: SlideScanner) {
       }
     });
 
-    if (!formData.research) {
-      if (!formData.dicomStore || !formData.dicomStore.trim()) {
-        newErrors.dicomStore = 'Storage Location is required when not in research mode';
-      }
-    }
-
     if (formData.aeTitle && !/^[A-Z0-9_]+$/.test(formData.aeTitle)) {
       newErrors.aeTitle = 'AE Title must contain only uppercase letters, numbers, and underscores';
     }
@@ -169,7 +163,6 @@ export function useScannerForm(scanner?: SlideScanner) {
       const value = formData[field as keyof FormData];
       return typeof value === 'string' && value.trim();
     });
-
     return allRequiredFieldsValid && Object.keys(errors).length === 0;
   }, [formData, errors]);
 
