@@ -266,7 +266,7 @@ export default function App() {
       return <PageLoader />;
     }
 
-    if (!canRead(currentPage)) {
+    if (!canGet(currentPage)) {
       return <UnauthorizedPage />;
     }
 
