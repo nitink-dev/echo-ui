@@ -117,7 +117,7 @@ export default function App() {
   }, [isLoggedIn]);
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
-    if (configLoaded && !canGet(page)) {
+    if (configLoaded && !canGet(SCANNER_SERVICE_URL)) {
       console.log("You don't have permission to access this page.", page);
       return;
     }
@@ -266,7 +266,7 @@ export default function App() {
       return <PageLoader />;
     }
 
-    if (!canGet(currentPage)) {
+    if (!canGet(SCANNER_SERVICE_URL)) {
       return <UnauthorizedPage />;
     }
 
