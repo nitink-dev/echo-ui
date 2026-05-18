@@ -15,8 +15,8 @@ import {
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "../hooks";
-import { usePermissions } from "../hooks/usePermissions";
 import { logoutUser } from "../store/slices/authSlice";
+import { usePermissions } from "../auth/permissions/usePermissions";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -81,7 +81,7 @@ interface NavigationProps {
 }
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
-  const { canRead, configLoaded } = usePermissions();
+  const { canGet, configLoaded } = usePermissions();
 
   const [expandedSections, setExpandedSections] = useState<string[]>([
     "devices",
@@ -101,7 +101,7 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
     .map((section) => ({
       ...section,
       children: section.children?.filter(
-        (item) => !configLoaded || canRead(item.id),
+        (item) => !configLoaded || canGet(item.id),
       ),
     }))
     .filter((section) => (section.children?.length ?? 0) > 0);
