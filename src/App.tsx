@@ -286,7 +286,7 @@ export default function App() {
           onDeleteScanner={handleDeleteScanner}
         />
       ),
-      add: canWrite("list") ? (
+      add: canPatch(SCANNER_SERVICE_URL) ? (
         <ScannerForm
           onSave={handleSaveScanner}
           onCancel={handleCancelForm}
@@ -295,7 +295,7 @@ export default function App() {
       ) : (
         <UnauthorizedPage />
       ),
-      edit: canWrite("list") ? (
+      edit: canPatch(SCANNER_SERVICE_URL) ? (
         <ScannerForm
           scanner={selectedScanner!}
           onSave={handleSaveScanner}
