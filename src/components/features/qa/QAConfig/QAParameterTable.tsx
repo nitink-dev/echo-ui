@@ -1,5 +1,4 @@
 import { Edit, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { QASlideParameter } from "../../../../types/qa.types";
 import { Button } from "../../../ui/button";
 import {
@@ -10,6 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { QA_SERVICE_URL } from "../../../../api/services/qaService";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -52,9 +53,10 @@ export function QAParameterTable({
     );
   }
 
-  const { canWrite, canDelete: canDeleteFn } = usePermissions();
-  const canEdit = canWrite("qa-analysis");
-  const canDelete = canDeleteFn("qa-analysis");
+  const { canPost, canPatch, canDelete: canDeleteFn } = usePermissions();
+  const canAdd = canPost(QA_SERVICE_URL);
+  const canEdit = canPatch(QA_SERVICE_URL);
+  const canDelete = canDeleteFn(QA_SERVICE_URL);
 
   return (
     <Table>

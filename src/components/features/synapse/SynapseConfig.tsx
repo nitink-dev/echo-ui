@@ -20,6 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { usePermissions } from "../../../auth/permissions/usePermissions";
+import { SERVICE_URL } from "../../../api/services/enrichmentService";
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -27,7 +28,7 @@ export const fetchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/fetch", async (_, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get("/api/enrichment/tools/synapse");
+    const res = await apiClient.get(SERVICE_URL + "/synapse");
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -51,7 +52,7 @@ export const patchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/patch", async ({ body }, { rejectWithValue }) => {
   try {
-    const res = await apiClient.patch("/api/enrichment/tools/synapse", body);
+    const res = await apiClient.patch(SERVICE_URL + "/synapse", body);
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -162,7 +163,7 @@ export function SynapseConfig() {
   const [cardError, setCardError] = useState<string | null>(null);
 
   const { canPatch, canPut } = usePermissions();
-  const canEditSynapse = canPatch("/api/enrichment/tools/synapse") || canPut("/api/enrichment/tools/synapse");
+  const canEditSynapse = canPatch(SERVICE_URL + "/synapse") || canPut(SERVICE_URL + "/synapse");
 
   useEffect(() => {
     const loadData = async () => {

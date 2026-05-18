@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { usePermissions } from "../../../auth/permissions/usePermissions";
+import { SERVICE_URL } from "../../../api/services/enrichmentService";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -87,7 +88,7 @@ export function LisConfig() {
   const [cardError, setCardError] = useState<string | null>(null);
 
   const { canPatch, canPut } = usePermissions();
-  const canEditLis = canPatch("/api/enrichment/tools/eh-lis-connector");
+  const canEditLis = canPatch( SERVICE_URL + "/eh-lis-connector");
 
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))

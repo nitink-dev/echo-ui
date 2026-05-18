@@ -159,12 +159,13 @@ export function LoginPage() {
                       <Eye className="h-5 w-5 text-gray-400" />
                     )}
                   </button>
+                  </div>
                   {errors.password && (
-                    <p className="text-sm text-red-600 mt-1">
+                    <p className="text-xs text-red-600">
                       {errors.password}
                     </p>
                   )}
-                </div>
+                
               </div>
 
               {/* General error */}

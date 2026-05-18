@@ -15,7 +15,7 @@ import { SlideScanStatus } from "./components/features/status/SlideScanStatus";
 import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { Toaster } from "./components/ui/sonner";
 import { useAppDispatch } from "./hooks";
-import { usePermissions } from "./hooks/usePermissions";
+import { usePermissions } from "./auth/permissions/usePermissions";
 import { loadStoredSession, logoutUser } from "./store/slices/authSlice";
 import {
   addScanner,
@@ -27,6 +27,7 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
+import { SCANNER_SERVICE_URL } from "./api/services/scannerService";
 
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
@@ -66,7 +67,7 @@ export default function App() {
 
   useCrossTabAuth(currentUser);
 
-  const { canRead, canWrite, configLoaded } = usePermissions();
+  const { canGet, canPatch, configLoaded } = usePermissions();
 
   useEffect(() => {
     dispatch(loadStoredSession());
@@ -116,7 +117,7 @@ export default function App() {
   }, [isLoggedIn]);
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
-    if (configLoaded && !canRead(page)) {
+    if (configLoaded && !canGet(page)) {
       console.log("You don't have permission to access this page.", page);
       return;
     }
@@ -142,7 +143,7 @@ export default function App() {
   }
 
   const handleAddScanner = () => {
-    if (!canWrite("list")) {
+    if (!canPatch(SCANNER_SERVICE_URL)) {
       toast.error("You don't have permission to add a scanner.");
       return;
     }
@@ -150,7 +151,7 @@ export default function App() {
   };
 
   const handleEditScanner = (scanner: SlideScanner) => {
-    if (!canWrite("list")) {
+    if (!canPatch(SCANNER_SERVICE_URL)) {
       toast.error("You don't have permission to edit a scanner.");
       return;
     }
@@ -164,7 +165,7 @@ export default function App() {
 
   const handleDeleteScanner = async (id?: string) => {
     if (!id) return;
-    if (!canWrite("list")) {
+    if (!canDelete(SCANNER_SERVICE_URL)) {
       toast.error("You don't have permission to delete a scanner.");
       return;
     }

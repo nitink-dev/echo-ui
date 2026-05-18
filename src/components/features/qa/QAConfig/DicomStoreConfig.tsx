@@ -1,6 +1,5 @@
 import { Database, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { Button } from "../../../ui/button";
 import {
   Card,
@@ -10,6 +9,8 @@ import {
   CardTitle,
 } from "../../../ui/card";
 import { Label } from "../../../ui/label";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { DICOM_STORE_CONFIG_URL } from "../../../../api/services/qaService";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -24,8 +25,10 @@ export function DicomStoreConfig({
 }: DicomStoreConfigProps) {
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
-  const { canWrite } = usePermissions();
-  const canEditDicomStore = canWrite("qa-analysis");
+
+  const { canPatch } = usePermissions();
+  const canEditDicomStore = canPatch(DICOM_STORE_CONFIG_URL);
+  
   useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
