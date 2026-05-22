@@ -74,8 +74,6 @@ const SCAN_STATUS_TO_TAB = {
   failed: "failed",
 };
 
-const SEARCH_JUMP_PRIORITY = ["inProgress", "completed", "failed"];
-
 const pageSize = 9;
 
 const singleSlideToPageable = (slide) => ({
@@ -129,7 +127,6 @@ export function SlideScanStatus() {
     deviceId: "",
   });
   const [searchState, setSearchState] = useState("idle");
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [currentPage, setCurrentPage] = useState({
     completed: 0,
     failed: 0,
@@ -198,7 +195,7 @@ export function SlideScanStatus() {
     } catch (error) {
       setStatusData((prev) => ({
         ...prev,
-        [statusKey]: emptyPageable(), 
+        [statusKey]: emptyPageable(),
         loading: { ...prev.loading, [statusKey]: false },
         error: { ...prev.error, [statusKey]: error.message || "Unknown error" },
       }));
@@ -369,14 +366,6 @@ export function SlideScanStatus() {
   }, []);
 
   useEffect(() => {
-    if (!autoRefresh) return;
-    const interval = setInterval(() => {
-      fetchData("inProgress", currentPageRef.current.inProgress, null);
-    }, 30000);
-    return () => clearInterval(interval);
-  }, [autoRefresh]);
-
-  useEffect(() => {
     if (currentPage.inProgress !== 0)
       fetchData("inProgress", currentPage.inProgress, null);
   }, [currentPage.inProgress]);
@@ -525,7 +514,6 @@ export function SlideScanStatus() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-5xl mx-auto p-6 space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-2">
@@ -585,7 +573,6 @@ export function SlideScanStatus() {
           </div>
         </div>
 
-        {/* Search result banners */}
         {searchState === "found" && isSearchActive && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
             <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
@@ -610,7 +597,6 @@ export function SlideScanStatus() {
           </div>
         )}
 
-        {/* Tab bar */}
         <div>
           <div className="flex gap-2 bg-gray-100/80 rounded-2xl p-1.5 border border-gray-200/60 shadow-inner">
             {TABS.map(
@@ -656,7 +642,6 @@ export function SlideScanStatus() {
                     />
                     <span className="tracking-tight">{label}</span>
 
-                    {/* Count badge — always rendered with inline styles to avoid Tailwind purge */}
                     <span
                       style={
                         isActive ? countActiveBgStyle : countInactiveBgStyle
@@ -678,7 +663,6 @@ export function SlideScanStatus() {
             )}
           </div>
 
-          {/* Panel card */}
           <div className="mt-3 bg-white rounded-2xl border border-gray-200 shadow-sm overflow-hidden">
             <div
               className={`h-1 w-full ${
@@ -739,7 +723,6 @@ export function SlideScanStatus() {
         </div>
       </div>
 
-      {/* Global loading indicator */}
       {isAnyLoading && (
         <div className="fixed bottom-4 right-4 bg-white rounded-lg shadow-lg p-4 border border-gray-200">
           <div className="flex items-center gap-2 text-sm text-gray-700">

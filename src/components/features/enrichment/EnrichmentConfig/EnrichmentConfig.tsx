@@ -16,7 +16,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../../../hooks";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../../hooks/useRefetchOnFocus";
 import { extractApiErrorMessage } from "../../../../api/services/apiClient";
 import {
@@ -45,6 +44,8 @@ import {
 import { Input } from "../../../ui/input";
 import { Label } from "../../../ui/label";
 import { Switch } from "../../../ui/switch";
+import { SERVICE_URL } from "../../../../api/services/enrichmentService";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress", "samIpAddress"],
@@ -81,8 +82,11 @@ export function EnrichmentToolConfig() {
     loading,
   } = useSelector((s: any) => s.ehTools || {});
 
-  const { canWrite } = usePermissions();
-  const canEdit = canWrite("enrichment-tool");
+  // const { canUpdate } = usePermissions();
+  // const canEdit = canUpdate(SERVICE_URL);
+
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false,
@@ -388,6 +392,12 @@ export function EnrichmentToolConfig() {
   };
 
   const handleEdit = (key: string, enable: boolean) => {
+    if (enable && isScanInProgress) {
+      toast.warning(
+        "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
+      );
+      return;
+    }
     setEditMode((prev) => ({ ...prev, [key]: enable }));
     if (!enable) {
       setForm(originalForm);
@@ -805,7 +815,7 @@ export function EnrichmentToolConfig() {
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">{body}</div>
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {canEdit && (
+              {(
                 <>
                   {editMode[keyName] ? (
                     <>
@@ -831,7 +841,13 @@ export function EnrichmentToolConfig() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(keyName, true)}
-                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                      disabled={isScanInProgress}
+                      title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
+                      }
+                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>
@@ -847,6 +863,22 @@ export function EnrichmentToolConfig() {
 
   return (
     <div className="space-y-6 p-6 bg-white">
+      {isScanInProgress && (
+        <div className="flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3.5 shadow-sm">
+          <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 mt-0.5">
+            <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-amber-800 leading-snug">
+              Slide scan in progress
+            </p>
+            <p className="text-sm text-amber-700 mt-0.5">
+              {inProgressCount} slide{inProgressCount !== 1 ? "s are" : " is"} currently being scanned. Configuration editing is disabled until all scans complete.
+            </p>
+          </div>
+        </div>
+      )}
+
       {renderDynamicCard(
         "DICOM Receiver",
         <Network className="h-5 w-5 text-[#007BFF]" />,

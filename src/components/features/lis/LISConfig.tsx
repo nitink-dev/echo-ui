@@ -3,7 +3,6 @@ import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../../hooks";
-import { usePermissions } from "../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 import { extractApiErrorMessage } from "../../../api/services/apiClient";
 import { fetchEhTool, patchEhTool } from "../../../store/slices/ehToolsSlice";
@@ -21,6 +20,8 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
+import { SERVICE_URL } from "../../../api/services/enrichmentService";
+import { useSlideScan } from "../status/SlideScanContext";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -86,8 +87,11 @@ export function LisConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { canWrite } = usePermissions();
-  const canEditLis = canWrite("lis");
+  // const { canPatch, canPut } = usePermissions();
+  // const canEditLis = canPatch(SERVICE_URL + "/eh-lis-connector");
+
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
 
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))
@@ -197,6 +201,12 @@ export function LisConfig() {
   );
 
   const handleEdit = (enable: boolean) => {
+    if (enable && isScanInProgress) {
+      toast.warning(
+        "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
+      );
+      return;
+    }
     setEditMode(enable);
     if (!enable) {
       setForm(originalForm);
@@ -307,6 +317,22 @@ export function LisConfig() {
           LIS Application Details
         </h1>
 
+        {isScanInProgress && (
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3.5 shadow-sm">
+            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 mt-0.5">
+              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold text-amber-800 leading-snug">
+                Slide scan in progress
+              </p>
+              <p className="text-sm text-amber-700 mt-0.5">
+                {inProgressCount} slide{inProgressCount !== 1 ? "s are" : " is"} currently being scanned. Configuration editing is disabled until all scans complete.
+              </p>
+            </div>
+          </div>
+        )}
+
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -322,7 +348,7 @@ export function LisConfig() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-semibold text-red-700 leading-none mb-1">
-                  Request Failed : {cardError} 
+                  Request Failed : {cardError}
                 </p>
               </div>
               <button
@@ -345,7 +371,7 @@ export function LisConfig() {
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {canEditLis && (
+              { (
                 <>
                   {editMode ? (
                     <>
@@ -371,7 +397,13 @@ export function LisConfig() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(true)}
-                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                      disabled={isScanInProgress}
+                      title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
+                      }
+                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>
