@@ -1,4 +1,5 @@
 import { BarChart3, Plus } from "lucide-react";
+import { usePermissions } from "../../../../hooks/usePermissions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +22,6 @@ import { DicomStoreConfig } from "./DicomStoreConfig";
 import { QAParameterForm } from "./QAParameterForm";
 import { QAParameterTable } from "./QAParameterTable";
 import { useQAConfig } from "./useQAConfig";
-import { usePermissions } from "../../../../auth/permissions/usePermissions";
-import { QA_SERVICE_URL } from "../../../../api/services/qaService";
 
 export function QAConfig() {
   const {
@@ -49,8 +48,8 @@ export function QAConfig() {
     handleSaveDicomStore,
   } = useQAConfig();
 
-  const { canPost } = usePermissions();
-  const canAdd = canPost(QA_SERVICE_URL);
+  const { canWrite } = usePermissions();
+  const canAdd = canWrite("qa-analysis");
 
   return (
     <div className="space-y-6">

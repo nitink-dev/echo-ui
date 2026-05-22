@@ -31,10 +31,10 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
-import { usePermissions } from "../../../../auth/permissions/usePermissions";
+
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { SCANNER_SERVICE_URL } from "../../../../api/services/scannerService";
+import { usePermissions } from "../../../../hooks/usePermissions";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -57,9 +57,9 @@ export function ScannerTable({
   const [scannerToDelete, setScannerToDelete] = useState<SlideScanner | null>(
     null,
   );
-  const { canPatch, canDelete } = usePermissions();
-  const canEditScanner = canPatch(SCANNER_SERVICE_URL);
-  const canDeleteScanner = canDelete(SCANNER_SERVICE_URL);
+  const { canWrite, canDelete } = usePermissions();
+  const canEditScanner = canWrite("edit");
+  const canDeleteScanner = canDelete("list");
 
   const initialConnected = useMemo(() => {
     const map: Record<string, boolean> = {};

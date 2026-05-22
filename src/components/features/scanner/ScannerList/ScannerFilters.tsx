@@ -1,8 +1,7 @@
 import { Plus, Search } from "lucide-react";
+import { usePermissions } from "../../../../hooks/usePermissions";
 import { Button } from "../../../ui/button";
 import { Input } from "../../../ui/input";
-import { usePermissions } from "../../../../auth/permissions/usePermissions";
-import { SCANNER_SERVICE_URL } from "../../../../api/services/scannerService";
 
 interface ScannerFiltersProps {
   searchTerm: string;
@@ -15,8 +14,8 @@ export function ScannerFilters({
   onSearchChange,
   onAddScanner,
 }: ScannerFiltersProps) {
-  const { canPost } = usePermissions();
-  const canAddScanner = canPost(SCANNER_SERVICE_URL);
+  const { canWrite } = usePermissions();
+  const canAddScanner = canWrite("add");
 
   return (
     <div className="grid grid-cols-12 gap-6 items-center py-4 min-h-[80px]">

@@ -16,6 +16,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { useAppDispatch } from "../../../../hooks";
+import { usePermissions } from "../../../../hooks/usePermissions";
 import { useRefetchOnFocus } from "../../../../hooks/useRefetchOnFocus";
 import { extractApiErrorMessage } from "../../../../api/services/apiClient";
 import {
@@ -44,8 +45,6 @@ import {
 import { Input } from "../../../ui/input";
 import { Label } from "../../../ui/label";
 import { Switch } from "../../../ui/switch";
-import { usePermissions } from "../../../../auth/permissions/usePermissions";
-import { SERVICE_URL } from "../../../../api/services/enrichmentService";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress", "samIpAddress"],
@@ -82,8 +81,8 @@ export function EnrichmentToolConfig() {
     loading,
   } = useSelector((s: any) => s.ehTools || {});
 
- const { canUpdate } = usePermissions();
- const canEdit = canUpdate(SERVICE_URL); 
+  const { canWrite } = usePermissions();
+  const canEdit = canWrite("enrichment-tool");
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false,

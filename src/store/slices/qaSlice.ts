@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { BASE_URL } from "../../utils/constants";
 import apiClient from "../../api/services/apiClient";
-import { qaService } from "../../api/services/qaService";
 
 export interface QASlideParameter {
   id: string;
@@ -88,7 +87,13 @@ export const addQAParameter = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      return qaService.addParameter(payload);
+      const res = await apiClient.post(`${BASE_URL}/api/slides`, payload);
+      return {
+        id: res.data.id,
+        barcode: res.data.barcode,
+        activationCode: res.data.activationCode,
+        dicomWebUrl: res.data.dicomWebUrl,
+      } as QASlideParameter;
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
@@ -102,7 +107,8 @@ export const updateQAParameter = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      return qaService.updateParameter(payload);
+      await apiClient.put(`${BASE_URL}/api/slides/${payload.barcode}`, payload);
+      return payload;
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
