@@ -140,7 +140,10 @@ const qaSlice = createSlice({
         fetchQAParameters.fulfilled,
         (state, action: PayloadAction<{ slides: QASlideParameter[]; dicomUrl: string }>) => {
           state.loading = false;
-          state.qaParameters = action.payload.slides;
+          state.qaParameters = action.payload.slides.map((slide) => ({
+            ...slide,
+            id: slide.id ?? crypto.randomUUID(), 
+          }));
           state.dicomStoreAddress = action.payload.dicomUrl;
         }
       )

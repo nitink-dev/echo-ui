@@ -81,14 +81,6 @@ export default function App() {
   useEffect(() => {
     if (isLoggedIn) {
       dispatch(fetchScanners());
-      const saved = localStorage.getItem("currentPage") as PageType;
-      const page = saved && VALID_PAGES.includes(saved) ? saved : "health-status";
-      if (page !== "view" && page !== "edit") {
-        setCurrentPage(page);
-      } else {
-        setCurrentPage("list");
-        localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, "list");
-      }
     }
   }, [isLoggedIn]);
 
