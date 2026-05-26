@@ -1,4 +1,4 @@
-import { AlertTriangle, Database, Edit, Save, X } from "lucide-react";
+import { Database, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -86,9 +86,6 @@ export function LisConfig() {
   >({});
 
   const [cardError, setCardError] = useState<string | null>(null);
-
-  // const { canPatch, canPut } = usePermissions();
-  // const canEditLis = canPatch(SERVICE_URL + "/eh-lis-connector");
 
   const { inProgressCount } = useSlideScan();
   const isScanInProgress = inProgressCount > 0;
@@ -318,15 +315,21 @@ export function LisConfig() {
         </h1>
 
         {isScanInProgress && (
-          <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3.5 shadow-sm">
-            <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-amber-100 mt-0.5">
-              <AlertTriangle className="h-3.5 w-3.5 text-amber-600" />
+          <div className="mb-4 flex items-start gap-3 rounded-lg border border-[#FAC775] bg-[#FAEEDA] px-4 py-3.5">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FAC775] mt-0.5">
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#633806" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M7 7v10"/><path d="M17 7v10"/><path d="M12 7v4"/></svg>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-amber-800 leading-snug">
-                Slide scan in progress
-              </p>
-              <p className="text-sm text-amber-700 mt-0.5">
+              <div className="flex items-center gap-2 mb-0.5">
+                <p className="text-sm font-medium text-[#633806] leading-snug">
+                  Slide scan in progress
+                </p>
+                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#854F0B] bg-[#FAC775] rounded-full px-2.5 py-0.5">
+                  <span className="h-1.5 w-1.5 rounded-full bg-[#633806] animate-pulse" />
+                  Live
+                </span>
+              </div>
+              <p className="text-sm text-[#854F0B] leading-snug">
                 {inProgressCount} slide{inProgressCount !== 1 ? "s are" : " is"} currently being scanned. Configuration editing is disabled until all scans complete.
               </p>
             </div>
@@ -342,19 +345,20 @@ export function LisConfig() {
           </CardHeader>
 
           {cardError && (
-            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm">
-              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
-                <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-[#F09595] bg-[#FCEBEB] px-4 py-3.5">
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C1C1] mt-0.5">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#791F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-semibold text-red-700 leading-none mb-1">
-                  Request Failed : {cardError}
+                <p className="text-sm font-medium text-[#791F1F] leading-snug mb-0.5">
+                  Request failed
                 </p>
+                <p className="text-sm text-[#A32D2D] leading-snug">{cardError}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setCardError(null)}
-                className="shrink-0 rounded-md p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+                className="shrink-0 rounded-md p-1 text-[#A32D2D] hover:bg-[#F7C1C1] transition-colors"
                 aria-label="Dismiss error"
               >
                 <X className="h-4 w-4" />
@@ -371,7 +375,7 @@ export function LisConfig() {
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              { (
+              {(
                 <>
                   {editMode ? (
                     <>
