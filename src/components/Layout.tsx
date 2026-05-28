@@ -56,10 +56,21 @@ interface NavigationItem {
 
 const navigationItems: NavigationItem[] = [
   {
+    label: "Operations",
+    icon: Activity,
+    id: "operations",
+    children: [
+      { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status" },
+      { label: "Health Status", icon: MonitorCheckIcon, id: "health-status" },
+    ],
+  },
+  {
     label: "Devices & Adapters",
     icon: Monitor,
     id: "devices",
-    children: [{ label: "Slide Scanner", icon: Microscope, id: "list" }],
+    children: [
+      { label: "Slide Scanner", icon: Microscope, id: "list" },
+    ],
   },
   {
     label: "Applications",
@@ -70,8 +81,6 @@ const navigationItems: NavigationItem[] = [
       { label: "IMS", icon: Settings, id: "synapse" },
       { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis" },
       { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool" },
-      { label: "Health Status", icon: MonitorCheckIcon, id: "health-status" },
-      { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status" },
     ],
   },
 ];
@@ -85,6 +94,7 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const { canRead, configLoaded } = usePermissions();
 
   const [expandedSections, setExpandedSections] = useState<string[]>([
+    "operations",
     "devices",
     "data-stores",
     "clinical-apps",
