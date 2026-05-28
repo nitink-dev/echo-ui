@@ -17,7 +17,7 @@ import { useSelector } from "react-redux";
 import { useAppDispatch } from "../hooks";
 import { usePermissions } from "../hooks/usePermissions";
 import { logoutUser } from "../store/slices/authSlice";
-import { useSlideScan } from "./status/SlideScanContext";
+import { useSlideScan } from "./features/status/SlideScanContext";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -314,10 +314,12 @@ export function Layout({
 
         {isScanInProgress && (
           <div className="w-full bg-[#1a3a5c] border-b border-[#1e4976] flex items-center gap-3 px-6 py-2">
-            <span className="relative flex h-2 w-2 shrink-0">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#60a5fa] opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-[#3b82f6]" />
-            </span>
+
+            <span className="relative flex h-3 w-3 shrink-0">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#60a5fa] opacity-75" />
+            <span className="animate-pulse relative inline-flex rounded-full h-3 w-3 bg-[#3b82f6]" />
+          </span>
+
             <p className="text-sm text-[#93c5fd]">
               <span className="font-semibold text-white">
                 Scan in progress —{" "}
