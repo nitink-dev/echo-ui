@@ -69,18 +69,18 @@ export function QAParameterTable({
       </TableHeader>
       <TableBody>
         {qaParameters.map((parameter) => (
-          <TableRow key={parameter.id}>
+          <TableRow key={parameter.barcode}>
             <TableCell className="font-mono">{parameter.barcode}</TableCell>
             <TableCell className="font-mono relative flex items-center gap-2">
-              {visibleActivationCodes[parameter.id]
+              {visibleActivationCodes[parameter.barcode]
                 ? parameter.activationCode
                 : "******"}
               <button
                 type="button"
-                onClick={() => onToggleVisibility(parameter.id)}
+                onClick={() => onToggleVisibility(parameter.barcode)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                {visibleActivationCodes[parameter.id] ? (
+                {visibleActivationCodes[parameter.barcode] ? (
                   <EyeOff className="h-4 w-4" />
                 ) : (
                   <Eye className="h-4 w-4" />

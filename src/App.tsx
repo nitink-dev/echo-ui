@@ -45,14 +45,14 @@ export default function App() {
   const dispatch = useAppDispatch();
 
   const getInitialPage = (): PageType => {
-  const user = localStorage.getItem("auth_user");
-  if (!user) return "slide-status"; 
+    const user = localStorage.getItem("auth_user");
+    if (!user) return "health-status";
 
-  const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
-  return saved && VALID_PAGES.includes(saved)
-    ? saved
-    : "slide-status"; 
-};
+    const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
+      return saved && VALID_PAGES.includes(saved)
+        ? saved
+        : "health-status";
+  };
 
   const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
   const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
@@ -95,7 +95,7 @@ export default function App() {
 
     const handlePopState = (event: PopStateEvent) => {
       if (isNavigating.current) return;
-      const page = (event.state?.page as PageType) || "slide-status";
+      const page = (event.state?.page as PageType) || "health-status";
       const safePage: PageType =
         page === "view" || page === "edit" ? "list" : page;
       localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, safePage);
