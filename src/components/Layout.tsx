@@ -15,7 +15,6 @@ import {
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "../hooks";
-import { usePermissions } from "../hooks/usePermissions";
 import { logoutUser } from "../store/slices/authSlice";
 import {
   Breadcrumb,
@@ -38,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { useFeaturePermissions } from "../auth/permissions/useFeaturePermissions";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -50,30 +50,59 @@ interface NavigationItem {
   label: string;
   icon: React.ComponentType<any>;
   id: string;
+  permissionKey?: keyof ReturnType<typeof buildPermissionMap>;
   children?: NavigationItem[];
 }
 
 const navigationItems: NavigationItem[] = [
-  {
-    label: "Devices & Adapters",
-    icon: Monitor,
-    id: "devices",
-    children: [{ label: "Slide Scanner", icon: Microscope, id: "list" }],
-  },
-  {
-    label: "Applications",
-    icon: Stethoscope,
-    id: "clinical-apps",
-    children: [
-      { label: "LIS", icon: Activity, id: "lis" },
-      { label: "IMS", icon: Settings, id: "synapse" },
-      { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis" },
-      { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool" },
-      { label: "Health Status", icon: MonitorCheckIcon, id: "health-status" },
-      { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status" },
-    ],
-  },
-];
+    {
+      label: "Operations",
+      icon: MonitorCheckIcon,
+      id: "operations",
+      children: [
+        { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status", permissionKey: "slide-status" },
+        { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
+      ],
+    },
+    {
+      label: "Devices & Adapters",
+      icon: Monitor,
+      id: "devices",
+      children: [
+        { label: "Slide Scanner", icon: Microscope, id: "list", permissionKey: "list" },
+      ],
+    },
+    {
+      label: "Applications",
+      icon: Stethoscope,
+      id: "clinical-apps",
+      children: [
+        { label: "LIS", icon: Activity, id: "lis", permissionKey: "lis" },
+        { label: "IMS", icon: Settings, id: "synapse", permissionKey: "synapse" },
+        { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis", permissionKey: "qa-analysis" },
+        { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool", permissionKey: "enrichment-tool" },
+      ],
+    },
+  ];
+
+function buildPermissionMap(
+  scanners: ReturnType<typeof useFeaturePermissions>["scanners"],
+  enrichment: ReturnType<typeof useFeaturePermissions>["enrichment"],
+  slides: ReturnType<typeof useFeaturePermissions>["slides"],
+  scanStatus: ReturnType<typeof useFeaturePermissions>["scanStatus"],
+  slideAnalysis: ReturnType<typeof useFeaturePermissions>["slideAnalysis"],
+) {
+  return {
+    list:             scanners.canRead,
+    lis:              enrichment.canRead,
+    synapse:          enrichment.canRead,
+    "qa-analysis":    slides.canRead,
+    "enrichment-tool": enrichment.canRead,
+    "health-status":  true,
+    "slide-status":   scanStatus.canReadStatus,
+    "slide-analysis": slideAnalysis.canRead,
+  };
+}
 
 interface NavigationProps {
   currentPage: string;
@@ -81,7 +110,10 @@ interface NavigationProps {
 }
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
-  const { canRead, configLoaded } = usePermissions();
+  
+  const { scanners, enrichment, slides, scanStatus, slideAnalysis } = useFeaturePermissions();
+  const permissionMap = buildPermissionMap(scanners, enrichment, slides, scanStatus, slideAnalysis);
+
 
   const [expandedSections, setExpandedSections] = useState<string[]>([
     "devices",
@@ -97,12 +129,14 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
     );
   };
 
+
   const filteredNavItems = navigationItems
     .map((section) => ({
       ...section,
-      children: section.children?.filter(
-        (item) => !configLoaded || canRead(item.id),
-      ),
+      children: section.children?.filter((item) => {
+        if (!item.permissionKey) return true;
+        return permissionMap[item.permissionKey] !== false;
+      }),
     }))
     .filter((section) => (section.children?.length ?? 0) > 0);
 

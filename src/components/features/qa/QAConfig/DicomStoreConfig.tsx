@@ -1,6 +1,5 @@
 import { Database, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { Button } from "../../../ui/button";
 import {
   Card,
@@ -10,6 +9,8 @@ import {
   CardTitle,
 } from "../../../ui/card";
 import { Label } from "../../../ui/label";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -24,8 +25,9 @@ export function DicomStoreConfig({
 }: DicomStoreConfigProps) {
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
-  const { canWrite } = usePermissions();
-  const canEditDicomStore = canWrite("qa-analysis");
+
+  const { config: dicomPermissions } = useFeaturePermissions();
+  
   useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
@@ -82,7 +84,7 @@ export function DicomStoreConfig({
                   );
                 })}
               </select>
-              {canEditDicomStore && (
+                <PermissionGuard allowed={dicomPermissions.canUpdateDicomStore}>
                 <>
                   {isEditingDicom ? (
                     <div className="flex gap-2">
@@ -103,7 +105,7 @@ export function DicomStoreConfig({
                     </Button>
                   )}
                 </>
-              )}
+              </PermissionGuard>
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Full path to the Google Cloud DICOM store for QA slide storage

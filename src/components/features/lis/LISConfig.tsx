@@ -1,4 +1,4 @@
-import { Database, Edit, Save, X } from "lucide-react";
+import { AlertTriangle, Database, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -20,16 +20,14 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { SERVICE_URL } from "../../../api/services/enrichmentService";
-import { useSlideScan } from "../status/SlideScanContext";
+import { useFeaturePermissions } from "../../../auth/permissions/useFeaturePermissions";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
     label: "LIS App Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
-    errorMessage:
-      "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
+    errorMessage: "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
     required: true,
   },
   ipAddress: {
@@ -43,8 +41,7 @@ const FIELD_RULES: Record<string, FieldRule> = {
     label: "LIS Facility",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
-    errorMessage:
-      "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
+    errorMessage: "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
     required: false,
   },
   incomingPort: {
@@ -74,21 +71,16 @@ export function LisConfig() {
   const dispatch = useAppDispatch();
   const { lisConnector, loading } = useSelector((s: any) => s.ehTools || {});
 
+  const { enrichment } = useFeaturePermissions();
+  const canEditLis = enrichment.canEditLis;
+
   const [editMode, setEditMode] = useState(false);
   const [initialized, setInitialized] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [originalForm, setOriginalForm] = useState<FormState>(INITIAL_FORM);
-  const [touched, setTouched] = useState<
-    Partial<Record<keyof FormState, boolean>>
-  >({});
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormState, string>>
-  >({});
-
+  const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
   const [cardError, setCardError] = useState<string | null>(null);
-
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
 
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))
@@ -101,8 +93,7 @@ export function LisConfig() {
   useRefetchOnFocus([() => fetchEhTool({ toolKey: "eh-lis-connector" })]);
 
   useEffect(() => {
-    if (!lisConnector || Object.keys(lisConnector).length === 0 || initialized)
-      return;
+    if (!lisConnector || Object.keys(lisConnector).length === 0 || initialized) return;
     const newData: FormState = {
       applicationName: lisConnector.receivingAppName || lisConnector.name || "",
       ipAddress: lisConnector.ipAddress || "",
@@ -151,9 +142,7 @@ export function LisConfig() {
   const handleChange = useCallback(
     (field: keyof FormState, value: string) => {
       const rule = FIELD_RULES[field];
-      const sanitized = rule
-        ? sanitizeByPattern(value, rule.allowedPattern)
-        : value;
+      const sanitized = rule ? sanitizeByPattern(value, rule.allowedPattern) : value;
       setForm((prev) => ({ ...prev, [field]: sanitized }));
       if (touched[field]) {
         setErrors((prev) => ({
@@ -188,22 +177,13 @@ export function LisConfig() {
         const start = input.selectionStart ?? 0;
         const end = input.selectionEnd ?? 0;
         const current = form[field];
-        handleChange(
-          field,
-          current.slice(0, start) + sanitized + current.slice(end),
-        );
+        handleChange(field, current.slice(0, start) + sanitized + current.slice(end));
       }
     },
     [form, handleChange],
   );
 
   const handleEdit = (enable: boolean) => {
-    if (enable && isScanInProgress) {
-      toast.warning(
-        "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
-      );
-      return;
-    }
     setEditMode(enable);
     if (!enable) {
       setForm(originalForm);
@@ -213,10 +193,7 @@ export function LisConfig() {
     setCardError(null);
   };
 
-  const getChangedFields = (
-    current: FormState,
-    original: FormState,
-  ): Partial<FormState> => {
+  const getChangedFields = (current: FormState, original: FormState): Partial<FormState> => {
     const diff: Partial<FormState> = {};
     (Object.keys(current) as Array<keyof FormState>).forEach((k) => {
       if (
@@ -243,17 +220,13 @@ export function LisConfig() {
     const body: any = {};
     if (changes.applicationName) body.appName = changes.applicationName;
     if (changes.ipAddress) body.ipAddress = changes.ipAddress;
-    if (changes.incomingPort)
-      body["incoming-port"] = parseInt(changes.incomingPort, 10);
-    if (changes.receivingFacility !== undefined)
-      body.receivingFacility = changes.receivingFacility;
+    if (changes.incomingPort) body["incoming-port"] = parseInt(changes.incomingPort, 10);
+    if (changes.receivingFacility !== undefined) body.receivingFacility = changes.receivingFacility;
 
     setCardError(null);
 
     try {
-      await dispatch(
-        patchEhTool({ toolKey: "eh-lis-connector", body }),
-      ).unwrap();
+      await dispatch(patchEhTool({ toolKey: "eh-lis-connector", body })).unwrap();
       toast.success("LIS configuration updated successfully");
       setOriginalForm(form);
       setEditMode(false);
@@ -296,10 +269,7 @@ export function LisConfig() {
           aria-describedby={hasError ? `${field}-error` : undefined}
         />
         {hasError && (
-          <p
-            id={`${field}-error`}
-            className="text-sm text-red-600 flex items-center gap-1"
-          >
+          <p id={`${field}-error`} className="text-sm text-red-600 flex items-center gap-1">
             {error}
           </p>
         )}
@@ -314,28 +284,6 @@ export function LisConfig() {
           LIS Application Details
         </h1>
 
-        {isScanInProgress && (
-          <div className="mb-4 flex items-start gap-3 rounded-lg border border-[#FAC775] bg-[#FAEEDA] px-4 py-3.5">
-            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#FAC775] mt-0.5">
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#633806" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><path d="M7 7v10"/><path d="M17 7v10"/><path d="M12 7v4"/></svg>
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 mb-0.5">
-                <p className="text-sm font-medium text-[#633806] leading-snug">
-                  Slide scan in progress
-                </p>
-                <span className="inline-flex items-center gap-1.5 text-xs font-medium text-[#854F0B] bg-[#FAC775] rounded-full px-2.5 py-0.5">
-                  <span className="h-1.5 w-1.5 rounded-full bg-[#633806] animate-pulse" />
-                  Live
-                </span>
-              </div>
-              <p className="text-sm text-[#854F0B] leading-snug">
-                {inProgressCount} slide{inProgressCount !== 1 ? "s are" : " is"} currently being scanned. Configuration editing is disabled until all scans complete.
-              </p>
-            </div>
-          </div>
-        )}
-
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-lg font-semibold text-gray-900">
@@ -345,20 +293,19 @@ export function LisConfig() {
           </CardHeader>
 
           {cardError && (
-            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-[#F09595] bg-[#FCEBEB] px-4 py-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C1C1] mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#791F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#791F1F] leading-snug mb-0.5">
-                  Request failed
+                <p className="text-sm font-semibold text-red-700 leading-none mb-1">
+                  Request Failed : {cardError}
                 </p>
-                <p className="text-sm text-[#A32D2D] leading-snug">{cardError}</p>
               </div>
               <button
                 type="button"
                 onClick={() => setCardError(null)}
-                className="shrink-0 rounded-md p-1 text-[#A32D2D] hover:bg-[#F7C1C1] transition-colors"
+                className="shrink-0 rounded-md p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
                 aria-label="Dismiss error"
               >
                 <X className="h-4 w-4" />
@@ -375,7 +322,7 @@ export function LisConfig() {
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {(
+              {canEditLis && (
                 <>
                   {editMode ? (
                     <>
@@ -401,13 +348,7 @@ export function LisConfig() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(true)}
-                      disabled={isScanInProgress}
-                      title={
-                        isScanInProgress
-                          ? "A slide scan is currently in progress. Editing is disabled."
-                          : undefined
-                      }
-                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
                     >
                       <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>

@@ -3,6 +3,7 @@ import apiClient from '../../api/services/apiClient';
 import { SlideScanner } from '../../types';
 import { scannerService } from '../../api/services/scannerService';
 import { BASE_URL } from '../../utils/constants';
+import { toast } from 'sonner';
 
 interface ScannerState {
   items: SlideScanner[];
@@ -117,6 +118,7 @@ const scannerSlice = createSlice({
       .addCase(addScanner.fulfilled, (state, action: PayloadAction<SlideScanner>) => {
         console.log("➕ Scanner added:", action.payload);
         state.items.push(action.payload);
+        toast.success("Scanner added successfully");
       })
 
       .addCase(updateScanner.fulfilled, (state, action: PayloadAction<SlideScanner>) => {
@@ -126,6 +128,7 @@ const scannerSlice = createSlice({
         if (index !== -1) {
           state.items[index] = action.payload;
           console.log("✏️ Scanner updated (PATCH):", action.payload);
+          toast.success("Scanner updated successfully");
         }
       })
 
@@ -134,7 +137,7 @@ const scannerSlice = createSlice({
         state.items = state.items.filter(
           (scanner) => scanner.deviceSerialNumber !== deletedSerial
         );
-        console.log("🗑️ Scanner deleted:", deletedSerial);
+              toast.success("Scanner deleted successfully");
       });
   },
 });

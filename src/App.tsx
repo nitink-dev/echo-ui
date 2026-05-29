@@ -15,7 +15,7 @@ import { SlideScanStatus } from "./components/features/status/SlideScanStatus";
 import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { Toaster } from "./components/ui/sonner";
 import { useAppDispatch } from "./hooks";
-import { usePermissions } from "./hooks/usePermissions";
+import { usePermissions } from "./auth/permissions/usePermissions";
 import { loadStoredSession, logoutUser } from "./store/slices/authSlice";
 import {
   addScanner,
@@ -27,6 +27,8 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
+import { SCANNER_SERVICE_URL } from "./api/services/scannerService";
+import { useFeaturePermissions } from "./auth/permissions/useFeaturePermissions";
 
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
@@ -66,7 +68,11 @@ export default function App() {
 
   useCrossTabAuth(currentUser);
 
-  const { canRead, canWrite, configLoaded } = usePermissions();
+  const { configLoaded } = usePermissions();
+  const { scanners: scannerPermissions } = useFeaturePermissions();
+  const canGetScanners = scannerPermissions.canRead;
+  const canEditScanners = scannerPermissions.canUpdate;
+  const canDeleteScanners = scannerPermissions.canDelete;
 
   useEffect(() => {
     dispatch(loadStoredSession());
@@ -81,6 +87,14 @@ export default function App() {
   useEffect(() => {
     if (isLoggedIn) {
       dispatch(fetchScanners());
+      const saved = localStorage.getItem("currentPage") as PageType;
+      const page = saved && VALID_PAGES.includes(saved) ? saved : "health-status";
+      if (page !== "view" && page !== "edit") {
+        setCurrentPage(page);
+      } else {
+        setCurrentPage("list");
+        localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, "list");
+      }
     }
   }, [isLoggedIn]);
 
@@ -108,7 +122,7 @@ export default function App() {
   }, [isLoggedIn]);
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
-    if (configLoaded && !canRead(page)) {
+    if (configLoaded && !canGetScanners) {
       console.log("You don't have permission to access this page.", page);
       return;
     }
@@ -134,7 +148,7 @@ export default function App() {
   }
 
   const handleAddScanner = () => {
-    if (!canWrite("list")) {
+    if (!canEditScanners) {
       toast.error("You don't have permission to add a scanner.");
       return;
     }
@@ -142,7 +156,7 @@ export default function App() {
   };
 
   const handleEditScanner = (scanner: SlideScanner) => {
-    if (!canWrite("list")) {
+    if (!canEditScanners) {
       toast.error("You don't have permission to edit a scanner.");
       return;
     }
@@ -156,13 +170,12 @@ export default function App() {
 
   const handleDeleteScanner = async (id?: string) => {
     if (!id) return;
-    if (!canWrite("list")) {
+    if (!canDeleteScanners) {
       toast.error("You don't have permission to delete a scanner.");
       return;
     }
     try {
-      await dispatch(deleteScanner(id));
-      toast.success("Scanner deleted successfully");
+      await dispatch(deleteScanner(id));     
     } catch (err: any) {
       toast.error(err.message || "Error deleting scanner");
     }
@@ -182,10 +195,10 @@ export default function App() {
             }
           )
         );
-        toast.success("Scanner updated successfully");
+      
       } else {
         await dispatch(addScanner(sanitizedData as Omit<SlideScanner, "id">));
-        toast.success("Scanner added successfully");
+     
       }
 
       navigateToPage("list");
@@ -257,7 +270,7 @@ export default function App() {
       return <PageLoader />;
     }
 
-    if (!canRead(currentPage)) {
+    if (!canGetScanners) {
       return <UnauthorizedPage />;
     }
 
@@ -277,7 +290,7 @@ export default function App() {
           onDeleteScanner={handleDeleteScanner}
         />
       ),
-      add: canWrite("list") ? (
+      add: canEditScanners ? (
         <ScannerForm
           onSave={handleSaveScanner}
           onCancel={handleCancelForm}
@@ -286,7 +299,7 @@ export default function App() {
       ) : (
         <UnauthorizedPage />
       ),
-      edit: canWrite("list") ? (
+      edit: canEditScanners ? (
         <ScannerForm
           scanner={selectedScanner!}
           onSave={handleSaveScanner}

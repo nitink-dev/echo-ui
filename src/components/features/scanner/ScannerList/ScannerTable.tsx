@@ -31,10 +31,10 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
-
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { usePermissions } from "../../../../hooks/usePermissions";
+import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -57,9 +57,9 @@ export function ScannerTable({
   const [scannerToDelete, setScannerToDelete] = useState<SlideScanner | null>(
     null,
   );
-  const { canWrite, canDelete } = usePermissions();
-  const canEditScanner = canWrite("edit");
-  const canDeleteScanner = canDelete("list");
+
+  const { scanners: scannerPermissions } = useFeaturePermissions();
+  const canEditScanner = scannerPermissions.canUpdate;
 
   const initialConnected = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -107,15 +107,18 @@ export function ScannerTable({
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           No registered scanners
         </h3>
-        <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Click "Add New Scanner" to register your first scanner.
-        </p>
-        <Button
-          onClick={onAddScanner}
-          className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-6 py-2.5"
-        >
-          <Plus className="h-4 w-4 mr-2" /> Add New Scanner
-        </Button>
+        <PermissionGuard allowed={scannerPermissions.canCreate}>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Click "Add New Scanner" to register your first scanner.
+          </p>
+          <Button
+            onClick={onAddScanner}
+            className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-6 py-2.5"
+          >
+            <Plus className="h-4 w-4 mr-2" /> Add New Scanner
+          </Button>
+        </PermissionGuard>
+
       </div>
     );
   }
@@ -298,22 +301,22 @@ export function ScannerTable({
                       <DropdownMenuItem onClick={() => onViewScanner(scanner)}>
                         <Eye className="h-4 w-4 mr-2" /> View
                       </DropdownMenuItem>
-                      {canEditScanner && (
+                      <PermissionGuard allowed={scannerPermissions.canUpdate}>
                         <DropdownMenuItem
                           onClick={() => onEditScanner(scanner)}
                         >
                           <Edit className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
-                      )}
+                      </PermissionGuard>
                       <DropdownMenuSeparator />
-                      {canDeleteScanner && (
+                      <PermissionGuard allowed={scannerPermissions.canDelete}>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(scanner)}
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
                         </DropdownMenuItem>
-                      )}
+                      </PermissionGuard>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

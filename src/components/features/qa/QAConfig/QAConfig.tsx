@@ -1,5 +1,4 @@
 import { BarChart3, Plus } from "lucide-react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +21,8 @@ import { DicomStoreConfig } from "./DicomStoreConfig";
 import { QAParameterForm } from "./QAParameterForm";
 import { QAParameterTable } from "./QAParameterTable";
 import { useQAConfig } from "./useQAConfig";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 
 export function QAConfig() {
   const {
@@ -48,8 +49,7 @@ export function QAConfig() {
     handleSaveDicomStore,
   } = useQAConfig();
 
-  const { canWrite } = usePermissions();
-  const canAdd = canWrite("qa-analysis");
+  const { qaAnalysis: qaPermissions } = useFeaturePermissions();
 
   return (
     <div className="space-y-6">
@@ -74,15 +74,16 @@ export function QAConfig() {
                 Manage barcode and activation code pairs for QA slides
               </CardDescription>
             </div>
-            {canAdd && (
-              <Button
-                onClick={handleAddParameter}
-                className="bg-blue-600 hover:bg-blue-700"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Add New
-              </Button>
-            )}
+              <PermissionGuard allowed={qaPermissions.canCreate}>
+                <Button
+                  onClick={handleAddParameter}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Add New
+                </Button>
+              </PermissionGuard>
+            
           </div>
         </CardHeader>
         <CardContent>
@@ -113,12 +114,6 @@ export function QAConfig() {
         onSave={handleSaveParameter}
       />
 
-      {/*
-        FIX 1: onOpenChange was () => {} (no-op) — now wired to setDeleteDialogOpen
-                so Escape key and backdrop click also close the dialog.
-        FIX 2: AlertDialogCancel now calls handleDeleteCancel which clears both
-                deleteDialogOpen AND parameterToDelete state cleanly.
-      */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -12,6 +12,8 @@ import {
   PORT_ERROR_MESSAGE,
   sanitizeByPattern,
 } from '../../../../utils/validation.constants';
+import { PermissionGuard } from '../../../../auth/permissions/PermissionGuard';
+import { useFeaturePermissions } from '../../../../auth/permissions/useFeaturePermissions';
 
 const SERIAL_ALLOWED_PATTERN = /^[a-zA-Z0-9_-]$/;
 const sanitizeSerial = (value: string) =>
@@ -65,6 +67,9 @@ export function ScannerFormFields({
       onInputChange('deviceSerialNumber', cur.slice(0, start) + sanitized + cur.slice(end));
     }
   };
+
+  const { hospital: hospitalPermissions } = useFeaturePermissions();
+  const { scanners: scannerPermissions } = useFeaturePermissions();
 
   const handleIpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = sanitizeByPattern(e.target.value, IP_ALLOWED_PATTERN);
@@ -191,6 +196,9 @@ export function ScannerFormFields({
           <Label htmlFor="hospitalName" className="text-sm font-medium text-gray-700">
             Hospital Name *
           </Label>
+
+          <PermissionGuard allowed={hospitalPermissions.canRead} fallback={ 
+            <p className="text-sm text-gray-400">Permission Required</p>  }>
           <select
             id="hospitalName"
             value={formData.hospitalName}
@@ -203,6 +211,7 @@ export function ScannerFormFields({
               <option key={i} value={h}>{h}</option>
             ))}
           </select>
+          </PermissionGuard>
           {errors.hospitalName && (
             <p className="text-sm text-red-600">{errors.hospitalName}</p>
           )}
@@ -258,21 +267,24 @@ export function ScannerFormFields({
             <Label htmlFor="dicomStore" className="text-sm font-medium text-gray-700">
               Storage Location *
             </Label>
-            <select
-              id="dicomStore"
-              value={formData.dicomStore || ''}
-              onChange={(e) => onInputChange('dicomStore', e.target.value)}
-              className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.dicomStore ? 'border-red-500 focus:border-red-500' : ''}`}
-            >
-              <option value="">Select Storage Location</option>
-              {(dicomStores[formData.department] || []).map((store, i) => (
-                <option key={i} value={store}>{store}</option>
-              ))}
-            </select>
-          
+            <PermissionGuard allowed={scannerPermissions.canReadDicom} fallback={ 
+              <p className="text-sm text-gray-400">Permission Required</p>  }>
+              <select
+                id="dicomStore"
+                value={formData.dicomStore || ''}
+                onChange={(e) => onInputChange('dicomStore', e.target.value)}
+                className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.dicomStore ? 'border-red-500 focus:border-red-500' : ''}`}
+              >
+                <option value="">Select Storage Location</option>
+                {(dicomStores[formData.department] || []).map((store, i) => (
+                  <option key={i} value={store}>{store}</option>
+                ))}
+              </select>
+            </PermissionGuard>
+            {/* This is the selected store: {formData.dicomStore} */}
             {formData.research && (
               <p className="text-xs text-blue-600 font-medium">
-                Research mode enabled - storage will be assigned automatically
+                Research mode enabled - storage will be assigned automatically for test slides.
               </p>
             )}
             {errors.dicomStore && (
