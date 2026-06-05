@@ -22,6 +22,7 @@ import { DicomStoreConfig } from "./DicomStoreConfig";
 import { QAParameterForm } from "./QAParameterForm";
 import { QAParameterTable } from "./QAParameterTable";
 import { useQAConfig } from "./useQAConfig";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 export function QAConfig() {
   const {
@@ -51,6 +52,9 @@ export function QAConfig() {
   const { canWrite } = usePermissions();
   const canAdd = canWrite("qa-analysis");
 
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
+
   return (
     <div className="space-y-6">
       <div>
@@ -77,6 +81,12 @@ export function QAConfig() {
             {canAdd && (
               <Button
                 onClick={handleAddParameter}
+                disabled={isScanInProgress}
+                title={
+                  isScanInProgress
+                    ? "A slide scan is currently in progress. Adding new parameters is disabled."
+                    : undefined
+                  }
                 className="bg-blue-600 hover:bg-blue-700"
               >
                 <Plus className="h-4 w-4 mr-2" />

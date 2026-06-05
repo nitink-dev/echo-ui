@@ -10,6 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -42,6 +43,12 @@ export function QAParameterTable({
         {canAdd && (
           <Button
             onClick={onAddParameter}
+            disabled={isScanInProgress}
+            title={
+              isScanInProgress
+                ? "A slide scan is currently in progress. Adding new parameters is disabled."
+                : "Add First Parameter"
+            }
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -55,6 +62,9 @@ export function QAParameterTable({
   const { canWrite, canDelete: canDeleteFn } = usePermissions();
   const canEdit = canWrite("qa-analysis");
   const canDelete = canDeleteFn("qa-analysis");
+
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
 
   return (
     <Table>
@@ -95,8 +105,13 @@ export function QAParameterTable({
                     variant="outline"
                     size="sm"
                     onClick={() => onEditParameter(parameter)}
+                    disabled={isScanInProgress}
+                    title={
+                      isScanInProgress
+                        ? "A slide scan is currently in progress. Editing is disabled."
+                        : "Edit Parameter"
+                    }
                     className="min-w-0"
-                    title="Edit Parameter"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -107,7 +122,12 @@ export function QAParameterTable({
                     size="sm"
                     onClick={() => onDeleteParameter(parameter)}
                     className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
-                    title="Delete Parameter"
+                    disabled={isScanInProgress}
+                    title={
+                      isScanInProgress
+                        ? "A slide scan is currently in progress. Deleting is disabled."
+                        : "Delete Parameter"
+                    }
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>

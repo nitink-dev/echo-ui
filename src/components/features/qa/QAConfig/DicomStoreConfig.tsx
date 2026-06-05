@@ -10,6 +10,7 @@ import {
   CardTitle,
 } from "../../../ui/card";
 import { Label } from "../../../ui/label";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -26,6 +27,10 @@ export function DicomStoreConfig({
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
   const { canWrite } = usePermissions();
   const canEditDicomStore = canWrite("qa-analysis");
+
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
+  
   useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
@@ -88,6 +93,12 @@ export function DicomStoreConfig({
                     <div className="flex gap-2">
                       <Button
                         onClick={handleSaveDicom}
+                        disabled={isScanInProgress}
+                        title={
+                          isScanInProgress
+                            ? "A slide scan is currently in progress. Editing is disabled."
+                            : undefined
+                        }
                         className="bg-green-600 hover:bg-green-700"
                       >
                         Save
@@ -97,7 +108,14 @@ export function DicomStoreConfig({
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" onClick={handleEditDicom}>
+                    <Button variant="outline" onClick={handleEditDicom}
+                      disabled={isScanInProgress}
+                      title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
+                      }
+                    >
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
