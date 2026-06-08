@@ -28,10 +28,10 @@ export function DicomStoreConfig({
   const { canWrite } = usePermissions();
   const canEditDicomStore = canWrite("qa-analysis");
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
-  
-  useEffect(() => {
+  const { inProgressCunt} = useSlideScan();
+  const isScanInProgress = inProgressCunt > 0;
+
+    useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
   }, [dicomStoreAddress]);
@@ -95,9 +95,9 @@ export function DicomStoreConfig({
                         onClick={handleSaveDicom}
                         disabled={isScanInProgress}
                         title={
-                          isScanInProgress
-                            ? "A slide scan is currently in progress. Editing is disabled."
-                            : undefined
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
                         }
                         className="bg-green-600 hover:bg-green-700"
                       >
@@ -108,14 +108,13 @@ export function DicomStoreConfig({
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" onClick={handleEditDicom}
-                      disabled={isScanInProgress}
-                      title={
+                    <Button variant="outline" onClick={handleEditDicom} 
+                    disabled={isScanInProgress} 
+                    title={
                         isScanInProgress
                           ? "A slide scan is currently in progress. Editing is disabled."
                           : undefined
-                      }
-                    >
+                      }>
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>

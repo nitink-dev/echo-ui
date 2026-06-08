@@ -312,8 +312,7 @@ export function LisConfig() {
       <div className="max-w-4xl mx-auto">
         <h1 className="text-2xl font-bold text-gray-900 mb-6">
           LIS Application Details
-        </h1>
-
+        </h1>        
 
         <Card className="border border-gray-200 shadow-sm">
           <CardHeader>

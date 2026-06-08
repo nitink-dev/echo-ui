@@ -83,9 +83,8 @@ export function ScannerTable({
   const [researchMap, setResearchMap] =
     useState<Record<string, boolean>>(initialResearch);
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
-  
+    const { inProgressCount } = useSlideScan();
+    const isScanInProgress = inProgressCount > 0;
 
   useEffect(() => setConnectedMap(initialConnected), [initialConnected]);
   useEffect(() => setResearchMap(initialResearch), [initialResearch]);
@@ -119,9 +118,8 @@ export function ScannerTable({
           onClick={onAddScanner}
           disabled={isScanInProgress}
           title={
-            isScanInProgress
-              ? "A slide scan is currently in progress. Editing is disabled."
-              : undefined
+            isScanInProgress? "A slide scan is currently in progress. Adding new scanners is disabled."
+              : "undefined"
           }
           className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-6 py-2.5"
         >
@@ -312,12 +310,11 @@ export function ScannerTable({
                       {canEditScanner && (
                         <DropdownMenuItem
                           onClick={() => onEditScanner(scanner)}
-                          disabled={isScanInProgress}
-                          title={
-                            isScanInProgress
-                              ? "A slide scan is currently in progress. Editing is disabled."
-                              : undefined
-                          }
+                             disabled={isScanInProgress}
+                        title={
+                          isScanInProgress? "A slide scan is currently in progress. Viewing scanner details is disabled."
+                          : "undefined"
+                        }
                         >
                           <Edit className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
@@ -326,12 +323,11 @@ export function ScannerTable({
                       {canDeleteScanner && (
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(scanner)}
-                          disabled={isScanInProgress}
-                          title={
-                            isScanInProgress
-                              ? "A slide scan is currently in progress. Deleting is disabled."
-                              : undefined
-                          }
+                             disabled={isScanInProgress}
+                        title={
+                          isScanInProgress? "A slide scan is currently in progress. Viewing scanner details is disabled."
+                          : "undefined"
+                        }
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete

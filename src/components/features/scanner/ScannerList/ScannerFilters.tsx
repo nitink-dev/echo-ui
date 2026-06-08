@@ -48,8 +48,8 @@ export function ScannerFilters({
               disabled={isScanInProgress}
               title={
                 isScanInProgress
-                  ? "A slide scan is currently in progress. Editing is disabled."
-                  : undefined
+                  ? "A slide scan is currently in progress. Adding new scanners is disabled."
+                  : "undefined"
               }
               className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-4 h-10 flex-shrink-0"
             >

@@ -29,9 +29,14 @@ export function QAParameterTable({
   onDeleteParameter,
   onToggleVisibility,
 }: QAParameterTableProps) {
+  const { canWrite, canDelete: canDeleteFn } = usePermissions();
+  const canAdd = canWrite("qa-analysis");
+  const canEdit = canWrite("qa-analysis");
+  const canDelete = canDeleteFn("qa-analysis");
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
+
   if (!qaParameters || qaParameters.length === 0) {
-    const { canWrite } = usePermissions();
-    const canAdd = canWrite("qa-analysis");
     return (
       <div className="text-center py-12">
         <div className="text-gray-400 text-lg mb-2">
@@ -58,13 +63,6 @@ export function QAParameterTable({
       </div>
     );
   }
-
-  const { canWrite, canDelete: canDeleteFn } = usePermissions();
-  const canEdit = canWrite("qa-analysis");
-  const canDelete = canDeleteFn("qa-analysis");
-
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
 
   return (
     <Table>
@@ -112,6 +110,7 @@ export function QAParameterTable({
                         : "Edit Parameter"
                     }
                     className="min-w-0"
+                    title="Edit Parameter"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
@@ -122,10 +121,11 @@ export function QAParameterTable({
                     size="sm"
                     onClick={() => onDeleteParameter(parameter)}
                     className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
+                    title="Delete Parameter"
                     disabled={isScanInProgress}
                     title={
                       isScanInProgress
-                        ? "A slide scan is currently in progress. Deleting is disabled."
+                        ? "A slide scan is currently in progress. Deleting parameters is disabled."
                         : "Delete Parameter"
                     }
                   >
