@@ -1,359 +1,329 @@
-import React, { useState, useEffect } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
+import { toast } from "sonner";
+import { setUnauthorizedHandler } from "./api/services/apiClient";
 import { Layout } from "./components/Layout";
-import { SlideScannerListView } from "./components/SlideScannerListView";
-import { SlideScannerForm } from "./components/SlideScannerForm";
-import { ScannerDetailsView } from "./components/ScannerDetailsView";
-import { QAAnalysisConfig } from "./components/QAAnalysisConfig";
-import { DataStoreConfig } from "./components/DataStoreConfig";
-import { ClinicalAppsConfig } from "./components/ClinicalAppsConfig";
+import { LoginPage } from "./components/auth/login/login";
+import { EnrichmentToolConfig } from "./components/features/enrichment/EnrichmentConfig/EnrichmentConfig";
+import { HealthMonitor } from "./components/features/health/HealthMonitor";
+import { LisConfig } from "./components/features/lis/LISConfig";
+import { QAConfig } from "./components/features/qa/QAConfig/QAConfig";
+import { ScannerDetails } from "./components/features/scanner/ScannerDetails/ScannerDetails";
+import { ScannerForm } from "./components/features/scanner/ScannerForm/ScannerForm";
+import { ScannerList } from "./components/features/scanner/ScannerList/ScannerList";
+import { SlideScanStatus } from "./components/features/status/SlideScanStatus";
+import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { Toaster } from "./components/ui/sonner";
-import axios from "axios";
-import {BASE_URL} from "./util/util"
+import { useAppDispatch } from "./hooks";
+import { usePermissions } from "./hooks/usePermissions";
+import { loadStoredSession, logoutUser } from "./store/slices/authSlice";
+import {
+  addScanner,
+  deleteScanner,
+  fetchScanners,
+  updateScanner,
+} from "./store/slices/scannerSlice";
+import { Breadcrumb, PageType } from "./types/common.types";
+import { SlideScanner } from "./types/scanner.types";
+import { sanitizeFormData } from "./utils/helpers";
+import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
 
-interface SlideScanner {
-  id?: string;
-  name: string;
-  aeTitle: string;
-  model: string;
-  serialNumber: string;
-  location: string;
-  hospitalName: string;
-  department: string;
-  ipAddress: string;
-  port: string;
-  dicomStore?: string; // new field for DICOM Store
-  vendor: string;
-  otherIdentifier?: string;
-  status?: "online" | "offline" | "maintenance";
-  lastSeen?: string;
-}
+const VALID_PAGES: PageType[] = [
+  "list", "add", "edit", "view", "lis", "synapse",
+  "qa-analysis", "enrichment-tool", "health-status", "slide-status",
+];
 
-type PageType =
-  | "slide-scanner"
-  | "add-scanner"
-  | "edit-scanner"
-  | "scanner-details"
-  | "qa-analysis"
-  | "google-dicom-temp"
-  | "google-dicom-final"
-  | "hl7-store"
-  | "lis"
-  | "synapse";
-
-interface AppState {
-  currentPage: PageType;
-  scanners: SlideScanner[];
-  selectedScanner: SlideScanner | null;
+function PageLoader() {
+  return (
+    <div className="flex items-center justify-center h-64">
+      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#007BFF]" />
+    </div>
+  );
 }
 
 export default function App() {
-  
+  const dispatch = useAppDispatch();
 
-const [appState, setAppState] = useState<AppState>({
-    currentPage: "slide-scanner",
-    scanners: [], 
-    selectedScanner: null,
-  });
+  const getInitialPage = (): PageType => {
+  const user = localStorage.getItem("auth_user");
+  if (!user) return "slide-status"; 
 
+  const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
+  return saved && VALID_PAGES.includes(saved)
+    ? saved
+    : "slide-status"; 
+};
 
-useEffect(() => {
-  const fetchScanners = async () => {
-    try {
-      const res = await axios.get(BASE_URL+"/scanners", {
-        headers: {
-              "Accept": "application/json"
-        }
-      });
+  const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
+  const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
+  const isNavigating = useRef(false);
 
-      const apiScanners = res.data.map((scanner: any) => ({
-        id: scanner.id,
-        name: scanner.name,
-        aeTitle: scanner.aeTitle,
-        model: scanner.model,
-        serialNumber: scanner.deviceSerialNumber,
-        location: scanner.location,
-        hospitalName: scanner.hospitalName,
-        otherIdentifier: scanner.deviceId,
-        dicomStore: scanner.dicomStore,
-        department: scanner.department,
-        ipAddress: "N/A", // not in API
-        port: "N/A", // not in API
-        vendor: "Unknown", // not in API
-        status: "online" as const, // default until backend provides
-        lastSeen: new Date().toLocaleString(),
-      }));
+  const scanners = useSelector((state: any) => state.scanners.items);
+  const loading = useSelector((state: any) => state.scanners.loading);
+  const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
 
-      setAppState((prev) => ({ ...prev, scanners: apiScanners }));
-    } catch (error) {
-      console.error("Error fetching scanners:", error);
+  const currentUser = useSelector((state: any) => state.auth.user);
+
+  useCrossTabAuth(currentUser);
+
+  const { canRead, canWrite, configLoaded } = usePermissions();
+
+  useEffect(() => {
+    dispatch(loadStoredSession());
+  }, []);
+
+  useEffect(() => {
+    setUnauthorizedHandler(() => {
+      dispatch(logoutUser());
+    });
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      dispatch(fetchScanners());
     }
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn && currentPage === "list") {
+      dispatch(fetchScanners());
+    }
+  }, [currentPage]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+
+    const handlePopState = (event: PopStateEvent) => {
+      if (isNavigating.current) return;
+      const page = (event.state?.page as PageType) || "slide-status";
+      const safePage: PageType =
+        page === "view" || page === "edit" ? "list" : page;
+      localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, safePage);
+      setCurrentPage(safePage);
+      setSelectedScanner(null);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [isLoggedIn]);
+
+  const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
+    if (configLoaded && !canRead(page)) {
+      console.log("You don't have permission to access this page.", page);
+      return;
+    }
+
+    const storePage = page === "login" ? "list" : page;
+    localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, storePage);
+
+    isNavigating.current = true;
+    window.history.pushState({ page: storePage }, "", window.location.pathname);
+    isNavigating.current = false;
+
+    setCurrentPage(storePage as PageType);
+    setSelectedScanner(scanner || null);
   };
 
-  fetchScanners();
-}, []);
-
-
-
-
-
-  const navigateToPage = (
-    page: PageType,
-    scanner?: SlideScanner,
-  ) => {
-    setAppState((prev) => ({
-      ...prev,
-      currentPage: page,
-      selectedScanner: scanner || null,
-    }));
-  };
-
-  // Handle navigation from sidebar
-  const handleNavigation = (pageId: string) => {
-    navigateToPage(pageId as PageType);
-  };
+  if (!isLoggedIn) {
+    return (
+      <>
+        <LoginPage />
+        <Toaster />
+      </>
+    );
+  }
 
   const handleAddScanner = () => {
-    navigateToPage("add-scanner");
+    if (!canWrite("list")) {
+      toast.error("You don't have permission to add a scanner.");
+      return;
+    }
+    navigateToPage("add");
   };
 
   const handleEditScanner = (scanner: SlideScanner) => {
-    navigateToPage("edit-scanner", scanner);
+    if (!canWrite("list")) {
+      toast.error("You don't have permission to edit a scanner.");
+      return;
+    }
+    navigateToPage("edit", scanner);
   };
 
-  const handleViewScanner = (scanner: SlideScanner) => {
-    // Add status and lastSeen if not present (for mock data compatibility)
-    const scannerWithStatus = {
-      ...scanner,
-      status: scanner.status || ("online" as const),
-      lastSeen: scanner.lastSeen || new Date().toLocaleString(),
-    };
-    navigateToPage("scanner-details", scannerWithStatus);
-  };
+  const handleViewScanner = (scanner: SlideScanner) =>
+    navigateToPage("view", scanner);
+  const handleCancelForm = () => navigateToPage("list");
+  const handleBackToList = () => navigateToPage("list");
 
-  const handleDeleteScanner = (scannerId: string) => {
-    setAppState((prev) => ({
-      ...prev,
-      scanners: prev.scanners.filter((s) => s.id !== scannerId),
-    }));
-  };
-
-  const handleSaveScanner = async (scannerData: SlideScanner) => {
+  const handleDeleteScanner = async (id?: string) => {
+    if (!id) return;
+    if (!canWrite("list")) {
+      toast.error("You don't have permission to delete a scanner.");
+      return;
+    }
     try {
-      // Backend payload mapping
-      const payload = {
-        id: scannerData.id, // only if editing
-        name: scannerData.name,
-        aeTitle: scannerData.aeTitle,
-        model: scannerData.model,
-        deviceId: scannerData.otherIdentifier,         
-        deviceSerialNumber: scannerData.serialNumber,
-        location: scannerData.location,
-        hospitalName: scannerData.hospitalName,    
-        department: scannerData.department,
-        dicomStore: scannerData.dicomStore,        
-        ipAddress: scannerData.ipAddress,        
-        port: scannerData.port,              
-        vendor: scannerData.vendor                  
-      };
-  
-      if (scannerData.id) {
-        // Update existing scanner
-        await axios.put(`${BASE_URL}/scanners/${payload.deviceSerialNumber}`, payload);
-  
-        setAppState((prev) => ({
-          ...prev,
-          scanners: prev.scanners.map((s) =>
-            s.id === scannerData.id
-              ? { ...scannerData, status: s.status, lastSeen: s.lastSeen }
-              : s
-          ),
-          currentPage: "slide-scanner",
-        }));
+      await dispatch(deleteScanner(id));
+      toast.success("Scanner deleted successfully");
+    } catch (err: any) {
+      toast.error(err.message || "Error deleting scanner");
+    }
+  };
+
+  const handleSaveScanner = async (
+    scannerData: SlideScanner | Partial<SlideScanner>
+  ) => {
+    try {
+      const sanitizedData = sanitizeFormData(scannerData);
+
+      if (currentPage === "edit" && "deviceSerialNumber" in sanitizedData) {
+        await dispatch(
+          updateScanner(
+            sanitizedData as Partial<SlideScanner> & {
+              deviceSerialNumber: string;
+            }
+          )
+        );
+        toast.success("Scanner updated successfully");
       } else {
-        // Add new scanner
-        const res = await axios.post(`${BASE_URL}/scanners`, payload);
-  
-        const newScanner = {
-          ...scannerData,
-          id: res.data.id ?? Date.now().toString(),
-          status: "offline" as const,
-          lastSeen: new Date().toLocaleString(),
-        };
-  
-        setAppState((prev) => ({
-          ...prev,
-          scanners: [...prev.scanners, newScanner],
-          currentPage: "slide-scanner",
-        }));
+        await dispatch(addScanner(sanitizedData as Omit<SlideScanner, "id">));
+        toast.success("Scanner added successfully");
       }
-    } catch (error) {
-      console.error("Error saving scanner:", error);
+
+      navigateToPage("list");
+    } catch (err: any) {
+      toast.error(err.message || "Error saving scanner");
     }
   };
-  
-  
 
-  const handleCancelForm = () => {
-    navigateToPage("slide-scanner");
+  const getBreadcrumbs = (): Breadcrumb[] => {
+    const breadcrumbMap: Record<string, Breadcrumb[]> = {
+      list: [{ label: "Slide Scanner" }],
+      add: [{ label: "Slide Scanner", href: "#" }, { label: "Add Scanner" }],
+      edit: [{ label: "Slide Scanner", href: "#" }, { label: "Edit Scanner" }],
+      view: [
+        { label: "Slide Scanner", href: "#" },
+        { label: "Scanner Details" },
+      ],
+      lis: [{ label: "Clinical Applications" }, { label: "LIS" }],
+      synapse: [{ label: "Clinical Applications" }, { label: "Synapse" }],
+      "qa-analysis": [
+        { label: "Clinical Applications" },
+        { label: "QA Slide Analysis" },
+      ],
+      "enrichment-tool": [
+        { label: "Clinical Applications" },
+        { label: "Enrichment Tool" },
+      ],
+      "health-status": [{ label: "Health Monitor" }],
+      "slide-status": [{ label: "Slide Scan Status" }],
+    };
+    return breadcrumbMap[currentPage] || [];
   };
 
-  const handleBackToList = () => {
-    navigateToPage("slide-scanner");
+  const handleLogout = async () => {
+    await dispatch(logoutUser());
   };
 
-  const getBreadcrumbs = () => {
-    const breadcrumbs = [];
-
-    switch (appState.currentPage) {
-      case "slide-scanner":
-        breadcrumbs.push({ label: "Slide Scanner" });
-        break;
-      case "add-scanner":
-        breadcrumbs.push(
-          { label: "Slide Scanner", href: "#" },
-          { label: "Add Scanner" },
-        );
-        break;
-      case "edit-scanner":
-        breadcrumbs.push(
-          { label: "Slide Scanner", href: "#" },
-          { label: "Edit Scanner" },
-        );
-        break;
-      case "scanner-details":
-        breadcrumbs.push(
-          { label: "Slide Scanner", href: "#" },
-          { label: "Scanner Details" },
-        );
-        break;
-      case "qa-analysis":
-        breadcrumbs.push(
-          { label: "Clinical Applications" },
-          { label: "Slide Image Analysis" },
-        );
-        break;
-      case "google-dicom-temp":
-        breadcrumbs.push(
-          { label: "Data Stores" },
-          { label: "Google DICOM Temp" },
-        );
-        break;
-      case "google-dicom-final":
-        breadcrumbs.push(
-          { label: "Data Stores" },
-          { label: "Google DICOM Final" },
-        );
-        break;
-      case "hl7-store":
-        breadcrumbs.push(
-          { label: "Data Stores" },
-          { label: "HL7 Store" },
-        );
-        break;
-      case "lis":
-        breadcrumbs.push(
-          { label: "Clinical Applications" },
-          { label: "LIS" },
-        );
-        break;
-      case "synapse":
-        breadcrumbs.push(
-          { label: "Clinical Applications" },
-          { label: "Synapse" },
-        );
-        break;
-    }
-
-    return breadcrumbs;
-  };
+  const UnauthorizedPage = () => (
+    <div className="flex flex-col items-center justify-center h-64 gap-3 text-gray-500">
+      <svg
+        className="w-12 h-12 text-red-300"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth={1.5}
+          d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"
+        />
+      </svg>
+      <p className="text-lg font-semibold text-gray-600">Access Denied</p>
+      <p className="text-sm text-gray-400">
+        You don't have permission to view this page.
+        <button
+          type="button"
+          onClick={handleLogout}
+          className="ml-1 bg-transparent p-0 text-sm font-medium text-[#DC2626] underline underline-offset-2 hover:text-[#991B1B] focus:outline-none focus:ring-0"
+        >
+          Back to login ...
+        </button>
+      </p>
+    </div>
+  );
 
   const renderCurrentPage = () => {
-    switch (appState.currentPage) {
-      case "slide-scanner":
-        return (
-          <SlideScannerListView
-            scanners={appState.scanners}
-            onAddScanner={handleAddScanner}
-            onEditScanner={handleEditScanner}
-            onViewScanner={handleViewScanner}
-            onDeleteScanner={handleDeleteScanner}
-          />
-        );
-
-      case "add-scanner":
-        return (
-          <SlideScannerForm
-            onSave={handleSaveScanner}
-            onCancel={handleCancelForm}
-            isEdit={false}
-          />
-        );
-
-      case "edit-scanner":
-        return appState.selectedScanner ? (
-          <SlideScannerForm
-            scanner={appState.selectedScanner}
-            onSave={handleSaveScanner}
-            onCancel={handleCancelForm}
-            isEdit={true}
-          />
-        ) : null;
-
-      case "scanner-details":
-        return appState.selectedScanner ? (
-          <ScannerDetailsView
-            scanner={appState.selectedScanner}
-            onBack={handleBackToList}
-          />
-        ) : null;
-
-      case "qa-analysis":
-        return <QAAnalysisConfig />;
-
-      case "google-dicom-temp":
-        return (
-          <DataStoreConfig storeType="google-dicom-temp" />
-        );
-
-      case "google-dicom-final":
-        return (
-          <DataStoreConfig storeType="google-dicom-final" />
-        );
-
-      case "hl7-store":
-        return <DataStoreConfig storeType="hl7-store" />;
-
-      case "lis":
-        return <ClinicalAppsConfig appType="lis" />;
-
-      case "synapse":
-        return <ClinicalAppsConfig appType="synapse" />;
-
-      default:
-        return (
-          <div className="text-center py-12">
-            <h2 className="text-xl font-semibold text-gray-900 mb-2">
-              Page Not Found
-            </h2>
-            <p className="text-gray-600">
-              The requested page could not be found.
-            </p>
-          </div>
-        );
+    if (!configLoaded) {
+      return <PageLoader />;
     }
+
+    if (!canRead(currentPage)) {
+      return <UnauthorizedPage />;
+    }
+
+    if ((currentPage === "view" || currentPage === "edit") && !selectedScanner) {
+      setTimeout(() => navigateToPage("list"), 0);
+      return <PageLoader />;
+    }
+
+    const pageComponents: Record<string, JSX.Element> = {
+      list: (
+        <ScannerList
+          scanners={scanners}
+          loading={loading}
+          onAddScanner={handleAddScanner}
+          onEditScanner={handleEditScanner}
+          onViewScanner={handleViewScanner}
+          onDeleteScanner={handleDeleteScanner}
+        />
+      ),
+      add: canWrite("list") ? (
+        <ScannerForm
+          onSave={handleSaveScanner}
+          onCancel={handleCancelForm}
+          isEdit={false}
+        />
+      ) : (
+        <UnauthorizedPage />
+      ),
+      edit: canWrite("list") ? (
+        <ScannerForm
+          scanner={selectedScanner!}
+          onSave={handleSaveScanner}
+          onCancel={handleCancelForm}
+          isEdit={true}
+        />
+      ) : (
+        <UnauthorizedPage />
+      ),
+      view: (
+        <ScannerDetails scanner={selectedScanner!} onBack={handleBackToList} />
+      ),
+      lis: <LisConfig appType="lis" />,
+      synapse: <SynapseConfig appType="synapse" />,
+      "qa-analysis": <QAConfig />,
+      "enrichment-tool": <EnrichmentToolConfig />,
+      "health-status": <HealthMonitor />,
+      "slide-status": <SlideScanStatus />,
+    };
+
+    return pageComponents[currentPage] ?? <div>Page Not Found</div>;
   };
 
   return (
     <div className="min-h-screen bg-[#fafbff]">
       <Layout
-        currentPage={appState.currentPage}
+        currentPage={currentPage}
         breadcrumbs={getBreadcrumbs()}
-        onNavigate={handleNavigation}
+        onNavigate={(pageId) => navigateToPage(pageId as PageType)}
       >
         {renderCurrentPage()}
       </Layout>
       <Toaster
         position="top-right"
+        richColors
+        visibleToasts={1}
+        expand={true}
         toastOptions={{
           duration: 4000,
           style: {
