@@ -23,6 +23,7 @@ import { QAParameterTable } from "./QAParameterTable";
 import { useQAConfig } from "./useQAConfig";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 export function QAConfig() {
   const {
@@ -50,6 +51,10 @@ export function QAConfig() {
   } = useQAConfig();
 
   const { qaAnalysis: qaPermissions } = useFeaturePermissions();
+  
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
+  
 
   return (
     <div className="space-y-6">
@@ -76,12 +81,17 @@ export function QAConfig() {
             </div>
               <PermissionGuard allowed={qaPermissions.canCreate}>
                 <Button
-                  onClick={handleAddParameter}
-                  className="bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add New
-                </Button>
+                onClick={handleAddParameter}
+                disabled={isScanInProgress}
+                title={
+                  isScanInProgress ? "A slide scan is currently in progress. Adding new parameters is disabled."
+                  : undefined
+                }
+                className="bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Add New
+              </Button>
               </PermissionGuard>
             
           </div>

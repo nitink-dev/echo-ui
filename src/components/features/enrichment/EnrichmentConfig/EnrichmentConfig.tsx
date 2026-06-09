@@ -45,6 +45,8 @@ import { Input } from "../../../ui/input";
 import { Label } from "../../../ui/label";
 import { Switch } from "../../../ui/switch";
 import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
+import { SERVICE_URL } from "../../../../api/services/enrichmentService";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress", "samIpAddress"],
@@ -91,6 +93,8 @@ export function EnrichmentToolConfig() {
     hl7:        enrichment.canEditAny,
     email:      enrichment.canEditAny,
   };
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false,
@@ -396,6 +400,12 @@ export function EnrichmentToolConfig() {
   };
 
   const handleEdit = (key: string, enable: boolean) => {
+    if (enable && isScanInProgress) {
+      toast.warning(
+        "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
+      );
+      return;
+    }
     setEditMode((prev) => ({ ...prev, [key]: enable }));
     if (!enable) {
       setForm(originalForm);
@@ -439,7 +449,10 @@ export function EnrichmentToolConfig() {
       case "dicom": {
         toolKey = "eh-dicom-receiver";
         sectionName = "DICOM Receiver";
-        const d = getChangedFields(form.dicomReceiver, originalForm.dicomReceiver);
+        const d = getChangedFields(
+          form.dicomReceiver,
+          originalForm.dicomReceiver,
+        );
         if (!Object.keys(d).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
@@ -456,7 +469,10 @@ export function EnrichmentToolConfig() {
       case "lis": {
         toolKey = "eh-lis-connector";
         sectionName = "LIS Connector";
-        const d = getChangedFields(form.lisConnector, originalForm.lisConnector);
+        const d = getChangedFields(
+          form.lisConnector,
+          originalForm.lisConnector,
+        );
         if (!Object.keys(d).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
@@ -466,14 +482,19 @@ export function EnrichmentToolConfig() {
           ...(d.applicationName && { appName: d.applicationName }),
           ...(d.ipAddress && { ipAddress: d.ipAddress }),
           ...(d.receivingPort && { port: parseInt(d.receivingPort) }),
-          ...(d.sendingFacility !== undefined && { sendingFacility: d.sendingFacility }),
+          ...(d.sendingFacility !== undefined && {
+            sendingFacility: d.sendingFacility,
+          }),
         };
         break;
       }
       case "enrichment": {
         toolKey = "eh-dicom-enricher";
         sectionName = "Enrichment Service";
-        body = getChangedFields(form.enrichmentService, originalForm.enrichmentService);
+        body = getChangedFields(
+          form.enrichmentService,
+          originalForm.enrichmentService,
+        );
         if (!Object.keys(body).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
@@ -484,15 +505,22 @@ export function EnrichmentToolConfig() {
       case "export": {
         toolKey = "eh-export-service";
         sectionName = "Export Service";
-        const d = getChangedFields(form.exportService, originalForm.exportService);
+        const d = getChangedFields(
+          form.exportService,
+          originalForm.exportService,
+        );
         if (!Object.keys(d).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
           return;
         }
         body = {
-          ...(d.synapseEnabled !== undefined && { synapseEnabled: !!d.synapseEnabled }),
-          ...(d.visioPharmEnabled !== undefined && { visioPharmEnabled: !!d.visioPharmEnabled }),
+          ...(d.synapseEnabled !== undefined && {
+            synapseEnabled: !!d.synapseEnabled,
+          }),
+          ...(d.visioPharmEnabled !== undefined && {
+            visioPharmEnabled: !!d.visioPharmEnabled,
+          }),
           ...(d.ibexEnabled !== undefined && { ibexEnabled: !!d.ibexEnabled }),
         };
         break;
@@ -500,7 +528,10 @@ export function EnrichmentToolConfig() {
       case "hl7": {
         toolKey = "eh-hl7-connector";
         sectionName = "HL7 Messaging";
-        const d = getChangedFields(form.hl7Messaging, originalForm.hl7Messaging);
+        const d = getChangedFields(
+          form.hl7Messaging,
+          originalForm.hl7Messaging,
+        );
         if (!Object.keys(d).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
@@ -509,27 +540,40 @@ export function EnrichmentToolConfig() {
         body = {
           ...(d.applicationName && { appName: d.applicationName }),
           ...(d.ipAddress && { ipAddress: d.ipAddress }),
-          ...(d.receivingPort && { "receive-port": parseInt(d.receivingPort) }),
-          ...(d.sendingFacility !== undefined && { sendingFacility: d.sendingFacility }),
+          ...(d.receivingPort && {
+            "receive-port": parseInt(d.receivingPort),
+          }),
+          ...(d.sendingFacility !== undefined && {
+            sendingFacility: d.sendingFacility,
+          }),
         };
         break;
       }
       case "email": {
         toolKey = "eh-email-service";
         sectionName = "Email Service";
-        const d = getChangedFields(form.emailService, originalForm.emailService);
+        const d = getChangedFields(
+          form.emailService,
+          originalForm.emailService,
+        );
         if (!Object.keys(d).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
           return;
         }
         body = {
-          ...(d.emailFrom !== undefined && { emailFrom: [form.emailService.emailFrom] }),
+          ...(d.emailFrom !== undefined && {
+            emailFrom: [form.emailService.emailFrom],
+          }),
           ...(d.emailTo !== undefined && {
-            emailTo: (form.emailService.emailTo || []).filter((e: string) => e.trim()),
+            emailTo: (form.emailService.emailTo || []).filter((e: string) =>
+              e.trim(),
+            ),
           }),
           ...(d.emailIbexTo !== undefined && {
-            emailIbexTo: (form.emailService.emailIbexTo || []).filter((e: string) => e.trim()),
+            emailIbexTo: (form.emailService.emailIbexTo || []).filter(
+              (e: string) => e.trim(),
+            ),
           }),
         };
         break;
@@ -578,7 +622,8 @@ export function EnrichmentToolConfig() {
             const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
             if (isCtrl) return;
             if (isIP && !IP_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
-            if (isPort && !PORT_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+            if (isPort && !PORT_ALLOWED_PATTERN.test(e.key))
+              e.preventDefault();
           }}
           onPaste={(e) => {
             if (disabled || (!isIP && !isPort)) return;
@@ -591,7 +636,11 @@ export function EnrichmentToolConfig() {
               const start = inp.selectionStart ?? 0;
               const end = inp.selectionEnd ?? 0;
               const cur = (form as any)[section][field] ?? "";
-              handleChange(section, field, cur.slice(0, start) + sanitized + cur.slice(end));
+              handleChange(
+                section,
+                field,
+                cur.slice(0, start) + sanitized + cur.slice(end),
+              );
             }
           }}
           disabled={disabled}
@@ -731,19 +780,20 @@ export function EnrichmentToolConfig() {
     const msg = cardErrors[cardKey];
     if (!msg) return null;
     return (
-      <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm">
-        <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
-          <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
+      <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-[#F09595] bg-[#FCEBEB] px-4 py-3.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C1C1] mt-0.5">
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#791F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-semibold text-red-700 leading-none mb-1">
-            Request Failed : {msg}
+          <p className="text-sm font-medium text-[#791F1F] leading-snug mb-0.5">
+            Request failed
           </p>
+          <p className="text-sm text-[#A32D2D] leading-snug">{msg}</p>
         </div>
         <button
           type="button"
           onClick={() => setCardError(cardKey, null)}
-          className="shrink-0 rounded-md p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
+          className="shrink-0 rounded-md p-1 text-[#A32D2D] hover:bg-[#F7C1C1] transition-colors"
           aria-label="Dismiss error"
         >
           <X className="h-4 w-4" />
@@ -800,7 +850,13 @@ export function EnrichmentToolConfig() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(keyName, true)}
-                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
+                      disabled={isScanInProgress}
+                      title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
+                      }
+                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>
@@ -822,10 +878,25 @@ export function EnrichmentToolConfig() {
         "dicom",
         <>
           {renderInput("dicomReceiver", "aet", "AET", !editMode.dicom)}
-          {renderInput("dicomReceiver", "ipAddress", "IP Address", !editMode.dicom)}
-          {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
+          {renderInput(
+            "dicomReceiver",
+            "ipAddress",
+            "IP Address",
+            !editMode.dicom,
+          )}
+          {renderInput(
+            "dicomReceiver",
+            "samIpAddress",
+            "SAM Server Address",
+            !editMode.dicom,
+          )}
           {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
-          {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
+          {renderInput(
+            "dicomReceiver",
+            "networkDrive",
+            "Network Drive",
+            !editMode.dicom,
+          )}
         </>,
       )}
 
@@ -834,10 +905,30 @@ export function EnrichmentToolConfig() {
         <Database className="h-5 w-5 text-[#007BFF]" />,
         "lis",
         <>
-          {renderInput("lisConnector", "applicationName", "Application Name", !editMode.lis)}
-          {renderInput("lisConnector", "ipAddress", "IP Address", !editMode.lis)}
-          {renderInput("lisConnector", "receivingPort", "LIS Connector Port", !editMode.lis)}
-          {renderInput("lisConnector", "sendingFacility", "Application Facility", !editMode.lis)}
+          {renderInput(
+            "lisConnector",
+            "applicationName",
+            "Application Name",
+            !editMode.lis,
+          )}
+          {renderInput(
+            "lisConnector",
+            "ipAddress",
+            "IP Address",
+            !editMode.lis,
+          )}
+          {renderInput(
+            "lisConnector",
+            "receivingPort",
+            "LIS Connector Port",
+            !editMode.lis,
+          )}
+          {renderInput(
+            "lisConnector",
+            "sendingFacility",
+            "Application Facility",
+            !editMode.lis,
+          )}
         </>,
       )}
 
@@ -857,7 +948,9 @@ export function EnrichmentToolConfig() {
               }
               disabled={!editMode.enrichment}
               className={`h-11 w-full rounded-md border border-gray-200 bg-[#f8faff] px-3 text-sm focus:border-[#007BFF] focus:outline-none focus:ring-2 focus:ring-[#007BFF]/20 ${
-                !editMode.enrichment ? "opacity-60 cursor-not-allowed bg-gray-100" : ""
+                !editMode.enrichment
+                  ? "opacity-60 cursor-not-allowed bg-gray-100"
+                  : ""
               }`}
             >
               <option value="OUL">Powerpath (OUL)</option>
@@ -910,10 +1003,30 @@ export function EnrichmentToolConfig() {
         <MessageSquare className="h-5 w-5 text-[#007BFF]" />,
         "hl7",
         <>
-          {renderInput("hl7Messaging", "applicationName", "Application Name", !editMode.hl7)}
-          {renderInput("hl7Messaging", "ipAddress", "IP Address (HL7 Provider)", !editMode.hl7)}
-          {renderInput("hl7Messaging", "receivingPort", "Receiving Port (HL7 Provider)", !editMode.hl7)}
-          {renderInput("hl7Messaging", "sendingFacility", "Application Facility", !editMode.hl7)}
+          {renderInput(
+            "hl7Messaging",
+            "applicationName",
+            "Application Name",
+            !editMode.hl7,
+          )}
+          {renderInput(
+            "hl7Messaging",
+            "ipAddress",
+            "IP Address (HL7 Provider)",
+            !editMode.hl7,
+          )}
+          {renderInput(
+            "hl7Messaging",
+            "receivingPort",
+            "Receiving Port (HL7 Provider)",
+            !editMode.hl7,
+          )}
+          {renderInput(
+            "hl7Messaging",
+            "sendingFacility",
+            "Application Facility",
+            !editMode.hl7,
+          )}
         </>,
       )}
 
@@ -923,7 +1036,10 @@ export function EnrichmentToolConfig() {
         "email",
         <>
           <div className="space-y-2">
-            <Label htmlFor="emailFrom" className="text-sm font-medium text-gray-700">
+            <Label
+              htmlFor="emailFrom"
+              className="text-sm font-medium text-gray-700"
+            >
               Email From
             </Label>
             <Input

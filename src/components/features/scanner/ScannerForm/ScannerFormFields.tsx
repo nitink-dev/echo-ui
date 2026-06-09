@@ -269,22 +269,21 @@ export function ScannerFormFields({
             </Label>
             <PermissionGuard allowed={scannerPermissions.canReadDicom} fallback={ 
               <p className="text-sm text-gray-400">Permission Required</p>  }>
-              <select
-                id="dicomStore"
-                value={formData.dicomStore || ''}
-                onChange={(e) => onInputChange('dicomStore', e.target.value)}
-                className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.dicomStore ? 'border-red-500 focus:border-red-500' : ''}`}
-              >
-                <option value="">Select Storage Location</option>
-                {(dicomStores[formData.department] || []).map((store, i) => (
-                  <option key={i} value={store}>{store}</option>
-                ))}
-              </select>
+            <select
+              id="dicomStore"
+              value={formData.dicomStore || ''}
+              onChange={(e) => onInputChange('dicomStore', e.target.value)}
+              className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.dicomStore ? 'border-red-500 focus:border-red-500' : ''}`}
+            >
+              <option value="">Select Storage Location</option>
+              {(dicomStores[formData.department] || []).map((store, i) => (
+                <option key={i} value={store}>{store}</option>
+              ))}
+            </select>
             </PermissionGuard>
-            {/* This is the selected store: {formData.dicomStore} */}
             {formData.research && (
               <p className="text-xs text-blue-600 font-medium">
-                Research mode enabled - storage will be assigned automatically for test slides.
+                Research mode enabled - storage will be assigned automatically
               </p>
             )}
             {errors.dicomStore && (

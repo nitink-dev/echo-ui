@@ -27,7 +27,6 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
-import { SCANNER_SERVICE_URL } from "./api/services/scannerService";
 import { useFeaturePermissions } from "./auth/permissions/useFeaturePermissions";
 
 const VALID_PAGES: PageType[] = [
@@ -47,14 +46,14 @@ export default function App() {
   const dispatch = useAppDispatch();
 
   const getInitialPage = (): PageType => {
-    const user = localStorage.getItem("auth_user");
-    if (!user) return "health-status";
+  const user = localStorage.getItem("auth_user");
+  if (!user) return "slide-status"; 
 
-    const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
-      return saved && VALID_PAGES.includes(saved)
-        ? saved
-        : "health-status";
-  };
+  const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
+  return saved && VALID_PAGES.includes(saved)
+    ? saved
+    : "slide-status"; 
+};
 
   const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
   const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
@@ -87,14 +86,6 @@ export default function App() {
   useEffect(() => {
     if (isLoggedIn) {
       dispatch(fetchScanners());
-      const saved = localStorage.getItem("currentPage") as PageType;
-      const page = saved && VALID_PAGES.includes(saved) ? saved : "health-status";
-      if (page !== "view" && page !== "edit") {
-        setCurrentPage(page);
-      } else {
-        setCurrentPage("list");
-        localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, "list");
-      }
     }
   }, [isLoggedIn]);
 
@@ -109,7 +100,7 @@ export default function App() {
 
     const handlePopState = (event: PopStateEvent) => {
       if (isNavigating.current) return;
-      const page = (event.state?.page as PageType) || "health-status";
+      const page = (event.state?.page as PageType) || "slide-status";
       const safePage: PageType =
         page === "view" || page === "edit" ? "list" : page;
       localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, safePage);

@@ -35,6 +35,7 @@ import { useDispatch } from "react-redux";
 import { toast } from "sonner";
 import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -82,6 +83,9 @@ export function ScannerTable({
   const [researchMap, setResearchMap] =
     useState<Record<string, boolean>>(initialResearch);
 
+    const { inProgressCount } = useSlideScan();
+    const isScanInProgress = inProgressCount > 0;
+
   useEffect(() => setConnectedMap(initialConnected), [initialConnected]);
   useEffect(() => setResearchMap(initialResearch), [initialResearch]);
 
@@ -111,12 +115,17 @@ export function ScannerTable({
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
             Click "Add New Scanner" to register your first scanner.
           </p>
-          <Button
-            onClick={onAddScanner}
-            className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-6 py-2.5"
-          >
-            <Plus className="h-4 w-4 mr-2" /> Add New Scanner
-          </Button>
+           <Button
+          onClick={onAddScanner}
+          disabled={isScanInProgress}
+          title={
+            isScanInProgress? "A slide scan is currently in progress. Adding new scanners is disabled."
+              : "undefined"
+          }
+          className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-6 py-2.5"
+        >
+          <Plus className="h-4 w-4 mr-2" /> Add New Scanner
+        </Button>
         </PermissionGuard>
 
       </div>
@@ -304,6 +313,11 @@ export function ScannerTable({
                       <PermissionGuard allowed={scannerPermissions.canUpdate}>
                         <DropdownMenuItem
                           onClick={() => onEditScanner(scanner)}
+                             disabled={isScanInProgress}
+                        title={
+                          isScanInProgress? "A slide scan is currently in progress. Viewing scanner details is disabled."
+                          : "undefined"
+                        }
                         >
                           <Edit className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
@@ -312,6 +326,11 @@ export function ScannerTable({
                       <PermissionGuard allowed={scannerPermissions.canDelete}>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(scanner)}
+                             disabled={isScanInProgress}
+                        title={
+                          isScanInProgress? "A slide scan is currently in progress. Viewing scanner details is disabled."
+                          : "undefined"
+                        }
                           className="text-red-600"
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete

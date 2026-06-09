@@ -11,6 +11,7 @@ import {
 import { Label } from "../../../ui/label";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -27,8 +28,11 @@ export function DicomStoreConfig({
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
 
   const { config: dicomPermissions } = useFeaturePermissions();
-  
-  useEffect(() => {
+
+  const { inProgressCunt} = useSlideScan();
+  const isScanInProgress = inProgressCunt > 0;
+
+    useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
   }, [dicomStoreAddress]);
@@ -90,6 +94,12 @@ export function DicomStoreConfig({
                     <div className="flex gap-2">
                       <Button
                         onClick={handleSaveDicom}
+                        disabled={isScanInProgress}
+                        title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
+                        }
                         className="bg-green-600 hover:bg-green-700"
                       >
                         Save
@@ -99,7 +109,13 @@ export function DicomStoreConfig({
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" onClick={handleEditDicom}>
+                    <Button variant="outline" onClick={handleEditDicom} 
+                    disabled={isScanInProgress} 
+                    title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Editing is disabled."
+                          : undefined
+                      }>
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>

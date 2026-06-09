@@ -3,6 +3,7 @@ import { Button } from "../../../ui/button";
 import { Input } from "../../../ui/input";
 import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { useSlideScan } from "../../status/SlideScanContext";
 
 interface ScannerFiltersProps {
   searchTerm: string;
@@ -17,6 +18,9 @@ export function ScannerFilters({
 }: ScannerFiltersProps) {
 
   const { scanners: scannerPermissions } = useFeaturePermissions();
+
+  const { inProgressCount } = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
 
   return (
     <div className="grid grid-cols-12 gap-6 items-center py-4 min-h-[80px]">
@@ -40,8 +44,14 @@ export function ScannerFilters({
         </div>
         <div className="flex items-center gap-2">
           <PermissionGuard allowed={scannerPermissions.canCreate}>
-            <Button
+           <Button
               onClick={onAddScanner}
+              disabled={isScanInProgress}
+              title={
+                isScanInProgress
+                  ? "A slide scan is currently in progress. Adding new scanners is disabled."
+                  : "undefined"
+              }
               className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-4 h-10 flex-shrink-0"
             >
               <Plus className="h-4 w-4 mr-2" />
