@@ -88,7 +88,7 @@ const navigationItems: NavigationItem[] = [
 function buildPermissionMap(
   scanners: ReturnType<typeof useFeaturePermissions>["scanners"],
   enrichment: ReturnType<typeof useFeaturePermissions>["enrichment"],
-  slides: ReturnType<typeof useFeaturePermissions>["slides"],
+  qaAnalysis: ReturnType<typeof useFeaturePermissions>["qaAnalysis"],
   scanStatus: ReturnType<typeof useFeaturePermissions>["scanStatus"],
   slideAnalysis: ReturnType<typeof useFeaturePermissions>["slideAnalysis"],
 ) {
@@ -96,7 +96,7 @@ function buildPermissionMap(
     list:             scanners.canRead,
     lis:              enrichment.canRead,
     synapse:          enrichment.canRead,
-    "qa-analysis":    slides.canRead,
+    "qa-analysis":    qaAnalysis.canRead,
     "enrichment-tool": enrichment.canRead,
     "health-status":  true,
     "slide-status":   scanStatus.canReadStatus,
@@ -111,8 +111,8 @@ interface NavigationProps {
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
   
-  const { scanners, enrichment, slides, scanStatus, slideAnalysis } = useFeaturePermissions();
-  const permissionMap = buildPermissionMap(scanners, enrichment, slides, scanStatus, slideAnalysis);
+  const { scanners, enrichment, qaAnalysis, scanStatus, slideAnalysis } = useFeaturePermissions();
+  const permissionMap = buildPermissionMap(scanners, enrichment, qaAnalysis, scanStatus, slideAnalysis);
 
 
   const [expandedSections, setExpandedSections] = useState<string[]>([
