@@ -1,5 +1,4 @@
 import { Edit, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { QASlideParameter } from "../../../../types/qa.types";
 import { Button } from "../../../ui/button";
 import {
@@ -10,7 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
-import { useSlideScan } from "../../status/SlideScanContext";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -29,13 +29,7 @@ export function QAParameterTable({
   onDeleteParameter,
   onToggleVisibility,
 }: QAParameterTableProps) {
-  const { canWrite, canDelete: canDeleteFn } = usePermissions();
-  const canAdd = canWrite("qa-analysis");
-  const canEdit = canWrite("qa-analysis");
-  const canDelete = canDeleteFn("qa-analysis");
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
-
+  const { qaAnalysis: qaPermissions } = useFeaturePermissions();
   if (!qaParameters || qaParameters.length === 0) {
     return (
       <div className="text-center py-12">
@@ -45,24 +39,21 @@ export function QAParameterTable({
         <p className="text-gray-600 mb-4">
           Add barcode and activation code pairs to get started
         </p>
-        {canAdd && (
+        <PermissionGuard allowed={qaPermissions.canCreate}>
           <Button
             onClick={onAddParameter}
-            disabled={isScanInProgress}
-            title={
-              isScanInProgress
-                ? "A slide scan is currently in progress. Adding new parameters is disabled."
-                : "Add First Parameter"
-            }
             className="bg-blue-600 hover:bg-blue-700"
           >
             <Plus className="h-4 w-4 mr-2" />
             Add First Parameter
           </Button>
-        )}
+        </PermissionGuard>
       </div>
     );
   }
+
+  const canEdit = qaPermissions.canUpdate;
+  const canDelete = qaPermissions.canDelete;
 
   return (
     <Table>
@@ -77,18 +68,18 @@ export function QAParameterTable({
       </TableHeader>
       <TableBody>
         {qaParameters.map((parameter) => (
-          <TableRow key={parameter.barcode}>
+          <TableRow key={parameter.id}>
             <TableCell className="font-mono">{parameter.barcode}</TableCell>
             <TableCell className="font-mono relative flex items-center gap-2">
-              {visibleActivationCodes[parameter.barcode]
+              {visibleActivationCodes[parameter.id]
                 ? parameter.activationCode
-                : "******"}
+                : "****** "+parameter.id}
               <button
                 type="button"
-                onClick={() => onToggleVisibility(parameter.barcode)}
+                onClick={() => onToggleVisibility(parameter.id)}
                 className="text-gray-400 hover:text-gray-600"
               >
-                {visibleActivationCodes[parameter.barcode] ? (
+                {visibleActivationCodes[parameter.id] ? (
                   <EyeOff className="h-4 w-4" />
                 ) : (
                   <Eye className="h-4 w-4" />
@@ -98,40 +89,29 @@ export function QAParameterTable({
 
             <TableCell>
               <div className="flex gap-1 flex-wrap">
-                {canEdit && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onEditParameter(parameter)}
-                    disabled={isScanInProgress}
-                    title={
-                      isScanInProgress
-                        ? "A slide scan is currently in progress. Editing is disabled."
-                        : "Edit Parameter"
-                    }
-                    className="min-w-0"
-                    title="Edit Parameter"
-                  >
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                )}
-                {canDelete && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => onDeleteParameter(parameter)}
-                    className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
-                    title="Delete Parameter"
-                    disabled={isScanInProgress}
-                    title={
-                      isScanInProgress
-                        ? "A slide scan is currently in progress. Deleting parameters is disabled."
-                        : "Delete Parameter"
-                    }
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                  <PermissionGuard allowed={qaPermissions.canUpdate}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onEditParameter(parameter)}
+                      className="min-w-0"
+                      title="Edit Parameter"
+                    >
+                      <Edit className="h-4 w-4" />
+                    </Button>
+                  </PermissionGuard>
+               
+                  <PermissionGuard allowed={qaPermissions.canDelete}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onDeleteParameter(parameter)}
+                      className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
+                      title="Delete Parameter"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </PermissionGuard>
               </div>
             </TableCell>
           </TableRow>

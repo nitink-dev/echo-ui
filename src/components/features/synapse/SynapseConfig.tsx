@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Cloud, Edit, Save, X } from "lucide-react";
+import { AlertTriangle, Cloud, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import apiClient, { extractApiErrorMessage } from "../../../api/services/apiClient";
@@ -20,7 +20,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
 import { SERVICE_URL } from "../../../api/services/enrichmentService";
-import { useSlideScan } from "../status/SlideScanContext";
+import { useFeaturePermissions } from "../../../auth/permissions/useFeaturePermissions";
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -162,8 +162,8 @@ export function SynapseConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { enrichment } = useFeaturePermissions();
+  const canEditSynapse = enrichment.canEditSynapse;
 
   useEffect(() => {
     const loadData = async () => {
@@ -278,12 +278,6 @@ export function SynapseConfig() {
   );
 
   const handleEdit = (enable: boolean) => {
-    if (enable && isScanInProgress) {
-      toast.warning(
-        "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
-      );
-      return;
-    }
     setEditMode(enable);
     if (!enable) {
       setForm(originalForm);
@@ -406,20 +400,20 @@ export function SynapseConfig() {
           </CardHeader>
 
           {cardError && (
-            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-[#F09595] bg-[#FCEBEB] px-4 py-3.5">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C1C1] mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#791F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3.5 shadow-sm">
+              <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-red-100 mt-0.5">
+                <AlertTriangle className="h-3.5 w-3.5 text-red-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[#791F1F] leading-snug mb-0.5">
-                  Request failed
+                <p className="text-sm font-semibold text-red-700 leading-none mb-1">
+                  Request Failed : {cardError}
                 </p>
-                <p className="text-sm text-[#A32D2D] leading-snug">{cardError}</p>
+
               </div>
               <button
                 type="button"
                 onClick={() => setCardError(null)}
-                className="shrink-0 rounded-md p-1 text-[#A32D2D] hover:bg-[#F7C1C1] transition-colors"
+                className="shrink-0 rounded-md p-0.5 text-red-400 hover:bg-red-100 hover:text-red-600 transition-colors"
                 aria-label="Dismiss error"
               >
                 <X className="h-4 w-4" />
@@ -439,7 +433,7 @@ export function SynapseConfig() {
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {(
+              {canEditSynapse && (
                 <>
                   {editMode ? (
                     <>
@@ -465,13 +459,7 @@ export function SynapseConfig() {
                       size="sm"
                       variant="outline"
                       onClick={() => handleEdit(true)}
-                      disabled={isScanInProgress}
-                      title={
-                        isScanInProgress
-                          ? "A slide scan is currently in progress. Editing is disabled."
-                          : undefined
-                      }
-                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                      className="h-9 px-4 border-gray-200 text-gray-700 hover:bg-gray-50"
                     >
                       <Edit className="h-4 w-4 mr-1" /> Edit
                     </Button>

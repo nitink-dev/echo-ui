@@ -1,8 +1,8 @@
 import { Plus, Search } from "lucide-react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { Button } from "../../../ui/button";
 import { Input } from "../../../ui/input";
-import { useSlideScan } from "../../status/SlideScanContext";
+import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 
 interface ScannerFiltersProps {
   searchTerm: string;
@@ -15,11 +15,8 @@ export function ScannerFilters({
   onSearchChange,
   onAddScanner,
 }: ScannerFiltersProps) {
-  const { canWrite } = usePermissions();
-  const canAddScanner = canWrite("add");
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { scanners: scannerPermissions } = useFeaturePermissions();
 
   return (
     <div className="grid grid-cols-12 gap-6 items-center py-4 min-h-[80px]">
@@ -42,21 +39,15 @@ export function ScannerFilters({
           />
         </div>
         <div className="flex items-center gap-2">
-          {canAddScanner && (
+          <PermissionGuard allowed={scannerPermissions.canCreate}>
             <Button
               onClick={onAddScanner}
-              disabled={isScanInProgress}
-              title={
-                isScanInProgress
-                  ? "A slide scan is currently in progress. Adding new scanners is disabled."
-                  : "undefined"
-              }
               className="bg-[#007BFF] hover:bg-[#0056cc] text-white px-4 h-10 flex-shrink-0"
             >
               <Plus className="h-4 w-4 mr-2" />
               <span className="hidden sm:inline">Add New Scanner</span>
             </Button>
-          )}
+          </PermissionGuard>
         </div>
       </div>
     </div>

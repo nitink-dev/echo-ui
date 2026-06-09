@@ -1,6 +1,5 @@
 import { Database, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { Button } from "../../../ui/button";
 import {
   Card,
@@ -10,7 +9,8 @@ import {
   CardTitle,
 } from "../../../ui/card";
 import { Label } from "../../../ui/label";
-import { useSlideScan } from "../../status/SlideScanContext";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -25,13 +25,10 @@ export function DicomStoreConfig({
 }: DicomStoreConfigProps) {
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
-  const { canWrite } = usePermissions();
-  const canEditDicomStore = canWrite("qa-analysis");
 
-  const { inProgressCunt} = useSlideScan();
-  const isScanInProgress = inProgressCunt > 0;
-
-    useEffect(() => {
+  const { config: dicomPermissions } = useFeaturePermissions();
+  
+  useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
     console.log("Dicom Store Address updated:", dicomStoreAddress);
   }, [dicomStoreAddress]);
@@ -87,18 +84,12 @@ export function DicomStoreConfig({
                   );
                 })}
               </select>
-              {canEditDicomStore && (
+                <PermissionGuard allowed={dicomPermissions.canUpdateDicomStore}>
                 <>
                   {isEditingDicom ? (
                     <div className="flex gap-2">
                       <Button
                         onClick={handleSaveDicom}
-                        disabled={isScanInProgress}
-                        title={
-                        isScanInProgress
-                          ? "A slide scan is currently in progress. Editing is disabled."
-                          : undefined
-                        }
                         className="bg-green-600 hover:bg-green-700"
                       >
                         Save
@@ -108,19 +99,13 @@ export function DicomStoreConfig({
                       </Button>
                     </div>
                   ) : (
-                    <Button variant="outline" onClick={handleEditDicom} 
-                    disabled={isScanInProgress} 
-                    title={
-                        isScanInProgress
-                          ? "A slide scan is currently in progress. Editing is disabled."
-                          : undefined
-                      }>
+                    <Button variant="outline" onClick={handleEditDicom}>
                       <Edit className="h-4 w-4 mr-2" />
                       Edit
                     </Button>
                   )}
                 </>
-              )}
+              </PermissionGuard>
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Full path to the Google Cloud DICOM store for QA slide storage

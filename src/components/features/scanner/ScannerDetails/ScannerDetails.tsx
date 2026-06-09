@@ -6,6 +6,8 @@ import { SlideScanner } from '../../../../types/scanner.types';
 import { ScannerInfo } from './ScannerInfo';
 import { AnalysisReports } from './AnalysisReports';
 import { Badge } from '../../../ui/badge';
+import { PermissionGuard } from '../../../../auth/permissions/PermissionGuard';
+import { useFeaturePermissions } from '../../../../auth/permissions/useFeaturePermissions';
 
 
 interface ScannerDetailsProps {
@@ -14,6 +16,7 @@ interface ScannerDetailsProps {
 }
 
 export function ScannerDetails({ scanner, onBack }: ScannerDetailsProps) {
+  const { scanners: scannerPermissions } = useFeaturePermissions();
   return (
     <div className="space-y-6">
       <div className="flex justify-between gap-4">
@@ -51,7 +54,9 @@ export function ScannerDetails({ scanner, onBack }: ScannerDetailsProps) {
       <Tabs defaultValue="info" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Scanner Information</TabsTrigger>
-          <TabsTrigger value="analysis">Analysis Report</TabsTrigger>
+          <PermissionGuard allowed={scannerPermissions.canReadDetail}>
+            <TabsTrigger value="analysis">Analysis Report</TabsTrigger>
+          </PermissionGuard>
         </TabsList>
 
         <TabsContent value="info">
