@@ -87,7 +87,7 @@ export function EnrichmentToolConfig() {
 
   const canEditPerCard: Record<string, boolean> = {
     dicom:      enrichment.canEditAny,
-    lis:        enrichment.canEditLis,
+    lis:        enrichment.canEditLisConn,
     enrichment: enrichment.canEditAny,
     export:     enrichment.canEditAny,
     hl7:        enrichment.canEditAny,

@@ -14,6 +14,8 @@ export const REQUIRED_SCANNER_FIELDS = [
 export const REQUIRED_QA_FIELDS = ['barcode', 'activationCode'];
 
 export const ENRICHMENT_TOOLS = {
+  LIS: 'lis',
+  SYNAPSE: 'synapse',
   DICOM_RECEIVER: 'eh-dicom-receiver',
   LIS_CONNECTOR: 'eh-lis-connector',
   ENRICHMENT_SERVICE: 'eh-dicom-enricher',

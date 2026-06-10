@@ -23,6 +23,7 @@ import { Label } from "../../ui/label";
 import { useFeaturePermissions } from "../../../auth/permissions/useFeaturePermissions";
 import { SERVICE_URL } from "../../../api/services/enrichmentService";
 import { useSlideScan } from "../status/SlideScanContext";
+import { ENRICHMENT_TOOLS } from "../../../utils/constants";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -95,14 +96,14 @@ export function LisConfig() {
   const isScanInProgress = inProgressCount > 0;
 
   useEffect(() => {
-    dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))
+    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS }))
       .unwrap()
       .catch((err: unknown) => {
         setCardError(extractApiErrorMessage(err));
       });
   }, [dispatch]);
 
-  useRefetchOnFocus([() => fetchEhTool({ toolKey: "eh-lis-connector" })]);
+  useRefetchOnFocus([() => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS })]);
 
   useEffect(() => {
     if (!lisConnector || Object.keys(lisConnector).length === 0 || initialized)
@@ -256,7 +257,7 @@ export function LisConfig() {
 
     try {
       await dispatch(
-        patchEhTool({ toolKey: "eh-lis-connector", body }),
+        patchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS, body }),
       ).unwrap();
       toast.success("LIS configuration updated successfully");
       setOriginalForm(form);

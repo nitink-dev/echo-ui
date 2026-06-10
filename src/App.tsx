@@ -27,6 +27,7 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
+import { SCANNER_SERVICE_URL } from "./api/services/scannerService";
 import { useFeaturePermissions } from "./auth/permissions/useFeaturePermissions";
 
 const VALID_PAGES: PageType[] = [

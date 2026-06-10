@@ -6,7 +6,8 @@ export function useFeaturePermissions() {
   return {
     enrichment: {
       canRead:           canGet("/api/enrichment/tools/**"),
-      canEditLis:        canUpdate("/api/enrichment/tools/eh-lis-connector"),
+      canEditLis:        canUpdate("/api/enrichment/tools/lis"),
+      canEditLisConn:    canUpdate("/api/enrichment/tools/eh-lis-connector"),
       canEditSynapse:    canUpdate("/api/enrichment/tools/synapse"),
       canEditAny:        canUpdate("/api/enrichment/tools/**"),
     },

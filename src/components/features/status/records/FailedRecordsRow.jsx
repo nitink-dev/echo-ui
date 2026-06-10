@@ -78,7 +78,7 @@ export function FailedRecordsRow({ record, index }) {
       "LIS Query Sent": "bg-yellow-100 text-yellow-800",
       "File sent to Visiopharm": "bg-purple-100 text-purple-800",
       "File sent to iBEX": "bg-indigo-100 text-indigo-800",
-      "ENRICHMENT_FAILED": "bg-red-100 text-red-800",
+      ENRICHMENT_FAILED: "bg-red-100 text-red-800",
     };
     return statusMap[status] || "bg-gray-100 text-gray-800";
   };
@@ -89,6 +89,7 @@ export function FailedRecordsRow({ record, index }) {
     if (progress >= 50) return "bg-yellow-500";
     return "bg-orange-500";
   };
+
   return (
     <>
       <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">

@@ -74,8 +74,6 @@ const SCAN_STATUS_TO_TAB = {
   failed: "failed",
 };
 
-const SEARCH_JUMP_PRIORITY = ["inProgress", "completed", "failed"];
-
 const pageSize = 9;
 
 const singleSlideToPageable = (slide) => ({
@@ -129,7 +127,6 @@ export function SlideScanStatus() {
     deviceId: "",
   });
   const [searchState, setSearchState] = useState("idle");
-  const [autoRefresh, setAutoRefresh] = useState(true);
   const [currentPage, setCurrentPage] = useState({
     completed: 0,
     failed: 0,
@@ -198,7 +195,7 @@ export function SlideScanStatus() {
     } catch (error) {
       setStatusData((prev) => ({
         ...prev,
-        [statusKey]: emptyPageable(), 
+        [statusKey]: emptyPageable(),
         loading: { ...prev.loading, [statusKey]: false },
         error: { ...prev.error, [statusKey]: error.message || "Unknown error" },
       }));

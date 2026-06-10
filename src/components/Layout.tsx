@@ -38,6 +38,7 @@ import {
   TooltipTrigger,
 } from "./ui/tooltip";
 import { useFeaturePermissions } from "../auth/permissions/useFeaturePermissions";
+import { useSlideScan } from "./features/status/SlideScanContext";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -344,7 +345,7 @@ export function Layout({
             </DropdownMenu>
           </div>
         </div>
-
+        {console.log("isScanInProgress:", isScanInProgress, "inProgressCount:", inProgressCount)}
         {isScanInProgress && (
           <div className="w-full bg-[#1a3a5c] border-b border-[#1e4976] flex items-center gap-3 px-6 py-2">
        

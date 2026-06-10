@@ -8,6 +8,7 @@ import "./index.css";
 import { store } from "./store/store";
 
 import { PermissionProvider } from "./auth/permissions/permission-context";
+import { SlideScanProvider } from "./components/features/status/SlideScanContext";
 
 function PermissionWrapper({
   children,
@@ -35,9 +36,12 @@ function PermissionWrapper({
 ReactDOM.createRoot(
   document.getElementById("root")!
 ).render(
-  <Provider store={store}>
-    <PermissionWrapper>
-      <App />
-    </PermissionWrapper>
+  <Provider store={store}>    
+  {/* comment this when banner functionality not needed */}
+      {/* <SlideScanProvider>   */}
+        <PermissionWrapper>
+          <App />
+      </PermissionWrapper>
+  {/* </SlideScanProvider>    */}
   </Provider>
 );
