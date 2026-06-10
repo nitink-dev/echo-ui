@@ -272,17 +272,28 @@ export function ScannerTable({
                     className="flex flex-col items-start"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Switch
-                      checked={!!connected}
-                      disabled={!canEditScanner}
-                      onCheckedChange={(checked) => {
-                        if (!canEditScanner) return;
-                        const next = Boolean(checked);
-                        setConnectedMap((prev) => ({ ...prev, [key]: next }));
-                        dispatchUpdate({ connected: next });
-                      }}
-                      aria-label="Connected"
-                    />
+                    <div
+                      title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Scanner connection cannot be changed."
+                          : !canEditScanner
+                            ? "You do not have permission to edit scanner connection."
+                            : undefined
+                      }
+                    >
+                      <Switch
+                        checked={!!connected}
+                        disabled={!canEditScanner || isScanInProgress}
+                        onCheckedChange={(checked) => {
+                          if (!canEditScanner || isScanInProgress) return;
+
+                          const next = Boolean(checked);
+                          setConnectedMap((prev) => ({ ...prev, [key]: next }));
+                          dispatchUpdate({ connected: next });
+                        }}
+                        aria-label="Connected"
+                      />
+                    </div>
 
                     <span
                       className={`mt-1 text-sm ${

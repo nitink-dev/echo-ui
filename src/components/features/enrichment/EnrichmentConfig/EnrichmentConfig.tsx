@@ -50,7 +50,6 @@ import { useSlideScan } from "../../status/SlideScanContext";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["ipAddress", "samIpAddress"],
-  lisConnector: ["ipAddress"],
   hl7Messaging: ["ipAddress"],
 };
 
@@ -132,7 +131,6 @@ export function EnrichmentToolConfig() {
     dicomReceiver: { aet: "", ipAddress: "", port: "", networkDrive: "" },
     lisConnector: {
       applicationName: "",
-      ipAddress: "",
       receivingPort: "",
       sendingFacility: "",
     },
@@ -222,17 +220,14 @@ export function EnrichmentToolConfig() {
   }, [dicomReceiver]);
 
   useEffect(() => {
-    if (!lisConnector || initializedSections.lis) return;
-    syncSection("lis", "lisConnector", {
-      applicationName: lisConnector.name || lisConnector.appName || "",
-      ipAddress: lisConnector["lis.ipAddress"] || lisConnector.ipAddress || "",
-      receivingPort:
-        lisConnector["lis.port"]?.toString() ||
-        lisConnector.port?.toString() ||
-        "",
-      sendingFacility: lisConnector.sendingFacility || "",
-    });
-  }, [lisConnector]);
+  if (!lisConnector || initializedSections.lis) return;
+  syncSection("lis", "lisConnector", {
+    applicationName: lisConnector.appName || "",
+    ipAddress: "", // no longer returned
+    receivingPort: lisConnector.port?.toString() || "",
+    sendingFacility: lisConnector.sendingFacility || "",
+  });
+}, [lisConnector]);
 
   useEffect(() => {
     if (!enrichmentService || initializedSections.enrichment) return;
@@ -480,7 +475,6 @@ export function EnrichmentToolConfig() {
         }
         body = {
           ...(d.applicationName && { appName: d.applicationName }),
-          ...(d.ipAddress && { ipAddress: d.ipAddress }),
           ...(d.receivingPort && { port: parseInt(d.receivingPort) }),
           ...(d.sendingFacility !== undefined && {
             sendingFacility: d.sendingFacility,
@@ -909,12 +903,6 @@ export function EnrichmentToolConfig() {
             "lisConnector",
             "applicationName",
             "Application Name",
-            !editMode.lis,
-          )}
-          {renderInput(
-            "lisConnector",
-            "ipAddress",
-            "IP Address",
             !editMode.lis,
           )}
           {renderInput(
