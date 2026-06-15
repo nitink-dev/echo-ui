@@ -22,7 +22,8 @@ import { QAParameterForm } from "./QAParameterForm";
 import { QAParameterTable } from "./QAParameterTable";
 import { useQAConfig } from "./useQAConfig";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
-import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../../status/SlideScanContext";
 
 export function QAConfig() {
@@ -50,11 +51,10 @@ export function QAConfig() {
     handleSaveDicomStore,
   } = useQAConfig();
 
-  const { qaAnalysis: qaPermissions } = useFeaturePermissions();
-  
+  const { canAccess } = usePermissions();
+
   const { inProgressCount } = useSlideScan();
   const isScanInProgress = inProgressCount > 0;
-  
 
   return (
     <div className="space-y-6">
@@ -79,7 +79,7 @@ export function QAConfig() {
                 Manage barcode and activation code pairs for QA slides
               </CardDescription>
             </div>
-              <PermissionGuard allowed={qaPermissions.canCreate}>
+              <PermissionGuard allowed={canAccess(API_URLS.qaAnalysis.detail, "POST")}>
                 <Button
                 onClick={handleAddParameter}
                 disabled={isScanInProgress}
@@ -93,7 +93,6 @@ export function QAConfig() {
                 Add New
               </Button>
               </PermissionGuard>
-            
           </div>
         </CardHeader>
         <CardContent>
