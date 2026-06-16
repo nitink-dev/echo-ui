@@ -1,18 +1,16 @@
 import { BASE_URL } from '../../utils/constants';
 import { QASlideParameter } from '../../types/qa.types';
 import apiClient from './apiClient';
-
-export const QA_SERVICE_URL = `/api/slides`;
-export const DICOM_STORE_CONFIG_URL = `/api/config/path-qa/dicom-store`;
+import { API_URLS } from '../../auth/permissions/apiConfig';
 
 export const qaService = {
   fetchParameters: async () => {
-    const res = await apiClient.get(`${BASE_URL}${QA_SERVICE_URL}`);
+    const res = await apiClient.get(`${BASE_URL}${API_URLS.qaAnalysis.base}`);
     return res.data;      
   },
 
   addParameter: async (payload: { barcode: string; activationCode: string }) => {
-    const res = await apiClient.post(`${BASE_URL}${QA_SERVICE_URL}`, payload);
+    const res = await apiClient.post(`${BASE_URL}${API_URLS.qaAnalysis.create}`, payload);
     return {
       id: res.data.id,
       barcode: res.data.barcode,
@@ -22,18 +20,18 @@ export const qaService = {
   },
 
   updateParameter: async (payload: { barcode: string; activationCode: string }) => {
-    await apiClient.put(`${BASE_URL}${QA_SERVICE_URL}/${payload.barcode}`, payload);
+    await apiClient.put(`${BASE_URL}${API_URLS.qaAnalysis.base}/${payload.barcode}`, payload);
     return payload;
   },
 
   deleteParameter: async (barcode: string) => {
-    await apiClient.delete(`${BASE_URL}${QA_SERVICE_URL}/${barcode}`);
+    await apiClient.delete(`${BASE_URL}${API_URLS.qaAnalysis.base}/${barcode}`);
     return barcode;
   },
 
   updateDicomStore: async (dicomStoreAddress: string) => {
     const payload = { "gcp-config.pathqa-store-url": dicomStoreAddress.trim() };
-    await apiClient.patch(`${BASE_URL}${DICOM_STORE_CONFIG_URL}`, payload);
+    await apiClient.patch(`${BASE_URL}${API_URLS.config.dicomStore}`, payload);
     return dicomStoreAddress;
   }
 };

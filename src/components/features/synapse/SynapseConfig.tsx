@@ -22,6 +22,9 @@ import { Label } from "../../ui/label";
 import { SERVICE_URL } from "../../../api/services/enrichmentService";
 import { useFeaturePermissions } from "../../../auth/permissions/useFeaturePermissions";
 import { useSlideScan } from "../status/SlideScanContext";
+import { usePermissions } from "../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../auth/permissions/apiConfig";
+import { ENRICHMENT_TOOLS } from "../../../utils/constants";
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -163,8 +166,8 @@ export function SynapseConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { enrichment } = useFeaturePermissions();
-  const canEditSynapse = enrichment.canEditSynapse;
+  const { canAccess } = usePermissions();
+  const canEditSynapse = canAccess(API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE }), API_URLS.enrichment.updateTool.method);
   const { inProgressCount } = useSlideScan();
   const isScanInProgress = inProgressCount > 0;
 

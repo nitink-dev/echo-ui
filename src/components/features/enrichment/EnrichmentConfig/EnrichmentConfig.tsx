@@ -44,8 +44,8 @@ import {
 import { Input } from "../../../ui/input";
 import { Label } from "../../../ui/label";
 import { Switch } from "../../../ui/switch";
-import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
-import { SERVICE_URL } from "../../../../api/services/enrichmentService";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../../status/SlideScanContext";
 
 const IP_FIELDS: Record<string, string[]> = {
@@ -82,16 +82,17 @@ export function EnrichmentToolConfig() {
     loading,
   } = useSelector((s: any) => s.ehTools || {});
 
-  const { enrichment } = useFeaturePermissions();
+  const { canAccess } = usePermissions();
 
   const canEditPerCard: Record<string, boolean> = {
-    dicom:      enrichment.canEditAny,
-    lis:        enrichment.canEditLisConn,
-    enrichment: enrichment.canEditAny,
-    export:     enrichment.canEditAny,
-    hl7:        enrichment.canEditAny,
-    email:      enrichment.canEditAny,
+    dicom:      canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.DICOM_RECEIVER }),
+    lis:        canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.LIS_CONNECTOR }),
+    enrichment: canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.ENRICHMENT_SERVICE }),
+    export:     canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.EXPORT_SERVICE }),
+    hl7:        canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.HL7_CONNECTOR }),
+    email:      canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }),
   };
+
   const { inProgressCount } = useSlideScan();
   const isScanInProgress = inProgressCount > 0;
 
@@ -220,14 +221,14 @@ export function EnrichmentToolConfig() {
   }, [dicomReceiver]);
 
   useEffect(() => {
-  if (!lisConnector || initializedSections.lis) return;
-  syncSection("lis", "lisConnector", {
-    applicationName: lisConnector.appName || "",
-    ipAddress: "", // no longer returned
-    receivingPort: lisConnector.port?.toString() || "",
-    sendingFacility: lisConnector.sendingFacility || "",
-  });
-}, [lisConnector]);
+    if (!lisConnector || initializedSections.lis) return;
+    syncSection("lis", "lisConnector", {
+      applicationName: lisConnector.appName || "",
+      ipAddress: "",
+      receivingPort: lisConnector.port?.toString() || "",
+      sendingFacility: lisConnector.sendingFacility || "",
+    });
+  }, [lisConnector]);
 
   useEffect(() => {
     if (!enrichmentService || initializedSections.enrichment) return;
@@ -872,25 +873,10 @@ export function EnrichmentToolConfig() {
         "dicom",
         <>
           {renderInput("dicomReceiver", "aet", "AET", !editMode.dicom)}
-          {renderInput(
-            "dicomReceiver",
-            "ipAddress",
-            "IP Address",
-            !editMode.dicom,
-          )}
-          {renderInput(
-            "dicomReceiver",
-            "samIpAddress",
-            "SAM Server Address",
-            !editMode.dicom,
-          )}
+          {renderInput("dicomReceiver", "ipAddress", "IP Address", !editMode.dicom)}
+          {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
           {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
-          {renderInput(
-            "dicomReceiver",
-            "networkDrive",
-            "Network Drive",
-            !editMode.dicom,
-          )}
+          {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
         </>,
       )}
 
@@ -899,24 +885,9 @@ export function EnrichmentToolConfig() {
         <Database className="h-5 w-5 text-[#007BFF]" />,
         "lis",
         <>
-          {renderInput(
-            "lisConnector",
-            "applicationName",
-            "Application Name",
-            !editMode.lis,
-          )}
-          {renderInput(
-            "lisConnector",
-            "receivingPort",
-            "LIS Connector Port",
-            !editMode.lis,
-          )}
-          {renderInput(
-            "lisConnector",
-            "sendingFacility",
-            "Application Facility",
-            !editMode.lis,
-          )}
+          {renderInput("lisConnector", "applicationName", "Application Name", !editMode.lis)}
+          {renderInput("lisConnector", "receivingPort", "LIS Connector Port", !editMode.lis)}
+          {renderInput("lisConnector", "sendingFacility", "Application Facility", !editMode.lis)}
         </>,
       )}
 
@@ -991,30 +962,10 @@ export function EnrichmentToolConfig() {
         <MessageSquare className="h-5 w-5 text-[#007BFF]" />,
         "hl7",
         <>
-          {renderInput(
-            "hl7Messaging",
-            "applicationName",
-            "Application Name",
-            !editMode.hl7,
-          )}
-          {renderInput(
-            "hl7Messaging",
-            "ipAddress",
-            "IP Address (HL7 Provider)",
-            !editMode.hl7,
-          )}
-          {renderInput(
-            "hl7Messaging",
-            "receivingPort",
-            "Receiving Port (HL7 Provider)",
-            !editMode.hl7,
-          )}
-          {renderInput(
-            "hl7Messaging",
-            "sendingFacility",
-            "Application Facility",
-            !editMode.hl7,
-          )}
+          {renderInput("hl7Messaging", "applicationName", "Application Name", !editMode.hl7)}
+          {renderInput("hl7Messaging", "ipAddress", "IP Address (HL7 Provider)", !editMode.hl7)}
+          {renderInput("hl7Messaging", "receivingPort", "Receiving Port (HL7 Provider)", !editMode.hl7)}
+          {renderInput("hl7Messaging", "sendingFacility", "Application Facility", !editMode.hl7)}
         </>,
       )}
 
@@ -1024,10 +975,7 @@ export function EnrichmentToolConfig() {
         "email",
         <>
           <div className="space-y-2">
-            <Label
-              htmlFor="emailFrom"
-              className="text-sm font-medium text-gray-700"
-            >
+            <Label htmlFor="emailFrom" className="text-sm font-medium text-gray-700">
               Email From
             </Label>
             <Input

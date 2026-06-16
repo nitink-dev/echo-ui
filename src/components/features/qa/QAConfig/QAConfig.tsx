@@ -79,7 +79,7 @@ export function QAConfig() {
                 Manage barcode and activation code pairs for QA slides
               </CardDescription>
             </div>
-              <PermissionGuard allowed={canAccess(API_URLS.qaAnalysis.detail, "POST")}>
+              <PermissionGuard allowed={canAccess(API_URLS.qaAnalysis.create, API_URLS.qaAnalysis.create.method)}>
                 <Button
                 onClick={handleAddParameter}
                 disabled={isScanInProgress}

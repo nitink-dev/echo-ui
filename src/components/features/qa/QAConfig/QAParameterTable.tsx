@@ -110,7 +110,6 @@ export function QAParameterTable({
                         : "Edit Parameter"
                     }
                     className="min-w-0"
-                    title="Edit Parameter"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>

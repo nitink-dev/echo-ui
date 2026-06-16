@@ -17,8 +17,8 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { useFeaturePermissions } from "../../../auth/permissions/useFeaturePermissions";
-import { SERVICE_URL } from "../../../api/services/enrichmentService";
+import { usePermissions } from "../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../status/SlideScanContext";
 import { ENRICHMENT_TOOLS } from "../../../utils/constants";
 
@@ -64,8 +64,11 @@ export function LisConfig() {
   const dispatch = useAppDispatch();
   const { lisConnector, loading } = useSelector((s: any) => s.ehTools || {});
 
-  const { enrichment } = useFeaturePermissions();
-  const canEditLis = enrichment.canEditLis;
+  const { canAccess } = usePermissions();
+  const canEditLis = canAccess(
+    API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.LIS }),
+    API_URLS.enrichment.updateTool.method,
+  );
 
   const [editMode, setEditMode] = useState(false);
   const [initialized, setInitialized] = useState(false);
