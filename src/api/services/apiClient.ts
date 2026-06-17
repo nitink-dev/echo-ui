@@ -116,8 +116,7 @@ apiClient.interceptors.response.use(
       .replace(/^\/api\//, "")
       .split("?")[0];
 
-    const isLoginRequest = sourcePath.includes("login");
-    console.log("isLoginRequest:", isLoginRequest);
+    const isLoginRequest = sourcePath.includes("login");    
 
     if (isLoginRequest) {
       return Promise.reject(error);

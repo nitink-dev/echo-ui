@@ -386,12 +386,6 @@ export function SlideScanStatus() {
     const preVal = Math.max(0, currentPageNum - 1);
     const newPage = direction === "next" ? nextVal : preVal;
 
-    {
-      console.log(
-        "direction: " + direction + ",pVal:" + preVal + "nVal: " + nextVal,
-      );
-    }
-
     if (newPage === currentPageNum) return;
 
     currentPageRef.current = { ...currentPageRef.current, [tab]: newPage };
@@ -399,11 +393,6 @@ export function SlideScanStatus() {
     setCurrentPage((prev) => ({ ...prev, [tab]: newPage }));
 
     fetchData(tab, newPage, null);
-    {
-      console.log(
-        "currentPageNum: " + currentPageNum + ",totalPages: " + totalPages,
-      );
-    }
   };
 
   const handleApplyFilters = async () => {

@@ -139,7 +139,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     apiClient
       .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=${pageSize}`)
       .then((res) => {
-        console.log("Initial in-progress slide scan count response:", res);
         if (!isMountedRef.current) return;
         const data = normalisePageable(res.data);
         setInProgressCount(data?.totalElements ?? 0);

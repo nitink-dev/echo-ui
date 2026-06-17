@@ -23,23 +23,8 @@ export function PermissionProvider({
   scopes,
   children,
 }: Props) {
-  console.log("[PermissionProvider] Rendering", {
-    scopes,
-    totalConfigs: securityConfig.length,
-    securityConfig,
-  });
-
   const engine = useMemo(() => {
-    console.log("[PermissionProvider] useMemo — (re)creating PermissionEngine", {
-      reason: "securityConfig or scopes changed",
-      scopes,
-      totalConfigs: securityConfig.length,
-    });
-
     const instance = new PermissionEngine(securityConfig, scopes);
-
-    console.log("[PermissionProvider] useMemo — PermissionEngine instance created", instance);
-
     return instance;
   }, [securityConfig, scopes]);
 

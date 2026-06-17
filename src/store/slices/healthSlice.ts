@@ -6,7 +6,6 @@ export const fetchHealthStatus = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await healthService.fetchHealthStatus();
-      console.log('Health status response:', res);
       return res;
     } catch (err: any) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
@@ -68,10 +67,7 @@ const healthSlice = createSlice({
         state.error = undefined;
       })
       .addCase(fetchHealthStatus.fulfilled, (state, action) => {
-        console.log('Fetched health status:', action.payload);
-      
-        const blockList = ['Database Service', 'Delete Service'];
-      
+        const blockList = ['Database Service', 'Delete Service'];      
         state.thirdParties = (action.payload.thirdParties || []).filter(
           (svc: ServiceHealth) => !blockList.includes(svc.name)
         );

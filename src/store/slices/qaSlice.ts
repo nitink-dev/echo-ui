@@ -32,9 +32,6 @@ export const fetchQAParameters = createAsyncThunk<
   try {
     const res = await apiClient.get(`${BASE_URL}/api/slides`);
     const data = res.data;
-
-    console.log("📥 API /api/slides response:", data);
-
     if (data?.qaSlides && data?.dicomUrl) {
       const slides = data.qaSlides.map((slide: any) => ({
         ...slide,

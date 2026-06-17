@@ -22,7 +22,6 @@ export const fetchScanners = createAsyncThunk<SlideScanner[]>(
   async (_, { rejectWithValue }) => {
     try {
       const response = await scannerService.fetchAll();
-      console.log('Fetched scanners:', response);
       if (!Array.isArray(response)) throw new Error("Invalid API response: Expected array");
       return response;
     } catch (err: any) {
@@ -102,10 +101,8 @@ const scannerSlice = createSlice({
       .addCase(fetchScanners.pending, (state) => {
         state.loading = true;
         state.error = null;
-        console.log("🔄 Fetching scanners...");
       })
       .addCase(fetchScanners.fulfilled, (state, action: PayloadAction<SlideScanner[]>) => {
-        console.log("✅ Scanners fetched:", action.payload);
         state.loading = false;
         state.items = action.payload;
       })
@@ -116,7 +113,6 @@ const scannerSlice = createSlice({
       })
 
       .addCase(addScanner.fulfilled, (state, action: PayloadAction<SlideScanner>) => {
-        console.log("➕ Scanner added:", action.payload);
         state.items.push(action.payload);
         toast.success("Scanner added successfully");
       })
@@ -127,7 +123,6 @@ const scannerSlice = createSlice({
         );
         if (index !== -1) {
           state.items[index] = action.payload;
-          console.log("✏️ Scanner updated (PATCH):", action.payload);
           toast.success("Scanner updated successfully");
         }
       })

@@ -62,6 +62,8 @@ export function ScannerTable({
 
   const { canAccess } = usePermissions();
   const canEditScanner = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
+  const canCreateScanner = canAccess(API_URLS.scanners.create.path, API_URLS.scanners.create.method);
+  const canDeleteScanner = canAccess(API_URLS.scanners.delete.path, API_URLS.scanners.delete.method);
 
   const initialConnected = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -112,7 +114,7 @@ export function ScannerTable({
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           No registered scanners
         </h3>
-        <PermissionGuard allowed={scannerPermissions.canCreate}>
+        <PermissionGuard allowed={canCreateScanner}>
           <p className="text-gray-600 mb-6 max-w-md mx-auto">
             Click "Add New Scanner" to register your first scanner.
           </p>
@@ -322,7 +324,7 @@ export function ScannerTable({
                       <DropdownMenuItem onClick={() => onViewScanner(scanner)}>
                         <Eye className="h-4 w-4 mr-2" /> View
                       </DropdownMenuItem>
-                      <PermissionGuard allowed={scannerPermissions.canUpdate}>
+                      <PermissionGuard allowed={canEditScanner}>
                         <DropdownMenuItem
                           onClick={() => onEditScanner(scanner)}
                              disabled={isScanInProgress}
@@ -335,7 +337,7 @@ export function ScannerTable({
                         </DropdownMenuItem>
                       </PermissionGuard>
                       <DropdownMenuSeparator />
-                      <PermissionGuard allowed={scannerPermissions.canDelete}>
+                      <PermissionGuard allowed={canDeleteScanner}>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(scanner)}
                              disabled={isScanInProgress}

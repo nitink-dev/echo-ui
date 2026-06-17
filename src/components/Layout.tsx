@@ -12,7 +12,7 @@ import {
   Stethoscope,
   User,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "../hooks";
 import { logoutUser } from "../store/slices/authSlice";
@@ -57,48 +57,48 @@ interface NavigationItem {
 }
 
 const navigationItems: NavigationItem[] = [
-    {
-      label: "Operations",
-      icon: MonitorCheckIcon,
-      id: "operations",
-      children: [
-        { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status", permissionKey: "slide-status" },
-        { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
-      ],
-    },
-    {
-      label: "Devices & Adapters",
-      icon: Monitor,
-      id: "devices",
-      children: [
-        { label: "Slide Scanner", icon: Microscope, id: "list", permissionKey: "list" },
-      ],
-    },
-    {
-      label: "Applications",
-      icon: Stethoscope,
-      id: "clinical-apps",
-      children: [
-        { label: "LIS", icon: Activity, id: "lis", permissionKey: "lis" },
-        { label: "IMS", icon: Settings, id: "synapse", permissionKey: "synapse" },
-        { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis", permissionKey: "qa-analysis" },
-        { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool", permissionKey: "enrichment-tool" },
-      ],
-    },
-  ];
+  {
+    label: "Operations",
+    icon: MonitorCheckIcon,
+    id: "operations",
+    children: [
+      { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status", permissionKey: "slide-status" },
+      { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
+    ],
+  },
+  {
+    label: "Devices & Adapters",
+    icon: Monitor,
+    id: "devices",
+    children: [
+      { label: "Slide Scanner", icon: Microscope, id: "list", permissionKey: "list" },
+    ],
+  },
+  {
+    label: "Applications",
+    icon: Stethoscope,
+    id: "clinical-apps",
+    children: [
+      { label: "LIS", icon: Activity, id: "lis", permissionKey: "lis" },
+      { label: "IMS", icon: Settings, id: "synapse", permissionKey: "synapse" },
+      { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis", permissionKey: "qa-analysis" },
+      { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool", permissionKey: "enrichment-tool" },
+    ],
+  },
+];
 
-  function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAccess"]) {
-    return {
-      list:              canAccess(API_URLS.scanners.base.path,          API_URLS.scanners.base.method),
-      lis:               canAccess(API_URLS.enrichment.lis.path,         API_URLS.enrichment.lis.method),
-      synapse:           canAccess(API_URLS.enrichment.synapse.path,     API_URLS.enrichment.synapse.method),
-      "qa-analysis":     canAccess(API_URLS.qaAnalysis.base.path,        API_URLS.qaAnalysis.base.method),
-      "enrichment-tool": canAccess(API_URLS.enrichment.tools.path,       API_URLS.enrichment.tools.method),
-      "health-status":   true,
-      "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
-      "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
-    };
-  }
+function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAccess"]) {
+  return {
+    list:              canAccess(API_URLS.scanners.base.path,          API_URLS.scanners.base.method),
+    lis:               canAccess(API_URLS.enrichment.lis.path,         API_URLS.enrichment.lis.method),
+    synapse:           canAccess(API_URLS.enrichment.synapse.path,     API_URLS.enrichment.synapse.method),
+    "qa-analysis":     canAccess(API_URLS.qaAnalysis.base.path,        API_URLS.qaAnalysis.base.method),
+    "enrichment-tool": canAccess(API_URLS.enrichment.tools.path,       API_URLS.enrichment.tools.method),
+    "health-status":   true,
+    "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
+    "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
+  };
+}
 
 interface NavigationProps {
   currentPage: string;
@@ -106,16 +106,33 @@ interface NavigationProps {
 }
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
-  
   const { canAccess } = usePermissions();
   const permissionMap = buildPermissionMap(canAccess);
 
+  // Finds which top-level section a given page id belongs to
+  const findSectionForPage = (page: string) =>
+    navigationItems.find((section) =>
+      section.children?.some((item) => item.id === page),
+    )?.id;
 
-  const [expandedSections, setExpandedSections] = useState<string[]>([
-    "devices",
-    "data-stores",
-    "clinical-apps",
-  ]);
+  const [expandedSections, setExpandedSections] = useState<string[]>(() => {
+    const activeSection = findSectionForPage(currentPage);
+    const defaults = ["devices", "clinical-apps"];
+    return activeSection && !defaults.includes(activeSection)
+      ? [...defaults, activeSection]
+      : defaults;
+  });
+
+  // Whenever currentPage changes (login, refresh, deep-link, programmatic nav),
+  // make sure its parent section is expanded.
+  useEffect(() => {
+    const activeSection = findSectionForPage(currentPage);
+    if (activeSection) {
+      setExpandedSections((prev) =>
+        prev.includes(activeSection) ? prev : [...prev, activeSection],
+      );
+    }
+  }, [currentPage]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -124,7 +141,6 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
         : [...prev, sectionId],
     );
   };
-
 
   const filteredNavItems = navigationItems
     .map((section) => ({
@@ -248,10 +264,6 @@ export function Layout({
     onNavigate("login");
   };
 
-  const topOffset = isScanInProgress ? "top-16" : "top-16";
-  const sidebarTop = isScanInProgress ? "top-[100px]" : "top-16";
-  const mainPadding = isScanInProgress ? "pt-[100px]" : "pt-16";
-
   return (
     <div className="min-h-screen bg-[#fafbff]">
       <header className="fixed top-0 left-0 right-0 z-50">
@@ -340,14 +352,13 @@ export function Layout({
             </DropdownMenu>
           </div>
         </div>
-        {console.log("isScanInProgress:", isScanInProgress, "inProgressCount:", inProgressCount)}
+
         {isScanInProgress && (
           <div className="w-full bg-[#1a3a5c] border-b border-[#1e4976] flex items-center gap-3 px-6 py-2">
-       
             <span className="relative flex h-3 w-3 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#60a5fa] opacity-75" />
               <span className="animate-pulse relative inline-flex rounded-full h-3 w-3 bg-[#3b82f6]" />
-              </span> 
+            </span>
 
             <p className="text-sm text-[#93c5fd]">
               <span className="font-semibold text-white">

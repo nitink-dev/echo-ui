@@ -47,6 +47,7 @@ export const patchEhTool = createAsyncThunk<
 const TOOL_KEY_TO_STATE: Record<string, keyof EhToolsState> = {
   "eh-dicom-receiver": "dicomReceiver",
   "eh-lis-connector": "lisConnector",
+  "lis":"lis",
   "eh-dicom-enricher": "enrichmentService",
   "eh-export-service": "exportService",
   "eh-hl7-connector": "hl7Connector",
@@ -62,6 +63,7 @@ const isValidConfigData = (data: any): boolean => {
 interface EhToolsState {
   dicomReceiver: any;
   lisConnector: any;
+  lis: any;
   enrichmentService: any;
   exportService: any;
   hl7Connector: any;
@@ -73,6 +75,7 @@ interface EhToolsState {
 const initialState: EhToolsState = {
   dicomReceiver: null,
   lisConnector: null,
+  lis:null,
   enrichmentService: null,
   exportService: null,
   hl7Connector: null,
