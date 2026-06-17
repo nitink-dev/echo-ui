@@ -12,6 +12,14 @@ import {
   TooltipTrigger,
 } from "../../../ui/tooltip";
 
+const toTitleCase = (str = "") =>
+  str
+    .replace(/-/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");
+
 export function CompletedRecordsRow({ record, index }) {
   const statusConfig = {
     completed: {
@@ -85,9 +93,9 @@ export function CompletedRecordsRow({ record, index }) {
                   className={`h-3.5 w-3.5 ${config.color}`}
                 />
                 <span
-                  className={`text-xs font-medium ${config.color} capitalize`}
+                  className={`text-xs font-medium ${config.color}`}
                 >
-                  {record.scanStatus.replace("-", " ")}
+                  {toTitleCase(record.scanStatus)}
                 </span>
               </div>
             </TooltipTrigger>
@@ -105,8 +113,8 @@ export function CompletedRecordsRow({ record, index }) {
                       className="border-t border-orange-100 pt-2 first:border-t-0 first:pt-0"
                     >
                       {/* Scan Status */}
-                      <div className="text-xs font-medium text-orange-800 capitalize">
-                        {warning.scanStatus.replace(/-/g, " ")}
+                      <div className="text-xs font-medium text-orange-800">
+                        {toTitleCase(warning.scanStatus)}
                       </div>
 
                       {/* Message */}
