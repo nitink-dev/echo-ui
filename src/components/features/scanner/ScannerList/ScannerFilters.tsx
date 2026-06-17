@@ -1,9 +1,10 @@
 import { Plus, Search } from "lucide-react";
 import { Button } from "../../../ui/button";
 import { Input } from "../../../ui/input";
-import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
 
 interface ScannerFiltersProps {
   searchTerm: string;
@@ -17,7 +18,9 @@ export function ScannerFilters({
   onAddScanner,
 }: ScannerFiltersProps) {
 
-  const { scanners: scannerPermissions } = useFeaturePermissions();
+  const { canAccess } = usePermissions();
+  const canCreateScanner = canAccess(API_URLS.scanners.create.path, API_URLS.scanners.create.method);
+
 
   const { inProgressCount } = useSlideScan();
   const isScanInProgress = inProgressCount > 0;
@@ -43,7 +46,7 @@ export function ScannerFilters({
           />
         </div>
         <div className="flex items-center gap-2">
-          <PermissionGuard allowed={scannerPermissions.canCreate}>
+          <PermissionGuard allowed={canCreateScanner}>
            <Button
               onClick={onAddScanner}
               disabled={isScanInProgress}

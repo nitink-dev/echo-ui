@@ -19,8 +19,6 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { SERVICE_URL } from "../../../api/services/enrichmentService";
-import { useFeaturePermissions } from "../../../auth/permissions/useFeaturePermissions";
 import { useSlideScan } from "../status/SlideScanContext";
 import { usePermissions } from "../../../auth/permissions/usePermissions";
 import { API_URLS } from "../../../auth/permissions/apiConfig";
@@ -32,7 +30,7 @@ export const fetchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/fetch", async (_, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get(SERVICE_URL + "/synapse");
+    const res = await apiClient.get(`${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`);
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -56,7 +54,7 @@ export const patchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/patch", async ({ body }, { rejectWithValue }) => {
   try {
-    const res = await apiClient.patch(SERVICE_URL + "/synapse", body);
+    const res = await apiClient.patch(`${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`, body);
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;

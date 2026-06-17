@@ -35,6 +35,9 @@ export const API_URLS = {
   scanners: {
     base:       api("/api/scanners", "GET"),
     create:     api("/api/scanners", "POST"),
+    update:     api("/api/scanners", "PUT"),
+    delete:     api("/api/scanners", "DELETE"),
+    detail:     api("/api/scanners/**", "GET"),
     dicomStore: api("/api/scanners/datasets/dicomStores", "GET"),
   },
   config: {
@@ -43,6 +46,8 @@ export const API_URLS = {
   qaAnalysis: {
     base:   api("/api/slides", "GET"),
     create: api("/api/slides", "POST"),
+    update: api("/api/slides", "PUT"),
+    delete: api("/api/slides", "DELETE"),
   },
   slideAnalysis: {
     all: api("/api/slide-analysis", "GET"),
@@ -53,6 +58,9 @@ export const API_URLS = {
   },
   hospital: {
     all: api("/api/hospital-metadata", "GET"),
+  },
+  health: {
+    all: api("/api/health/status", "GET"),
   },
   auth: {
     config: api("/api/auth/config", "GET"),

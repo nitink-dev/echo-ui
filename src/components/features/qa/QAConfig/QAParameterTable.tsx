@@ -10,8 +10,9 @@ import {
   TableRow,
 } from "../../../ui/table";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
-import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -30,8 +31,12 @@ export function QAParameterTable({
   onDeleteParameter,
   onToggleVisibility,
 }: QAParameterTableProps) {
-  const { qaAnalysis: qaPermissions } = useFeaturePermissions();
-  const { inProgressCount } = useSlideScan();
+  const { canAccess } = usePermissions();
+const canCreate = canAccess(API_URLS.qaAnalysis.create.path, API_URLS.qaAnalysis.create.method);
+const canEdit   = canAccess(API_URLS.qaAnalysis.base.path,   "PATCH");
+const canDelete = canAccess(API_URLS.qaAnalysis.base.path,   "DELETE");
+  
+const { inProgressCount } = useSlideScan();
   const isScanInProgress = inProgressCount > 0;
   if (!qaParameters || qaParameters.length === 0) {
     return (
@@ -42,7 +47,7 @@ export function QAParameterTable({
         <p className="text-gray-600 mb-4">
           Add barcode and activation code pairs to get started
         </p>
-        <PermissionGuard allowed={qaPermissions.canCreate}>
+        <PermissionGuard allowed={canCreate}>
           <Button
             onClick={onAddParameter}
             disabled={isScanInProgress}
@@ -60,9 +65,6 @@ export function QAParameterTable({
       </div>
     );
   }
-
-  const canEdit = qaPermissions.canUpdate;
-  const canDelete = qaPermissions.canDelete;
 
   return (
     <Table>
@@ -98,7 +100,7 @@ export function QAParameterTable({
 
             <TableCell>
               <div className="flex gap-1 flex-wrap">
-                  <PermissionGuard allowed={qaPermissions.canUpdate}>
+                  <PermissionGuard allowed={canEdit}>
                     <Button
                     variant="outline"
                     size="sm"
@@ -115,13 +117,12 @@ export function QAParameterTable({
                   </Button>
                   </PermissionGuard>
                
-                  <PermissionGuard allowed={qaPermissions.canDelete}>
+                  <PermissionGuard allowed={canDelete}>
                     <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDeleteParameter(parameter)}
                     className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
-                    title="Delete Parameter"
                     disabled={isScanInProgress}
                     title={
                       isScanInProgress

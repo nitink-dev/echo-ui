@@ -7,7 +7,8 @@ import { ScannerInfo } from './ScannerInfo';
 import { AnalysisReports } from './AnalysisReports';
 import { Badge } from '../../../ui/badge';
 import { PermissionGuard } from '../../../../auth/permissions/PermissionGuard';
-import { useFeaturePermissions } from '../../../../auth/permissions/useFeaturePermissions';
+import { API_URLS } from '../../../../auth/permissions/apiConfig';
+import { usePermissions } from '../../../../auth/permissions/usePermissions';
 
 
 interface ScannerDetailsProps {
@@ -16,7 +17,10 @@ interface ScannerDetailsProps {
 }
 
 export function ScannerDetails({ scanner, onBack }: ScannerDetailsProps) {
-  const { scanners: scannerPermissions } = useFeaturePermissions();
+  
+  const { canAccess } = usePermissions();
+  const canReadDetail = canAccess(API_URLS.scanners.detail.path, API_URLS.scanners.detail.method);
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between gap-4">
@@ -54,7 +58,7 @@ export function ScannerDetails({ scanner, onBack }: ScannerDetailsProps) {
       <Tabs defaultValue="info" className="space-y-6">
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="info">Scanner Information</TabsTrigger>
-          <PermissionGuard allowed={scannerPermissions.canReadDetail}>
+          <PermissionGuard allowed={canReadDetail}>
             <TabsTrigger value="analysis">Analysis Report</TabsTrigger>
           </PermissionGuard>
         </TabsList>

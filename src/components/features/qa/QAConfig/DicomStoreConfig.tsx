@@ -10,8 +10,9 @@ import {
 } from "../../../ui/card";
 import { Label } from "../../../ui/label";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
-import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -27,7 +28,7 @@ export function DicomStoreConfig({
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
 
-  const { config: dicomPermissions } = useFeaturePermissions();
+  const { canAccess } = usePermissions();
 
   const { inProgressCunt} = useSlideScan();
   const isScanInProgress = inProgressCunt > 0;
@@ -88,7 +89,7 @@ export function DicomStoreConfig({
                   );
                 })}
               </select>
-                <PermissionGuard allowed={dicomPermissions.canUpdateDicomStore}>
+                <PermissionGuard allowed={canAccess(API_URLS.config.dicomStore.path, "PATCH")}>
                 <>
                   {isEditingDicom ? (
                     <div className="flex gap-2">

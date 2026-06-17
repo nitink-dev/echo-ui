@@ -33,9 +33,10 @@ import {
 } from "../../../ui/table";
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { useFeaturePermissions } from "../../../../auth/permissions/useFeaturePermissions";
 import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -59,8 +60,8 @@ export function ScannerTable({
     null,
   );
 
-  const { scanners: scannerPermissions } = useFeaturePermissions();
-  const canEditScanner = scannerPermissions.canUpdate;
+  const { canAccess } = usePermissions();
+  const canEditScanner = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
 
   const initialConnected = useMemo(() => {
     const map: Record<string, boolean> = {};

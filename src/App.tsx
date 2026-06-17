@@ -28,7 +28,7 @@ import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
 import { SCANNER_SERVICE_URL } from "./api/services/scannerService";
-import { useFeaturePermissions } from "./auth/permissions/useFeaturePermissions";
+import { API_URLS } from "./auth/permissions/apiConfig";
 
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
@@ -67,12 +67,10 @@ export default function App() {
   const currentUser = useSelector((state: any) => state.auth.user);
 
   useCrossTabAuth(currentUser);
-
-  const { configLoaded } = usePermissions();
-  const { scanners: scannerPermissions } = useFeaturePermissions();
-  const canGetScanners = scannerPermissions.canRead;
-  const canEditScanners = scannerPermissions.canUpdate;
-  const canDeleteScanners = scannerPermissions.canDelete;
+  const { canAccess, configLoaded } = usePermissions();
+  const canGetScanners = canAccess(API_URLS.scanners.base.path, API_URLS.scanners.base.method);
+  const canEditScanners = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
+  const canDeleteScanners = canAccess(API_URLS.scanners.delete.path, API_URLS.scanners.delete.method);
 
   useEffect(() => {
     dispatch(loadStoredSession());

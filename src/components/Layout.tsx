@@ -37,8 +37,9 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
-import { useFeaturePermissions } from "../auth/permissions/useFeaturePermissions";
 import { useSlideScan } from "./features/status/SlideScanContext";
+import { usePermissions } from "../auth/permissions/usePermissions";
+import { API_URLS } from "../auth/permissions/apiConfig";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -86,24 +87,18 @@ const navigationItems: NavigationItem[] = [
     },
   ];
 
-function buildPermissionMap(
-  scanners: ReturnType<typeof useFeaturePermissions>["scanners"],
-  enrichment: ReturnType<typeof useFeaturePermissions>["enrichment"],
-  qaAnalysis: ReturnType<typeof useFeaturePermissions>["qaAnalysis"],
-  scanStatus: ReturnType<typeof useFeaturePermissions>["scanStatus"],
-  slideAnalysis: ReturnType<typeof useFeaturePermissions>["slideAnalysis"],
-) {
-  return {
-    list:             scanners.canRead,
-    lis:              enrichment.canRead,
-    synapse:          enrichment.canRead,
-    "qa-analysis":    qaAnalysis.canRead,
-    "enrichment-tool": enrichment.canRead,
-    "health-status":  true,
-    "slide-status":   scanStatus.canReadStatus,
-    "slide-analysis": slideAnalysis.canRead,
-  };
-}
+  function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAccess"]) {
+    return {
+      list:              canAccess(API_URLS.scanners.base.path,          API_URLS.scanners.base.method),
+      lis:               canAccess(API_URLS.enrichment.lis.path,         API_URLS.enrichment.lis.method),
+      synapse:           canAccess(API_URLS.enrichment.synapse.path,     API_URLS.enrichment.synapse.method),
+      "qa-analysis":     canAccess(API_URLS.qaAnalysis.base.path,        API_URLS.qaAnalysis.base.method),
+      "enrichment-tool": canAccess(API_URLS.enrichment.tools.path,       API_URLS.enrichment.tools.method),
+      "health-status":   true,
+      "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
+      "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
+    };
+  }
 
 interface NavigationProps {
   currentPage: string;
@@ -112,8 +107,8 @@ interface NavigationProps {
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
   
-  const { scanners, enrichment, qaAnalysis, scanStatus, slideAnalysis } = useFeaturePermissions();
-  const permissionMap = buildPermissionMap(scanners, enrichment, qaAnalysis, scanStatus, slideAnalysis);
+  const { canAccess } = usePermissions();
+  const permissionMap = buildPermissionMap(canAccess);
 
 
   const [expandedSections, setExpandedSections] = useState<string[]>([

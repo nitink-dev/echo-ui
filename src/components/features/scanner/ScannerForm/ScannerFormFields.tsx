@@ -13,7 +13,8 @@ import {
   sanitizeByPattern,
 } from '../../../../utils/validation.constants';
 import { PermissionGuard } from '../../../../auth/permissions/PermissionGuard';
-import { useFeaturePermissions } from '../../../../auth/permissions/useFeaturePermissions';
+import { API_URLS } from '../../../../auth/permissions/apiConfig';
+import { usePermissions } from '../../../../auth/permissions/usePermissions';
 
 const SERIAL_ALLOWED_PATTERN = /^[a-zA-Z0-9_-]$/;
 const sanitizeSerial = (value: string) =>
@@ -67,9 +68,9 @@ export function ScannerFormFields({
       onInputChange('deviceSerialNumber', cur.slice(0, start) + sanitized + cur.slice(end));
     }
   };
-
-  const { hospital: hospitalPermissions } = useFeaturePermissions();
-  const { scanners: scannerPermissions } = useFeaturePermissions();
+  const { canAccess } = usePermissions();
+  const canReadHospital  = canAccess(API_URLS.hospital.all.path,       API_URLS.hospital.all.method);
+  const canReadDicomStore = canAccess(API_URLS.scanners.dicomStore.path, API_URLS.scanners.dicomStore.method);
 
   const handleIpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = sanitizeByPattern(e.target.value, IP_ALLOWED_PATTERN);
@@ -197,7 +198,7 @@ export function ScannerFormFields({
             Hospital Name *
           </Label>
 
-          <PermissionGuard allowed={hospitalPermissions.canRead} fallback={ 
+          <PermissionGuard allowed={canReadHospital} fallback={ 
             <p className="text-sm text-gray-400">Permission Required</p>  }>
           <select
             id="hospitalName"
@@ -267,7 +268,7 @@ export function ScannerFormFields({
             <Label htmlFor="dicomStore" className="text-sm font-medium text-gray-700">
               Storage Location *
             </Label>
-            <PermissionGuard allowed={scannerPermissions.canReadDicom} fallback={ 
+            <PermissionGuard allowed={canReadDicomStore} fallback={ 
               <p className="text-sm text-gray-400">Permission Required</p>  }>
             <select
               id="dicomStore"
