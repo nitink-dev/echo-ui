@@ -66,6 +66,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     if (!slideId) return;
 
     const isTerminal = TERMINAL_STATUSES.has(scanStatus);
+    
     const wasTracked = trackedSlidesRef.current.has(slideId);
 
     if (isTerminal) {
@@ -86,6 +87,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     if (!isMountedRef.current) return;
 
     const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress`;
+
 
     try {
       const eventSource = new EventSource(url, { withCredentials: true });
