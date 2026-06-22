@@ -61,4 +61,20 @@ describe('QAParameterForm Component', () => {
     fireEvent.click(saveButton);
     expect(mockProps.onSave).toHaveBeenCalled();
   });
+
+  test('calls onOpenChange when Cancel is clicked', () => {
+    render(<QAParameterForm {...mockProps} />);
+    fireEvent.click(screen.getByText('Cancel'));
+    expect(mockProps.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  test('populates form fields from formData', () => {
+    const props = {
+      ...mockProps,
+      formData: { barcode: 'QA-003', activationCode: 'ACT-003' },
+    };
+    render(<QAParameterForm {...props} />);
+    expect(screen.getByDisplayValue('QA-003')).toBeInTheDocument();
+    expect(screen.getByDisplayValue('ACT-003')).toBeInTheDocument();
+  });
 });

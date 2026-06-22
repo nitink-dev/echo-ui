@@ -42,5 +42,10 @@ describe('healthService', () => {
 
       expect(result).toEqual(mockResponse);
     });
+
+    it('propagates API errors', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue(new Error('Service down'));
+      await expect(healthService.fetchHealthStatus()).rejects.toThrow('Service down');
+    });
   });
 });

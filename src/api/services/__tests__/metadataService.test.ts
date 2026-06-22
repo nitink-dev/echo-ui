@@ -89,5 +89,10 @@ describe('metadataService', () => {
 
       expect(result).toEqual([]);
     });
+
+    it('propagates errors from fetchHospitalMetadata', async () => {
+      vi.mocked(apiClient.get).mockRejectedValue(new Error('Metadata unavailable'));
+      await expect(metadataService.fetchHospitalMetadata()).rejects.toThrow('Metadata unavailable');
+    });
   });
 });

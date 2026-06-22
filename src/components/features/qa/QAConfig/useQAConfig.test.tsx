@@ -98,4 +98,31 @@ describe('useQAConfig Hook', () => {
 
     expect(result.current.visibleActivationCodes['1']).toBe(false);
   });
+
+  test('handleParameterInputChange updates form data', () => {
+    const { result } = renderHook(() => useQAConfig(), { wrapper });
+
+    act(() => {
+      result.current.handleParameterInputChange('barcode', 'QA-NEW');
+    });
+
+    expect(result.current.parameterFormData.barcode).toBe('QA-NEW');
+  });
+
+  test('handleDeleteCancel closes delete dialog', () => {
+    const { result } = renderHook(() => useQAConfig(), { wrapper });
+
+    act(() => {
+      result.current.handleDeleteClick({ id: '1', barcode: 'QA-001', activationCode: 'AC1' });
+    });
+
+    expect(result.current.deleteDialogOpen).toBe(true);
+
+    act(() => {
+      result.current.handleDeleteCancel();
+    });
+
+    expect(result.current.deleteDialogOpen).toBe(false);
+    expect(result.current.parameterToDelete).toBeNull();
+  });
 });

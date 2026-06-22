@@ -5,6 +5,12 @@ import {
   canDeleteWithScopes
 } from '../roleConfig';
 import { SecurityConfigEntry } from '../../api/services/authService';
+import { PermissionEngine } from '../../auth/permissions/permission-engine';
+import { renderHook } from '@testing-library/react';
+import React from 'react';
+import { PermissionContext } from '../../auth/permissions/permission-context';
+import { usePermissions } from '../../auth/permissions/usePermissions';
+import { API_URLS } from '../../auth/permissions/apiConfig';
 
 describe('roleConfig.ts', () => {
   const mockSecurityConfig: SecurityConfigEntry[] = [
@@ -222,6 +228,79 @@ describe('roleConfig.ts', () => {
     });
   });
 
+  describe('feature-specific scopes', () => {
+    const configWithPatch: SecurityConfigEntry[] = [
+      ...mockSecurityConfig,
+      {
+        api: '/api/config/**',
+        methods: ['PATCH'],
+        requiredScopes: [],
+        isPublic: false,
+      },
+      {
+        api: '/api/slides/**',
+        methods: ['PATCH', 'DELETE'],
+        requiredScopes: [],
+        isPublic: false,
+      },
+      {
+        api: '/api/enrichment/tools/**',
+        methods: ['PATCH'],
+        requiredScopes: [],
+        isPublic: false,
+      },
+    ];
+
+    it('should allow lis write with platform.update or config scopes', () => {
+      expect(
+        canWriteWithScopes('lis', [], configWithPatch, true)
+      ).toBe(false);
+      expect(
+        canWriteWithScopes('lis', ['platform.update'], configWithPatch, true)
+      ).toBe(true);
+      expect(
+        canWriteWithScopes(
+          'lis',
+          ['config.update', 'config.path-qa-store.update'],
+          configWithPatch,
+          true
+        )
+      ).toBe(true);
+    });
+
+    it('should require config.update for synapse write', () => {
+      expect(
+        canWriteWithScopes('synapse', ['platform.update', 'config.update'], configWithPatch, true)
+      ).toBe(true);
+    });
+
+    it('should require qa-slide scopes for qa-analysis write and delete', () => {
+      expect(
+        canWriteWithScopes('qa-analysis', ['platform.update', 'qa-slide.update'], configWithPatch, true)
+      ).toBe(true);
+      expect(
+        canDeleteWithScopes('qa-analysis', ['platform.delete', 'qa-slide.delete'], configWithPatch, true)
+      ).toBe(true);
+    });
+
+    it('should require enrichment.tools.update for enrichment-tool write', () => {
+      expect(
+        canWriteWithScopes(
+          'enrichment-tool',
+          ['platform.update', 'enrichment.tools.update'],
+          configWithPatch,
+          true
+        )
+      ).toBe(true);
+    });
+
+    it('should allow read on health-status with health.read scope', () => {
+      expect(
+        canReadWithScopes('health-status', ['health.read'], mockSecurityConfig, true)
+      ).toBe(true);
+    });
+  });
+
   describe('access control combinations', () => {
     it('should handle read-only pages', () => {
       const result = {
@@ -246,10 +325,16 @@ describe('roleConfig.ts', () => {
     });
 
     it('should handle full-access pages', () => {
+      const editScopes = [
+        'platform.read',
+        'platform.update',
+        'scanner.update',
+        'platform.delete',
+      ];
       const result = {
-        read: canReadWithScopes('edit', ['platform.read'], mockSecurityConfig, true),
-        write: canWriteWithScopes('edit', ['platform.write'], mockSecurityConfig, true),
-        delete: canDeleteWithScopes('edit', ['platform.delete'], mockSecurityConfig, true)
+        read: canReadWithScopes('edit', editScopes, mockSecurityConfig, true),
+        write: canWriteWithScopes('edit', editScopes, mockSecurityConfig, true),
+        delete: canDeleteWithScopes('edit', editScopes, mockSecurityConfig, true)
       };
       expect(result.read).toBe(true);
       expect(result.write).toBe(true);
@@ -297,7 +382,13 @@ describe('roleConfig.ts', () => {
     });
 
     it('should allow bypass with proper platform scopes', () => {
-      const adminScopes = ['platform.read', 'platform.write', 'platform.delete', 'admin'];
+      const adminScopes = [
+        'platform.read',
+        'platform.update',
+        'scanner.update',
+        'platform.delete',
+        'admin',
+      ];
       const result = {
         read: canReadWithScopes('edit', adminScopes, mockSecurityConfig, true),
         write: canWriteWithScopes('edit', adminScopes, mockSecurityConfig, true),
@@ -307,5 +398,84 @@ describe('roleConfig.ts', () => {
       expect(result.write).toBe(true);
       expect(result.delete).toBe(true);
     });
+  });
+});
+
+describe('PermissionEngine', () => {
+  const securityConfig: SecurityConfigEntry[] = [
+    {
+      api: '/api/scanners',
+      methods: ['GET'],
+      requiredScopes: ['platform.read'],
+      isPublic: false,
+    },
+    {
+      api: '/api/scanners/**',
+      methods: ['PATCH'],
+      requiredScopes: ['scanner.update'],
+      isPublic: false,
+    },
+    {
+      api: '/api/slides',
+      methods: ['GET'],
+      requiredScopes: [],
+      isPublic: true,
+    },
+  ];
+
+  it('should allow access when user has required scope', () => {
+    const engine = new PermissionEngine(securityConfig, ['platform.read']);
+    expect(engine.canCall('/api/scanners', 'GET')).toBe(true);
+  });
+
+  it('should deny access when user lacks required scope', () => {
+    const engine = new PermissionEngine(securityConfig, []);
+    expect(engine.canCall('/api/scanners', 'GET')).toBe(false);
+  });
+
+  it('should allow public API access without scopes', () => {
+    const engine = new PermissionEngine(securityConfig, []);
+    expect(engine.canCall('/api/slides', 'GET')).toBe(true);
+  });
+
+  it('should match wildcard API paths', () => {
+    const engine = new PermissionEngine(securityConfig, ['scanner.update']);
+    expect(engine.canCall('/api/scanners/SN-123', 'PATCH')).toBe(true);
+  });
+
+  it('should return false for unmatched API', () => {
+    const engine = new PermissionEngine(securityConfig, ['platform.read']);
+    expect(engine.canCall('/api/unknown', 'GET')).toBe(false);
+  });
+});
+
+describe('usePermissions hook', () => {
+  const securityConfig: SecurityConfigEntry[] = [
+    {
+      api: '/api/scanners',
+      methods: ['GET', 'POST'],
+      requiredScopes: ['platform.read'],
+      isPublic: false,
+    },
+  ];
+
+  const wrapper = ({ children }: { children: React.ReactNode }) =>
+    React.createElement(
+      PermissionContext.Provider,
+      { value: new PermissionEngine(securityConfig, ['platform.read']) },
+      children
+    );
+
+  it('should expose canAccess for API definitions', () => {
+    const { result } = renderHook(() => usePermissions(), { wrapper });
+    expect(result.current.configLoaded).toBe(true);
+    expect(result.current.canGet('/api/scanners')).toBe(true);
+    expect(result.current.canAccess(API_URLS.scanners.base, 'GET')).toBe(true);
+  });
+
+  it('should return false helpers when context is missing', () => {
+    const { result } = renderHook(() => usePermissions());
+    expect(result.current.configLoaded).toBe(false);
+    expect(result.current.canAccess('/api/scanners', 'GET')).toBe(false);
   });
 });

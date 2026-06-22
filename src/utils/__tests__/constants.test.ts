@@ -98,6 +98,8 @@ describe('constants.ts', () => {
     });
 
     it('should contain all enrichment tool definitions', () => {
+      expect(ENRICHMENT_TOOLS).toHaveProperty('LIS');
+      expect(ENRICHMENT_TOOLS).toHaveProperty('SYNAPSE');
       expect(ENRICHMENT_TOOLS).toHaveProperty('DICOM_RECEIVER');
       expect(ENRICHMENT_TOOLS).toHaveProperty('LIS_CONNECTOR');
       expect(ENRICHMENT_TOOLS).toHaveProperty('ENRICHMENT_SERVICE');
@@ -107,6 +109,8 @@ describe('constants.ts', () => {
     });
 
     it('should have correct values for each tool', () => {
+      expect(ENRICHMENT_TOOLS.LIS).toBe('lis');
+      expect(ENRICHMENT_TOOLS.SYNAPSE).toBe('synapse');
       expect(ENRICHMENT_TOOLS.DICOM_RECEIVER).toBe('eh-dicom-receiver');
       expect(ENRICHMENT_TOOLS.LIS_CONNECTOR).toBe('eh-lis-connector');
       expect(ENRICHMENT_TOOLS.ENRICHMENT_SERVICE).toBe('eh-dicom-enricher');
@@ -128,14 +132,27 @@ describe('constants.ts', () => {
     });
 
     it('should have correct number of tools', () => {
-      expect(Object.keys(ENRICHMENT_TOOLS).length).toBe(6);
+      expect(Object.keys(ENRICHMENT_TOOLS).length).toBe(8);
     });
 
-    it('should follow naming convention', () => {
-      Object.values(ENRICHMENT_TOOLS).forEach(value => {
+    it('should follow naming convention for eh-prefixed tools', () => {
+      const ehTools = [
+        ENRICHMENT_TOOLS.DICOM_RECEIVER,
+        ENRICHMENT_TOOLS.LIS_CONNECTOR,
+        ENRICHMENT_TOOLS.ENRICHMENT_SERVICE,
+        ENRICHMENT_TOOLS.EXPORT_SERVICE,
+        ENRICHMENT_TOOLS.HL7_CONNECTOR,
+        ENRICHMENT_TOOLS.EMAIL_SERVICE,
+      ];
+      ehTools.forEach(value => {
         expect(value).toMatch(/^eh-/);
         expect(value).toMatch(/[a-z-]+$/);
       });
+    });
+
+    it('should use short names for LIS and SYNAPSE', () => {
+      expect(ENRICHMENT_TOOLS.LIS).toMatch(/^[a-z]+$/);
+      expect(ENRICHMENT_TOOLS.SYNAPSE).toMatch(/^[a-z]+$/);
     });
   });
 

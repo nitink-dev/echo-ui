@@ -114,4 +114,71 @@ describe('useScannerForm Hook', () => {
     
     expect(result.current.formData.dicomStore).toBe('');
   });
+
+  test('getChangedFields returns only modified fields in edit mode', () => {
+    const scanner = {
+      name: 'Scanner A',
+      aeTitle: 'SCAN_AE',
+      deviceSerialNumber: 'SERIAL-12345',
+      hospitalName: 'Hospital',
+      department: 'Radiology',
+      location: 'Room 1',
+      dicomStore: 'store1',
+    };
+    const { result } = renderHook(() => useScannerForm(scanner as any));
+
+    act(() => {
+      result.current.handleInputChange('name', 'Scanner B');
+    });
+
+    expect(result.current.getChangedFields()).toEqual({ name: 'Scanner B' });
+  });
+
+  test('handles boolean toggles for research and connected', () => {
+    const { result } = renderHook(() => useScannerForm());
+
+    act(() => {
+      result.current.handleInputChange('research', true);
+      result.current.handleInputChange('connected', true);
+    });
+
+    expect(result.current.formData.research).toBe(true);
+    expect(result.current.formData.connected).toBe(true);
+    expect(result.current.isDirty).toBe(true);
+  });
+
+  test('setFieldError adds and clears field errors', () => {
+    const { result } = renderHook(() => useScannerForm());
+
+    act(() => {
+      result.current.setFieldError('name', 'Name is invalid');
+    });
+    expect(result.current.errors.name).toBe('Name is invalid');
+
+    act(() => {
+      result.current.setFieldError('name', '');
+    });
+    expect(result.current.errors.name).toBeUndefined();
+  });
+
+  test('resetForm restores scanner data in edit mode', () => {
+    const scanner = {
+      name: 'Scanner A',
+      aeTitle: 'SCAN_AE',
+      deviceSerialNumber: 'SERIAL-12345',
+      hospitalName: 'Hospital',
+      department: 'Radiology',
+      location: 'Room 1',
+      dicomStore: 'store1',
+    };
+    const { result } = renderHook(() => useScannerForm(scanner as any));
+
+    act(() => {
+      result.current.handleInputChange('name', 'Changed');
+      result.current.resetForm();
+    });
+
+    expect(result.current.formData.name).toBe('Scanner A');
+    expect(result.current.isDirty).toBe(false);
+  });
 });
