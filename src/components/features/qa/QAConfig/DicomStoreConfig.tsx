@@ -30,8 +30,8 @@ export function DicomStoreConfig({
 
   const { canAccess } = usePermissions();
 
-  const { inProgressCunt} = useSlideScan();
-  const isScanInProgress = inProgressCunt > 0;
+  const { inProgressCount} = useSlideScan();
+  const isScanInProgress = inProgressCount > 0;
 
     useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);

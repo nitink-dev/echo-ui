@@ -58,3 +58,11 @@ export const normalizeToArray = (value: any): string[] => {
     downloadFile(url, filename);
     window.URL.revokeObjectURL(url);
   };
+
+  export const toTitleCase = (str = "") =>
+  str
+    .replace(/-/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+    .join(" ");

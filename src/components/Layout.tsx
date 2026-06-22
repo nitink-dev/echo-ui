@@ -109,7 +109,7 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const { canAccess } = usePermissions();
   const permissionMap = buildPermissionMap(canAccess);
 
-  // Finds which top-level section a given page id belongs to
+ 
   const findSectionForPage = (page: string) =>
     navigationItems.find((section) =>
       section.children?.some((item) => item.id === page),
@@ -123,8 +123,6 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
       : defaults;
   });
 
-  // Whenever currentPage changes (login, refresh, deep-link, programmatic nav),
-  // make sure its parent section is expanded.
   useEffect(() => {
     const activeSection = findSectionForPage(currentPage);
     if (activeSection) {

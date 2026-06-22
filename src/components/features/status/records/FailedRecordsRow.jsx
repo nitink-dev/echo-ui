@@ -3,6 +3,7 @@ import { CheckCircle2, XCircle, Clock, X, Eye } from "lucide-react";
 import { BASE_URL } from "../../../../utils/constants";
 import { toast } from "sonner";
 import apiClient from "../../../../api/services/apiClient";
+import {toTitleCase} from "../../../../utils/helpers";
 
 export function FailedRecordsRow({ record, index }) {
   const [showPopup, setShowPopup] = useState(false);
@@ -113,7 +114,7 @@ export function FailedRecordsRow({ record, index }) {
           >
             <StatusIcon className={`h-3.5 w-3.5 ${config.color}`} />
             <span className={`text-xs font-medium ${config.color} capitalize`}>
-              {record.scanStatus.replace("-", " ")}
+              {toTitleCase( record.scanStatus.replace("-", " "))}           
             </span>
           </div>
         </td>

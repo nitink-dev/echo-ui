@@ -62,7 +62,7 @@ const INITIAL_FORM: FormState = {
 
 export function LisConfig() {
   const dispatch = useAppDispatch();
-  const { lisConnector, loading } = useSelector((s: any) => s.ehTools || {});
+  const { lis, loading } = useSelector((s: any) => s.ehTools || {});
 
   const { canAccess } = usePermissions();
   const canEditLis = canAccess(
@@ -97,18 +97,18 @@ export function LisConfig() {
   useRefetchOnFocus([() => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS })]);
 
   useEffect(() => {
-    if (!lisConnector || Object.keys(lisConnector).length === 0 || initialized)
+    if (!lis || Object.keys(lis).length === 0 || initialized)
       return;
     const newData: FormState = {
-      applicationName: lisConnector.receivingAppName || "",
-      ipAddress: lisConnector.ipAddress || "",
-      receivingFacility: lisConnector.receivingFacility || "",
+      applicationName: lis.receivingAppName || "",
+      ipAddress: lis.ipAddress || "",
+      receivingFacility: lis.receivingFacility || "",
     };
     setForm(newData);
     setOriginalForm(newData);
     setInitialized(true);
     setCardError(null);
-  }, [lisConnector, initialized]);
+  }, [lis, initialized]);
 
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {

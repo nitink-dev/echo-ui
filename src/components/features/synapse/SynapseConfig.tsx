@@ -179,11 +179,11 @@ export function SynapseConfig() {
           const newData: FormState = {
             applicationName: result.receivingAppName || "",
             ipAddress: result.ipAddress || "",
-            receivingPort: result["receive-port"]?.toString() || "",
+            receivingPort: result["synapse-receive-port"]?.toString() || "",
             networkFolder: result.synapseServerFolder || "",
             receivingFacility: result.receivingFacility || "",
-            imsName: result.imsName || "",
-            networkFolder2: result.networkFolder2 || "",
+            imsName: result["ims-name"]?.toString() || "",
+            networkFolder2: result.synapseServerFolder2 || "",
           };
           setForm(newData);
           setOriginalForm(newData);

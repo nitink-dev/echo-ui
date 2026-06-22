@@ -38,10 +38,10 @@ ReactDOM.createRoot(
 ).render(
   <Provider store={store}>    
   {/* comment this when banner functionality not needed */}
-       {/* <SlideScanProvider>    */}
+       <SlideScanProvider>   
         <PermissionWrapper>
           <App />
       </PermissionWrapper>
-   {/* </SlideScanProvider>     */}
+    </SlideScanProvider>   
   </Provider>
 );

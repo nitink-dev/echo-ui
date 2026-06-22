@@ -11,14 +11,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "../../../ui/tooltip";
-
-const toTitleCase = (str = "") =>
-  str
-    .replace(/-/g, " ")
-    .split(" ")
-    .filter(Boolean)
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-    .join(" ");
+import { toTitleCase } from "../../../../utils/helpers";
 
 export function CompletedRecordsRow({ record, index }) {
   const statusConfig = {

@@ -27,7 +27,6 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
-import { SCANNER_SERVICE_URL } from "./api/services/scannerService";
 import { API_URLS } from "./auth/permissions/apiConfig";
 
 const VALID_PAGES: PageType[] = [
@@ -43,20 +42,36 @@ function PageLoader() {
   );
 }
 
+const STORAGE_KEY_PREFIX = "currentPage:";
+
+const normalizeStoredPage = (page: string | null): PageType => {
+  const safePage = page && VALID_PAGES.includes(page as PageType)
+    ? (page as PageType)
+    : "slide-status";
+
+  return safePage === "view" || safePage === "edit"
+    ? "list"
+    : safePage;
+};
+
+const getSavedPageForUser = (user: string | null): PageType =>
+  normalizeStoredPage(localStorage.getItem(`${STORAGE_KEY_PREFIX}${user}`));
+
+const savePageForCurrentUser = (page: PageType): PageType => {
+  const user = localStorage.getItem("auth_user");
+  const normalizedPage = normalizeStoredPage(page);
+  if (user) {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${user}`, normalizedPage);
+  }
+  return normalizedPage;
+};
+
 export default function App() {
   const dispatch = useAppDispatch();
 
-  const getInitialPage = (): PageType => {
-  const user = localStorage.getItem("auth_user");
-  if (!user) return "slide-status"; 
-
-  const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
-  return saved && VALID_PAGES.includes(saved)
-    ? saved
-    : "slide-status"; 
-};
-
-  const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
+  const [currentPage, setCurrentPage] = useState<PageType>(() =>
+    getSavedPageForUser(localStorage.getItem("auth_user"))
+  );
   const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
   const isNavigating = useRef(false);
 
@@ -92,23 +107,29 @@ export default function App() {
     if (isLoggedIn && currentPage === "list") {
       dispatch(fetchScanners());
     }
-  }, [currentPage]);
+  }, [currentPage, dispatch, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     const handlePopState = (event: PopStateEvent) => {
       if (isNavigating.current) return;
-      const page = (event.state?.page as PageType) || "slide-status";
-      const safePage: PageType =
-        page === "view" || page === "edit" ? "list" : page;
-      localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, safePage);
-      setCurrentPage(safePage);
+      const page = (event.state?.page as string) || "slide-status";
+      const normalizedPage = normalizeStoredPage(page);
+      savePageForCurrentUser(normalizedPage);
+      setCurrentPage(normalizedPage);
       setSelectedScanner(null);
     };
 
     window.addEventListener("popstate", handlePopState);
     return () => window.removeEventListener("popstate", handlePopState);
+  }, [isLoggedIn]);
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      const savedPage = getSavedPageForUser(localStorage.getItem("auth_user"));
+      setCurrentPage(savedPage);
+    }
   }, [isLoggedIn]);
 
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
@@ -117,14 +138,14 @@ export default function App() {
       return;
     }
 
-    const storePage = page === "login" ? "list" : page;
-    localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, storePage);
+    const normalizedPage = normalizeStoredPage(page);
+    savePageForCurrentUser(normalizedPage);
 
     isNavigating.current = true;
-    window.history.pushState({ page: storePage }, "", window.location.pathname);
+    window.history.pushState({ page: normalizedPage }, "", window.location.pathname);
     isNavigating.current = false;
 
-    setCurrentPage(storePage as PageType);
+    setCurrentPage(normalizedPage);
     setSelectedScanner(scanner || null);
   };
 
