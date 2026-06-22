@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAppDispatch } from "./useAppDispatch";
+import { useAppDispatch } from "../hooks";
 import { clearAuthState } from "../store/slices/authSlice";
 
 const SESSION_CHANNEL = "app_session";
