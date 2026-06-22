@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useAppDispatch } from "./index";
+import { useAppDispatch } from "../hooks";
 import { createAsyncThunk } from "@reduxjs/toolkit";
 
 export function useRefetchOnFocus(fetchActions: (() => any)[]) {
