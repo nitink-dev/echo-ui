@@ -11,6 +11,14 @@ export const useSlideScan = () => useContext(SlideScanContext);
 
 const pageSize = 10;
 
+const TERMINAL_STATUSES = new Set([
+  "completed",
+  "failed",
+  "warning-completed",
+  "ibex-warning-completed",
+  "synapse-export-failed",
+]);
+
 const normalisePageable = (data: any) => {
   if (!data) return data;
   const totalElements = Number.isFinite(Number(data.totalElements))
@@ -33,6 +41,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
+  const trackedSlidesRef = useRef<Set<string>>(new Set());
 
   const cleanup = () => {
     eventSourceRef.current?.close();
@@ -43,23 +52,37 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateCountFromSSE = (slideData: any) => {
-    const status = (slideData?.scanStatus ?? "")
-      .toString()
-      .trim()
-      .toLowerCase();
+  const updateCountFromSSE = (rawData: any) => {
+    if (!rawData) return;
 
-    setInProgressCount((prev) => {
-      if (status === "completed" || status === "failed") {
-        return Math.max(0, prev - 1);
+    const eventType = (rawData.eventType ?? "").toString().trim().toLowerCase();
+    if (eventType !== "slide_scan_status") return;
+
+    const payload = rawData.payload;
+    if (!payload) return;
+
+    const slideId = payload.id as string;
+    const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
+    if (!slideId) return;
+
+    const isTerminal = TERMINAL_STATUSES.has(scanStatus);
+    const wasTracked = trackedSlidesRef.current.has(slideId);
+
+    if (isTerminal) {
+      if (wasTracked) {
+        trackedSlidesRef.current.delete(slideId);
+        setInProgressCount((prev) => Math.max(0, prev - 1));
       }
-      return prev;
-    });
+    } else {
+      if (!wasTracked) {
+        trackedSlidesRef.current.add(slideId);
+        setInProgressCount((prev) => prev + 1);
+      }
+    }
   };
 
   const connectStream = () => {
     cleanup();
-
     if (!isMountedRef.current) return;
 
     const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress`;
@@ -71,12 +94,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       eventSource.onopen = () => {
         reconnectAttemptsRef.current = 0;
       };
-
-      eventSource.addEventListener("slide_scan_status", (event) => {
-        try {
-          updateCountFromSSE(JSON.parse(event.data));
-        } catch {}
-      });
 
       eventSource.onmessage = (event) => {
         try {
@@ -133,6 +150,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       cleanup();
       setInProgressCount(0);
       reconnectAttemptsRef.current = 0;
+      trackedSlidesRef.current.clear();
       return;
     }
 
@@ -141,7 +159,17 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       .then((res) => {
         if (!isMountedRef.current) return;
         const data = normalisePageable(res.data);
-        setInProgressCount(data?.totalElements ?? 0);
+        const count = data?.totalElements ?? 0;
+        setInProgressCount(count);
+
+        trackedSlidesRef.current.clear();
+        const content: any[] = data?.content ?? [];
+        content.forEach((slide: any) => {
+          if (slide.id) {
+            trackedSlidesRef.current.add(slide.id);
+          }
+        });
+
         connectStream();
       })
       .catch((err) => {
