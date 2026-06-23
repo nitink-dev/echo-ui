@@ -213,59 +213,89 @@ export function SlideScanStatus() {
       fetchData("inProgress", pageSnapshot.inProgress);
   };
 
-  const updateInProgressWithSSE = (slideData) => {
-    const status = (slideData?.scanStatus ?? "")
+  const updateInProgressWithSSE = (eventData) => {
+    const slideData = eventData?.payload;
+  
+    if (!slideData?.id) return;
+  
+    const status = (slideData.scanStatus ?? "")
       .toString()
       .trim()
       .toLowerCase();
-
+  
+    const isTerminal =
+      status === "completed" ||
+      status === "failed" ||
+      status === "warning-completed" ||
+      status === "ibex-warning-completed" ||
+      status === "synapse-export-failed";
+  
     setStatusData((prev) => {
       const currentData = prev.inProgress;
-      if (!currentData || !currentData.content) return prev;
-
+  
+      if (!currentData?.content) return prev;
+  
       let updatedContent = [...currentData.content];
+  
       const existingIndex = updatedContent.findIndex(
         (s) => s.id === slideData.id,
       );
-
-      if (status === "completed") {
-        if (existingIndex !== -1) updatedContent.splice(existingIndex, 1);
-        refreshPanelsForStatus("completed");
-      } else if (status === "failed") {
-        if (existingIndex !== -1) updatedContent.splice(existingIndex, 1);
-        refreshPanelsForStatus("failed");
+  
+      if (isTerminal) {
+        if (existingIndex !== -1) {
+          updatedContent.splice(existingIndex, 1);
+        }
+  
+        if (
+          currentPageRef.current.completed === 0 ||
+          currentPageRef.current.failed === 0
+        ) {
+          setTimeout(() => {
+            fetchData("completed", currentPageRef.current.completed);
+            fetchData("failed", currentPageRef.current.failed);
+          }, 0);
+        }
       } else {
         if (existingIndex !== -1) {
           updatedContent[existingIndex] = {
             ...updatedContent[existingIndex],
             ...slideData,
           };
-        } else {
+        } else if (currentPageRef.current.inProgress === 0) {
           updatedContent.unshift(slideData);
-          if (updatedContent.length > pageSize)
+  
+          if (updatedContent.length > pageSize) {
             updatedContent = updatedContent.slice(0, pageSize);
+          }
         }
       }
-
+  
       const totalElements =
-        status !== "completed" && status !== "failed" && existingIndex === -1
-          ? currentData.totalElements + 1
-          : (status === "completed" || status === "failed") &&
-              existingIndex !== -1
+        isTerminal
+          ? existingIndex !== -1
             ? Math.max(0, currentData.totalElements - 1)
+            : currentData.totalElements
+          : existingIndex === -1
+            ? currentData.totalElements + 1
             : currentData.totalElements;
-
+  
       prevInProgressCountRef.current = totalElements;
-
+  
       return {
         ...prev,
         inProgress: normalisePageable({
           ...currentData,
           content: updatedContent,
           totalElements,
-          totalPages: Math.max(1, Math.ceil(totalElements / pageSize)),
+          totalPages: Math.max(
+            1,
+            Math.ceil(totalElements / pageSize),
+          ),
         }),
-        lastFetched: { ...prev.lastFetched, inProgress: Date.now() },
+        lastFetched: {
+          ...prev.lastFetched,
+          inProgress: Date.now(),
+        },
       };
     });
   };
@@ -293,22 +323,22 @@ export function SlideScanStatus() {
 
       eventSource.addEventListener("slide_scan_status", (event) => {
         try {
-          updateInProgressWithSSE(JSON.parse(event.data));
-        } catch (e) {
-          toast.error(
-            "SSE parse error:" + (e instanceof Error ? e.message : String(e)),
-          );
-        }
+          const parsed = JSON.parse(event.data);
+          updateInProgressWithSSE(parsed);
+        } catch (e) {}
       });
 
       eventSource.onmessage = (event) => {
         try {
-          updateInProgressWithSSE(JSON.parse(event.data));
-        } catch (e) {
-          toast.error(
-            "SSE parse error: " + (e instanceof Error ? e.message : String(e)),
-          );
-        }
+          const parsed = JSON.parse(event.data);
+      
+          if (
+            parsed?.eventType?.toLowerCase() ===
+            "slide_scan_status"
+          ) {
+            updateInProgressWithSSE(parsed);
+          }
+        } catch (e) {}
       };
 
       eventSource.onerror = () => {

@@ -54,33 +54,46 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
   const updateCountFromSSE = (rawData: any) => {
     if (!rawData) return;
-
-    const eventType = (rawData.eventType ?? "").toString().trim().toLowerCase();
+  
+    const eventType = (rawData.eventType ?? "")
+      .toString()
+      .trim()
+      .toLowerCase();
+  
     if (eventType !== "slide_scan_status") return;
-
+  
     const payload = rawData.payload;
-    if (!payload) return;
-
+  
+    if (!payload?.id) return;
+  
     const slideId = payload.id as string;
-    const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
-    if (!slideId) return;
-
+  
+    const scanStatus = (payload.scanStatus ?? "")
+      .toString()
+      .trim()
+      .toLowerCase();
+  
     const isTerminal = TERMINAL_STATUSES.has(scanStatus);
-    
+  
     const wasTracked = trackedSlidesRef.current.has(slideId);
-
+  
     if (isTerminal) {
       if (wasTracked) {
         trackedSlidesRef.current.delete(slideId);
-        setInProgressCount((prev) => Math.max(0, prev - 1));
+  
+        setInProgressCount((prev) =>
+          Math.max(0, prev - 1),
+        );
       }
     } else {
       if (!wasTracked) {
         trackedSlidesRef.current.add(slideId);
+  
         setInProgressCount((prev) => prev + 1);
       }
     }
   };
+
 
   const connectStream = () => {
     cleanup();
