@@ -202,8 +202,7 @@ export function FailedRecordsRow({ record, index }) {
                           </th>
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                             Enriched At
-                          </th>
-                          {/* <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">DICOM Received</th> */}
+                          </th>                         
                           <th className="px-4 py-3 text-left text-sm font-semibold text-gray-700">
                             SOP UID
                           </th>

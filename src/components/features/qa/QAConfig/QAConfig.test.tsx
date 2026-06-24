@@ -9,14 +9,11 @@ import { QAConfig } from './QAConfig';
    - QAConfig uses canWrite
    - QAParameterTable uses canWrite + canDelete
 ========================================================= */
-vi.mock('../../../../auth/permissions/usePermissions', () => ({
+vi.mock('../../../../hooks/usePermissions', () => ({
   usePermissions: () => ({
-    canAccess: () => true,
+    canWrite: () => true,
+    canDelete: () => true,
   }),
-}));
-
-vi.mock('../../status/SlideScanContext', () => ({
-  useSlideScan: () => ({ inProgressCount: 0 }),
 }));
 
 /* =========================================================
@@ -100,4 +97,4 @@ describe('QAConfig Component', () => {
     ).toBeInTheDocument();
   });
 });
-
+``

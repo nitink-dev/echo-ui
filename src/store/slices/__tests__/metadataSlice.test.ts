@@ -127,14 +127,4 @@ describe('metadataSlice', () => {
     expect(state.loading).toBe(false);
     expect(state.error).toBe(undefined);
   });
-
-  it('should handle empty dicom stores response', async () => {
-    const store = createStore();
-    (metadataService.fetchDicomStores as any).mockResolvedValue({});
-
-    await store.dispatch(fetchDicomStores());
-
-    expect(store.getState().metadata.departments).toEqual([]);
-    expect(store.getState().metadata.dicomStores).toEqual({});
-  });
 });

@@ -73,8 +73,7 @@ export function CompletedRecordsRow({ record, index }) {
           {record.deviceSerialNumber}
         </div>
       </td>
-
-      {/* ✅ STATUS CELL WITH WARNING TOOLTIP */}
+        
       <td className="px-3 py-0">
         <TooltipProvider>
           <Tooltip>
@@ -88,7 +87,7 @@ export function CompletedRecordsRow({ record, index }) {
                 <span
                   className={`text-xs font-medium ${config.color}`}
                 >
-                  {toTitleCase(record.scanStatus)}
+                  {toTitleCase(record.scanStatus)}                
                 </span>
               </div>
             </TooltipTrigger>
@@ -107,7 +106,9 @@ export function CompletedRecordsRow({ record, index }) {
                     >
                       {/* Scan Status */}
                       <div className="text-xs font-medium text-orange-800">
-                        {toTitleCase(warning.scanStatus)}
+                        {/* {toTitleCase(warning.scanStatus)} */}
+                        {console.log("record CR: ", record)}
+                          {record.scanStatus}
                       </div>
 
                       {/* Message */}

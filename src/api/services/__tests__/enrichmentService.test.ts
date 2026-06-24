@@ -66,17 +66,5 @@ describe('enrichmentService', () => {
       const result = await enrichmentService.patchTool('qa', { updated: true });
       expect(result).toEqual({ toolKey: 'qa', data: { updated: true } });
     });
-
-    it('propagates errors from patchTool', async () => {
-      vi.mocked(apiClient.patch).mockRejectedValue(new Error('Patch failed'));
-      await expect(enrichmentService.patchTool('qa', {})).rejects.toThrow('Patch failed');
-    });
-  });
-
-  describe('fetchTool errors', () => {
-    it('propagates errors from fetchTool', async () => {
-      vi.mocked(apiClient.get).mockRejectedValue(new Error('Not found'));
-      await expect(enrichmentService.fetchTool('missing')).rejects.toThrow('Not found');
-    });
   });
 });

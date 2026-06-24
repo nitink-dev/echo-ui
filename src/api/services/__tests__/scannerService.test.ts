@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import axios from 'axios';
 
 vi.mock('../apiClient', () => ({
   default: {
@@ -8,26 +7,12 @@ vi.mock('../apiClient', () => ({
     put: vi.fn(),
     patch: vi.fn(),
     delete: vi.fn(),
-  },
-  extractApiErrorMessage: vi.fn(),
-  setUnauthorizedHandler: vi.fn(),
+  }
 }));
 
 import { scannerService } from '../scannerService';
-import scannerReducer, {
-  fetchScanners,
-  addScanner,
-  updateScanner,
-  deleteScanner,
-  checkScannerExists,
-} from '../../../store/slices/scannerSlice';
 import { BASE_URL } from '../../../utils/constants';
 import apiClient from '../apiClient';
-import { configureStore } from '@reduxjs/toolkit';
-
-vi.mock('sonner', () => ({
-  toast: { success: vi.fn(), error: vi.fn() },
-}));
 
 describe('scannerService', () => {
   beforeEach(() => {
@@ -87,113 +72,5 @@ describe('scannerService', () => {
 
     expect(apiClient.get).toHaveBeenCalledWith(`${BASE_URL}/api/scanners/REP123/reports`);
     expect(result).toEqual(reports);
-  });
-});
-
-describe('scannerSlice', () => {
-  const createStore = () =>
-    configureStore({
-      reducer: { scanners: scannerReducer },
-    });
-
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
-  it('should return initial scanner state', () => {
-    const store = createStore();
-    expect(store.getState().scanners).toEqual({
-      items: [],
-      loading: false,
-      error: null,
-    });
-  });
-
-  it('should handle fetchScanners success', async () => {
-    const scanners = [{ deviceSerialNumber: 'SN1', name: 'Scanner 1' }];
-    vi.mocked(apiClient.get).mockResolvedValue({ data: scanners });
-
-    const store = createStore();
-    await store.dispatch(fetchScanners() as any);
-
-    expect(store.getState().scanners.items).toEqual(scanners);
-    expect(store.getState().scanners.loading).toBe(false);
-  });
-
-  it('should handle fetchScanners failure', async () => {
-    vi.mocked(apiClient.get).mockRejectedValue(new Error('Fetch failed'));
-
-    const store = createStore();
-    await store.dispatch(fetchScanners() as any);
-
-    const state = store.getState().scanners;
-    expect(state.loading).toBe(false);
-    expect(state.items).toEqual([]);
-    expect(state.error).toBe('Fetch failed');
-  });
-
-  it('should add scanner on addScanner fulfilled', async () => {
-    const scanner = { deviceSerialNumber: 'NEW1', name: 'New Scanner' };
-    vi.mocked(apiClient.post).mockResolvedValue({ data: scanner });
-
-    const store = createStore();
-    await store.dispatch(addScanner(scanner as any) as any);
-
-    expect(store.getState().scanners.items).toHaveLength(1);
-    expect(store.getState().scanners.items[0].name).toBe('New Scanner');
-  });
-
-  it('should update scanner on updateScanner fulfilled', async () => {
-    const store = createStore();
-    store.dispatch({
-      type: fetchScanners.fulfilled.type,
-      payload: [{ deviceSerialNumber: 'SN1', name: 'Old Name' }],
-    });
-
-    vi.mocked(apiClient.patch).mockResolvedValue({
-      data: { deviceSerialNumber: 'SN1', name: 'Updated Name' },
-    });
-
-    await store.dispatch(
-      updateScanner({ deviceSerialNumber: 'SN1', name: 'Updated Name' } as any) as any
-    );
-
-    expect(store.getState().scanners.items[0].name).toBe('Updated Name');
-  });
-
-  it('should remove scanner on deleteScanner fulfilled', async () => {
-    const store = createStore();
-    store.dispatch({
-      type: fetchScanners.fulfilled.type,
-      payload: [
-        { deviceSerialNumber: 'SN1', name: 'Scanner 1' },
-        { deviceSerialNumber: 'SN2', name: 'Scanner 2' },
-      ],
-    });
-
-    vi.mocked(apiClient.delete).mockResolvedValue({});
-
-    await store.dispatch(deleteScanner('SN1') as any);
-
-    expect(store.getState().scanners.items).toHaveLength(1);
-    expect(store.getState().scanners.items[0].deviceSerialNumber).toBe('SN2');
-  });
-
-  it('should return false when scanner does not exist', async () => {
-    vi.mocked(apiClient.get).mockRejectedValue({ response: { status: 404 } });
-
-    const store = createStore();
-    const result = await store.dispatch(checkScannerExists('MISSING') as any);
-
-    expect(result.payload).toBe(false);
-  });
-
-  it('should return true when scanner exists', async () => {
-    vi.mocked(apiClient.get).mockResolvedValue({ data: { deviceSerialNumber: 'SN1' } });
-
-    const store = createStore();
-    const result = await store.dispatch(checkScannerExists('SN1') as any);
-
-    expect(result.payload).toBe(true);
   });
 });

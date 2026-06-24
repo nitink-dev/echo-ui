@@ -114,6 +114,7 @@ export const StatusPanel = ({
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-100">
+                  {console.log("NULLL key issue data.content: ", data.content)}
                   {data.content.map((record, idx) => (
                     <RunningRecordsRow
                       key={record.id}

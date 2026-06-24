@@ -7,7 +7,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import apiClient from "../../../api/services/apiClient";
 import { BASE_URL } from "../../../utils/constants";
 import AutocompleteInput from "./AutocompleteInput";
@@ -215,37 +214,34 @@ export function SlideScanStatus() {
 
   const updateInProgressWithSSE = (eventData) => {
     const slideData = eventData?.payload;
-  
+
     if (!slideData?.id) return;
-  
-    const status = (slideData.scanStatus ?? "")
-      .toString()
-      .trim()
-      .toLowerCase();
-  
+
+    const status = (slideData.scanStatus ?? "").toString().trim().toLowerCase();
+
     const isTerminal =
       status === "completed" ||
       status === "failed" ||
       status === "warning-completed" ||
       status === "ibex-warning-completed" ||
       status === "synapse-export-failed";
-  
+
     setStatusData((prev) => {
       const currentData = prev.inProgress;
-  
+
       if (!currentData?.content) return prev;
-  
+
       let updatedContent = [...currentData.content];
-  
+
       const existingIndex = updatedContent.findIndex(
         (s) => s.id === slideData.id,
       );
-  
+
       if (isTerminal) {
         if (existingIndex !== -1) {
           updatedContent.splice(existingIndex, 1);
         }
-  
+
         if (
           currentPageRef.current.completed === 0 ||
           currentPageRef.current.failed === 0
@@ -263,34 +259,30 @@ export function SlideScanStatus() {
           };
         } else if (currentPageRef.current.inProgress === 0) {
           updatedContent.unshift(slideData);
-  
+
           if (updatedContent.length > pageSize) {
             updatedContent = updatedContent.slice(0, pageSize);
           }
         }
       }
-  
-      const totalElements =
-        isTerminal
-          ? existingIndex !== -1
-            ? Math.max(0, currentData.totalElements - 1)
-            : currentData.totalElements
-          : existingIndex === -1
-            ? currentData.totalElements + 1
-            : currentData.totalElements;
-  
+
+      const totalElements = isTerminal
+        ? existingIndex !== -1
+          ? Math.max(0, currentData.totalElements - 1)
+          : currentData.totalElements
+        : existingIndex === -1
+          ? currentData.totalElements + 1
+          : currentData.totalElements;
+
       prevInProgressCountRef.current = totalElements;
-  
+
       return {
         ...prev,
         inProgress: normalisePageable({
           ...currentData,
           content: updatedContent,
           totalElements,
-          totalPages: Math.max(
-            1,
-            Math.ceil(totalElements / pageSize),
-          ),
+          totalPages: Math.max(1, Math.ceil(totalElements / pageSize)),
         }),
         lastFetched: {
           ...prev.lastFetched,
@@ -331,11 +323,8 @@ export function SlideScanStatus() {
       eventSource.onmessage = (event) => {
         try {
           const parsed = JSON.parse(event.data);
-      
-          if (
-            parsed?.eventType?.toLowerCase() ===
-            "slide_scan_status"
-          ) {
+
+          if (parsed?.eventType?.toLowerCase() === "slide_scan_status") {
             updateInProgressWithSSE(parsed);
           }
         } catch (e) {}

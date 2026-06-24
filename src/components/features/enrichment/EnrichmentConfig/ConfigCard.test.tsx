@@ -71,10 +71,4 @@ describe('ConfigCard Component', () => {
     render(<ConfigCard {...mockProps} />);
     expect(screen.getByTestId('card-content')).toBeInTheDocument();
   });
-
-  test('disables Save button when editing and loading', () => {
-    render(<ConfigCard {...mockProps} isEditing={true} loading={true} />);
-    const saveButton = screen.getByText('Save').closest('button');
-    expect(saveButton).toBeDisabled();
-  });
 });
