@@ -13,6 +13,7 @@ import AutocompleteInput from "./AutocompleteInput";
 import { StatusPanel } from "./StatusPanel";
 import { StatusPanelCompleted } from "./StatusPanelCompleted";
 import { StatusPanelFailed } from "./StatusPanelFailed";
+import { useSlideScan } from "./SlideScanContext";
 
 const TABS = [
   {
@@ -65,17 +66,46 @@ const TABS = [
   },
 ];
 
-const SCAN_STATUS_TO_TAB = {
+const TERMINAL_STATUSES = new Set([
+  "completed",
+  "failed",
+  "warning-completed",
+  "ibex-warning-completed",
+  "synapse-export-failed",
+  "exported",
+  "synapse-exported",
+]);
+
+const COMPLETED_STATUSES = new Set([
+  "completed",
+  "warning-completed",
+  "ibex-warning-completed",
+  "exported",
+  "synapse-exported",
+]);
+
+const FAILED_STATUSES = new Set([
+  "failed",
+  "synapse-export-failed",
+]);
+
+const SCAN_STATUS_TO_TAB: Record<string, string> = {
   "in-progress": "inProgress",
   inprogress: "inProgress",
   in_progress: "inProgress",
+  "enrichment-in-progress": "inProgress",
   completed: "completed",
+  "warning-completed": "completed",
+  "ibex-warning-completed": "completed",
+  exported: "completed",
+  "synapse-exported": "completed",
   failed: "failed",
+  "synapse-export-failed": "failed",
 };
 
 const pageSize = 9;
 
-const singleSlideToPageable = (slide) => ({
+const singleSlideToPageable = (slide: any) => ({
   content: [slide],
   totalElements: 1,
   totalPages: 1,
@@ -95,7 +125,7 @@ const emptyPageable = () => ({
   hasPrevious: false,
 });
 
-const normalisePageable = (data) => {
+const normalisePageable = (data: any) => {
   if (!data) return data;
   const totalElements = Number.isFinite(Number(data.totalElements))
     ? Number(data.totalElements)
@@ -110,7 +140,9 @@ const normalisePageable = (data) => {
 };
 
 export function SlideScanStatus() {
-  const [statusData, setStatusData] = useState({
+  const { subscribeToSSE } = useSlideScan();
+
+  const [statusData, setStatusData] = useState<any>({
     completed: null,
     failed: null,
     inProgress: null,
@@ -121,35 +153,24 @@ export function SlideScanStatus() {
 
   const [activeTab, setActiveTab] = useState("inProgress");
   const [barcodeFilter, setBarcodeFilter] = useState("");
-  const [appliedFilters, setAppliedFilters] = useState({
-    barcode: "",
-    deviceId: "",
-  });
+  const [appliedFilters, setAppliedFilters] = useState({ barcode: "", deviceId: "" });
   const [searchState, setSearchState] = useState("idle");
-  const [currentPage, setCurrentPage] = useState({
-    completed: 0,
-    failed: 0,
-    inProgress: 0,
-  });
-  const eventSourceRef = useRef(null);
-  const reconnectTimeoutRef = useRef(null);
+  const [currentPage, setCurrentPage] = useState({ completed: 0, failed: 0, inProgress: 0 });
   const [isStreamConnected, setIsStreamConnected] = useState(false);
-  const [reconnectAttempts, setReconnectAttempts] = useState(0);
-  const prevInProgressCountRef = useRef(null);
+
   const currentPageRef = useRef(currentPage);
-  useEffect(() => {
-    currentPageRef.current = currentPage;
-  }, [currentPage]);
+  useEffect(() => { currentPageRef.current = currentPage; }, [currentPage]);
 
   const appliedFiltersRef = useRef(appliedFilters);
-  useEffect(() => {
-    appliedFiltersRef.current = appliedFilters;
-  }, [appliedFilters]);
+  useEffect(() => { appliedFiltersRef.current = appliedFilters; }, [appliedFilters]);
 
-  const toApiStatus = (key) => (key === "inProgress" ? "in-progress" : key);
+  const isSearchActiveRef = useRef(false);
+  useEffect(() => { isSearchActiveRef.current = !!appliedFilters.barcode; }, [appliedFilters]);
 
-  const fetchData = async (statusKey, page, overrideFilters) => {
-    setStatusData((prev) => ({
+  const toApiStatus = (key: string) => (key === "inProgress" ? "in-progress" : key);
+
+  const fetchData = async (statusKey: string, page: number, overrideFilters?: any) => {
+    setStatusData((prev: any) => ({
       ...prev,
       loading: { ...prev.loading, [statusKey]: true },
     }));
@@ -157,42 +178,23 @@ export function SlideScanStatus() {
     try {
       const apiStatus = toApiStatus(statusKey);
       const filters = overrideFilters ?? appliedFiltersRef.current;
-      const barcodeParam = filters.barcode
-        ? `&searchTerm=${encodeURIComponent(filters.barcode)}`
-        : "";
+      const barcodeParam = filters.barcode ? `&searchTerm=${encodeURIComponent(filters.barcode)}` : "";
 
       const url = `${BASE_URL}/api/slide-scan-status/${apiStatus}?page=${page}&size=${pageSize}${barcodeParam}`;
       const response = await apiClient.get(url);
       const data = normalisePageable(response.data);
 
-      setStatusData((prev) => {
-        if (statusKey === "inProgress") {
-          const newCount = data?.totalElements ?? 0;
-          const oldCount = prevInProgressCountRef.current;
-
-          if (oldCount !== null && newCount < oldCount) {
-            const pageSnap = currentPageRef.current;
-            setTimeout(() => {
-              fetchData("completed", pageSnap.completed);
-              fetchData("failed", pageSnap.failed);
-            }, 0);
-          }
-
-          prevInProgressCountRef.current = newCount;
-        }
-
-        return {
-          ...prev,
-          [statusKey]: data,
-          loading: { ...prev.loading, [statusKey]: false },
-          lastFetched: { ...prev.lastFetched, [statusKey]: Date.now() },
-          error: { ...prev.error, [statusKey]: undefined },
-        };
-      });
+      setStatusData((prev: any) => ({
+        ...prev,
+        [statusKey]: data,
+        loading: { ...prev.loading, [statusKey]: false },
+        lastFetched: { ...prev.lastFetched, [statusKey]: Date.now() },
+        error: { ...prev.error, [statusKey]: undefined },
+      }));
 
       return data;
-    } catch (error) {
-      setStatusData((prev) => ({
+    } catch (error: any) {
+      setStatusData((prev: any) => ({
         ...prev,
         [statusKey]: emptyPageable(),
         loading: { ...prev.loading, [statusKey]: false },
@@ -202,203 +204,101 @@ export function SlideScanStatus() {
     }
   };
 
-  const refreshPanelsForStatus = (normalizedStatus) => {
-    const pageSnapshot = currentPageRef.current;
-    if (normalizedStatus === "completed")
-      fetchData("completed", pageSnapshot.completed);
-    else if (normalizedStatus === "failed")
-      fetchData("failed", pageSnapshot.failed);
-    if (pageSnapshot.inProgress !== 0)
-      fetchData("inProgress", pageSnapshot.inProgress);
-  };
+  const applySSEToInProgress = (payload: any) => {
+    if (isSearchActiveRef.current) return;
+    if (!payload?.id) return;
 
-  const updateInProgressWithSSE = (eventData) => {
-    const slideData = eventData?.payload;
+    const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
+    const isTerminal = TERMINAL_STATUSES.has(scanStatus);
 
-    if (!slideData?.id) return;
-
-    const status = (slideData.scanStatus ?? "").toString().trim().toLowerCase();
-
-    const isTerminal =
-      status === "completed" ||
-      status === "failed" ||
-      status === "warning-completed" ||
-      status === "ibex-warning-completed" ||
-      status === "synapse-export-failed";
-
-    setStatusData((prev) => {
+    setStatusData((prev: any) => {
       const currentData = prev.inProgress;
-
       if (!currentData?.content) return prev;
 
-      let updatedContent = [...currentData.content];
-
-      const existingIndex = updatedContent.findIndex(
-        (s) => s.id === slideData.id,
-      );
+      const updatedContent = [...currentData.content];
+      const existingIndex = updatedContent.findIndex((s: any) => s.id === payload.id);
 
       if (isTerminal) {
         if (existingIndex !== -1) {
           updatedContent.splice(existingIndex, 1);
         }
 
-        if (
-          currentPageRef.current.completed === 0 ||
-          currentPageRef.current.failed === 0
-        ) {
-          setTimeout(() => {
-            fetchData("completed", currentPageRef.current.completed);
-            fetchData("failed", currentPageRef.current.failed);
-          }, 0);
+        const newTotal = existingIndex !== -1
+          ? Math.max(0, currentData.totalElements - 1)
+          : currentData.totalElements;
+
+        const needsCompletedRefresh = COMPLETED_STATUSES.has(scanStatus) && currentPageRef.current.completed === 0;
+        const needsFailedRefresh = FAILED_STATUSES.has(scanStatus) && currentPageRef.current.failed === 0;
+
+        if (needsCompletedRefresh) {
+          setTimeout(() => fetchData("completed", currentPageRef.current.completed), 300);
         }
+        if (needsFailedRefresh) {
+          setTimeout(() => fetchData("failed", currentPageRef.current.failed), 300);
+        }
+
+        return {
+          ...prev,
+          inProgress: normalisePageable({
+            ...currentData,
+            content: updatedContent,
+            totalElements: newTotal,
+            totalPages: Math.max(1, Math.ceil(newTotal / pageSize)),
+          }),
+          lastFetched: { ...prev.lastFetched, inProgress: Date.now() },
+        };
       } else {
         if (existingIndex !== -1) {
-          updatedContent[existingIndex] = {
-            ...updatedContent[existingIndex],
-            ...slideData,
-          };
+          updatedContent[existingIndex] = { ...updatedContent[existingIndex], ...payload };
         } else if (currentPageRef.current.inProgress === 0) {
-          updatedContent.unshift(slideData);
-
-          if (updatedContent.length > pageSize) {
-            updatedContent = updatedContent.slice(0, pageSize);
-          }
+          updatedContent.unshift(payload);
+          if (updatedContent.length > pageSize) updatedContent.length = pageSize;
         }
-      }
 
-      const totalElements = isTerminal
-        ? existingIndex !== -1
-          ? Math.max(0, currentData.totalElements - 1)
-          : currentData.totalElements
-        : existingIndex === -1
+        const newTotal = existingIndex === -1
           ? currentData.totalElements + 1
           : currentData.totalElements;
 
-      prevInProgressCountRef.current = totalElements;
-
-      return {
-        ...prev,
-        inProgress: normalisePageable({
-          ...currentData,
-          content: updatedContent,
-          totalElements,
-          totalPages: Math.max(1, Math.ceil(totalElements / pageSize)),
-        }),
-        lastFetched: {
-          ...prev.lastFetched,
-          inProgress: Date.now(),
-        },
-      };
+        return {
+          ...prev,
+          inProgress: normalisePageable({
+            ...currentData,
+            content: updatedContent,
+            totalElements: newTotal,
+            totalPages: Math.max(1, Math.ceil(newTotal / pageSize)),
+          }),
+          lastFetched: { ...prev.lastFetched, inProgress: Date.now() },
+        };
+      }
     });
   };
 
-  const connectToInProgressStream = () => {
-    if (reconnectTimeoutRef.current) {
-      clearTimeout(reconnectTimeoutRef.current);
-      reconnectTimeoutRef.current = null;
-    }
-    if (eventSourceRef.current) {
-      eventSourceRef.current.close();
-      eventSourceRef.current = null;
-    }
-
-    const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress`;
-
-    try {
-      const eventSource = new EventSource(url, { withCredentials: true });
-      eventSourceRef.current = eventSource;
-
-      eventSource.onopen = () => {
-        setIsStreamConnected(true);
-        setReconnectAttempts(0);
-      };
-
-      eventSource.addEventListener("slide_scan_status", (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-          updateInProgressWithSSE(parsed);
-        } catch (e) {}
-      });
-
-      eventSource.onmessage = (event) => {
-        try {
-          const parsed = JSON.parse(event.data);
-
-          if (parsed?.eventType?.toLowerCase() === "slide_scan_status") {
-            updateInProgressWithSSE(parsed);
-          }
-        } catch (e) {}
-      };
-
-      eventSource.onerror = () => {
-        setIsStreamConnected(false);
-        if (eventSource.readyState === EventSource.CLOSED) {
-          setStatusData((prev) => ({
-            ...prev,
-            error: {
-              ...prev.error,
-              inProgress:
-                reconnectAttempts > 3
-                  ? "Stream connection failed. Please refresh manually."
-                  : undefined,
-            },
-          }));
-
-          if (reconnectAttempts < 5) {
-            const delay = Math.min(
-              5000 * Math.pow(2, reconnectAttempts),
-              30000,
-            );
-            reconnectTimeoutRef.current = setTimeout(() => {
-              setReconnectAttempts((prev) => prev + 1);
-              connectToInProgressStream();
-            }, delay);
-          }
-        }
-      };
-    } catch (error) {
-      setStatusData((prev) => ({
-        ...prev,
-        error: {
-          ...prev.error,
-          inProgress: `Connection error: ${error.message}`,
-        },
-      }));
-    }
-  };
+  useEffect(() => {
+    const unsub = subscribeToSSE((payload) => {
+      setIsStreamConnected(true);
+      applySSEToInProgress(payload);
+    });
+    return unsub;
+  }, [subscribeToSSE]);
 
   useEffect(() => {
     fetchData("failed", 0, null);
     fetchData("completed", 0, null);
-    fetchData("inProgress", 0, null).then((data) => {
-      if (data) {
-        prevInProgressCountRef.current = data.totalElements ?? 0;
-        connectToInProgressStream();
-      }
-    });
-
-    return () => {
-      eventSourceRef.current?.close();
-      if (reconnectTimeoutRef.current)
-        clearTimeout(reconnectTimeoutRef.current);
-    };
+    fetchData("inProgress", 0, null);
   }, []);
 
   useEffect(() => {
-    if (currentPage.inProgress !== 0)
-      fetchData("inProgress", currentPage.inProgress, null);
+    if (currentPage.inProgress !== 0) fetchData("inProgress", currentPage.inProgress, null);
   }, [currentPage.inProgress]);
 
   const handleRefresh = () => {
     fetchData("failed", currentPageRef.current.failed, null);
     fetchData("completed", currentPageRef.current.completed, null);
     fetchData("inProgress", currentPageRef.current.inProgress, null);
-    setReconnectAttempts(0);
-    connectToInProgressStream();
   };
 
-  const handlePageChange = (tab, direction) => {
-    const currentPageNum = currentPageRef.current[tab];
+  const handlePageChange = (tab: string, direction: "prev" | "next") => {
+    const currentPageNum = currentPageRef.current[tab as keyof typeof currentPage];
     const totalPages = statusData[tab]?.totalPages ?? 1;
 
     const nextVal = Math.min(currentPageNum + 1, totalPages - 1);
@@ -408,9 +308,7 @@ export function SlideScanStatus() {
     if (newPage === currentPageNum) return;
 
     currentPageRef.current = { ...currentPageRef.current, [tab]: newPage };
-
     setCurrentPage((prev) => ({ ...prev, [tab]: newPage }));
-
     fetchData(tab, newPage, null);
   };
 
@@ -430,7 +328,7 @@ export function SlideScanStatus() {
       const slide = response.data;
 
       if (!slide) {
-        setStatusData((prev) => ({
+        setStatusData((prev: any) => ({
           ...prev,
           inProgress: emptyPageable(),
           completed: emptyPageable(),
@@ -441,35 +339,15 @@ export function SlideScanStatus() {
         return;
       }
 
-      const rawStatus = (slide.scanStatus ?? "")
-        .toString()
-        .trim()
-        .toLowerCase();
+      const rawStatus = (slide.scanStatus ?? "").toString().trim().toLowerCase();
       const matchedTab = SCAN_STATUS_TO_TAB[rawStatus] ?? null;
 
-      const inProgressData =
-        matchedTab === "inProgress"
-          ? singleSlideToPageable(slide)
-          : emptyPageable();
-      const completedData =
-        matchedTab === "completed"
-          ? singleSlideToPageable(slide)
-          : emptyPageable();
-      const failedData =
-        matchedTab === "failed"
-          ? singleSlideToPageable(slide)
-          : emptyPageable();
-
-      setStatusData((prev) => ({
+      setStatusData((prev: any) => ({
         ...prev,
-        inProgress: inProgressData,
-        completed: completedData,
-        failed: failedData,
-        lastFetched: {
-          inProgress: Date.now(),
-          completed: Date.now(),
-          failed: Date.now(),
-        },
+        inProgress: matchedTab === "inProgress" ? singleSlideToPageable(slide) : emptyPageable(),
+        completed: matchedTab === "completed" ? singleSlideToPageable(slide) : emptyPageable(),
+        failed: matchedTab === "failed" ? singleSlideToPageable(slide) : emptyPageable(),
+        lastFetched: { inProgress: Date.now(), completed: Date.now(), failed: Date.now() },
         error: {},
       }));
 
@@ -480,8 +358,8 @@ export function SlideScanStatus() {
         setSearchState("not-found");
         setActiveTab("inProgress");
       }
-    } catch (err) {
-      setStatusData((prev) => ({
+    } catch {
+      setStatusData((prev: any) => ({
         ...prev,
         inProgress: emptyPageable(),
         completed: emptyPageable(),
@@ -511,10 +389,11 @@ export function SlideScanStatus() {
     statusData.loading.completed ||
     statusData.loading.failed ||
     statusData.loading.inProgress;
+
   const isSearchActive = !!appliedFilters.barcode;
   const isSearching = searchState === "searching";
 
-  const getTabCount = (key) => {
+  const getTabCount = (key: string) => {
     const val = statusData[key]?.totalElements;
     return Number.isFinite(Number(val)) ? Number(val) : 0;
   };
@@ -541,7 +420,7 @@ export function SlideScanStatus() {
                 onChange={setBarcodeFilter}
                 placeholder="Search barcode…"
                 emptyText="Enter exact barcode to search"
-                onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
+                onKeyDown={(e: any) => e.key === "Enter" && handleApplyFilters()}
               />
 
               <button
@@ -573,9 +452,7 @@ export function SlideScanStatus() {
               disabled={isAnyLoading}
               className="flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
-              <RefreshCw
-                className={`h-4 w-4 ${isAnyLoading ? "animate-spin" : ""}`}
-              />
+              <RefreshCw className={`h-4 w-4 ${isAnyLoading ? "animate-spin" : ""}`} />
               Refresh
             </button>
           </div>
@@ -588,9 +465,7 @@ export function SlideScanStatus() {
             <code className="px-2 py-0.5 bg-green-100 rounded font-mono text-green-900 text-xs">
               {appliedFilters.barcode}
             </code>
-            <span className="text-green-600">
-              — jumped to the matching tab.
-            </span>
+            <span className="text-green-600">— jumped to the matching tab.</span>
           </div>
         )}
 
@@ -636,24 +511,20 @@ export function SlideScanStatus() {
                         : {}
                     }
                     className={`
-                    relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5
-                    rounded-xl text-sm font-semibold transition-all duration-200 border
-                    ${
-                      isActive
-                        ? `${activeBg} ${activeClass}`
-                        : "text-gray-400 hover:text-gray-600 hover:bg-white/50 border-transparent"
-                    }
-                  `}
+                      relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5
+                      rounded-xl text-sm font-semibold transition-all duration-200 border
+                      ${
+                        isActive
+                          ? `${activeBg} ${activeClass}`
+                          : "text-gray-400 hover:text-gray-600 hover:bg-white/50 border-transparent"
+                      }
+                    `}
                   >
-                    <Icon
-                      className={`h-4 w-4 transition-colors ${isActive ? iconActiveColor : "text-gray-400"}`}
-                    />
+                    <Icon className={`h-4 w-4 transition-colors ${isActive ? iconActiveColor : "text-gray-400"}`} />
                     <span className="tracking-tight">{label}</span>
 
                     <span
-                      style={
-                        isActive ? countActiveBgStyle : countInactiveBgStyle
-                      }
+                      style={isActive ? countActiveBgStyle : countInactiveBgStyle}
                       className="px-2 py-0.5 rounded-full text-xs font-bold transition-colors"
                     >
                       {count}
