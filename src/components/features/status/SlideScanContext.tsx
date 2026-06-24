@@ -1,46 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from "react";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import apiClient from "../../../api/services/apiClient";
 import { BASE_URL } from "../../../utils/constants";
 
-type SSESlidePayload = {
-  id: string;
-  scanStatus: string;
-  slideBarcode?: string;
-  deviceSerialNumber?: string;
-  progressPercent?: number;
-  accessionNumber?: string;
-  seriesId?: string;
-  createdAt?: string;
-  updatedAt?: string;
-  [key: string]: unknown;
-};
-
-type SSEEventListener = (payload: SSESlidePayload) => void;
-
-type SlideScanContextValue = {
-  inProgressCount: number;
-  subscribeToSSE: (listener: SSEEventListener) => () => void;
-};
-
-const SlideScanContext = createContext<SlideScanContextValue>({
+const SlideScanContext = createContext({
   inProgressCount: 0,
-  subscribeToSSE: () => () => {},
 });
 
 export const useSlideScan = () => useContext(SlideScanContext);
 
 const pageSize = 10;
 
-const TERMINAL_STATUSES = new Set([
-  "completed",
-  "failed",
-  "warning-completed",
-  "ibex-warning-completed",
-  "synapse-export-failed",
-  "exported",
-  "synapse-exported",
-]);
+const BANNER_BUFFER_MS = 5 * 60 * 1000;
 
 const normalisePageable = (data: any) => {
   if (!data) return data;
@@ -60,29 +31,16 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useSelector((s: any) => s.auth.isLoggedIn);
 
   const [inProgressCount, setInProgressCount] = useState(0);
-
   const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
-
   const trackedSlidesRef = useRef<Set<string>>(new Set());
-  const listenersRef = useRef<Set<SSEEventListener>>(new Set());
-
-  const subscribeToSSE = useCallback((listener: SSEEventListener) => {
-    listenersRef.current.add(listener);
-    return () => {
-      listenersRef.current.delete(listener);
-    };
-  }, []);
-
-  const broadcast = (payload: SSESlidePayload) => {
-    listenersRef.current.forEach((fn) => {
-      try {
-        fn(payload);
-      } catch {}
-    });
-  };
+  const pendingTerminalTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
+    new Map(),
+  );
 
   const cleanup = () => {
     eventSourceRef.current?.close();
@@ -93,49 +51,55 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const processSSEPayload = (payload: SSESlidePayload) => {
-    if (!payload?.id) return;
-
-    const slideId = payload.id;
-    const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
-    const isTerminal = TERMINAL_STATUSES.has(scanStatus);
-    const wasTracked = trackedSlidesRef.current.has(slideId);
-
-    if (isTerminal) {
-      if (wasTracked) {
-        trackedSlidesRef.current.delete(slideId);
-        setInProgressCount((prev) => Math.max(0, prev - 1));
-      }
-    } else {
-      if (!wasTracked) {
-        trackedSlidesRef.current.add(slideId);
-        setInProgressCount((prev) => prev + 1);
-      }
+  const clearPendingTimer = (slideId: string) => {
+    const existing = pendingTerminalTimersRef.current.get(slideId);
+    if (existing) {
+      clearTimeout(existing);
+      pendingTerminalTimersRef.current.delete(slideId);
     }
-
-    broadcast(payload);
   };
 
-  const handleRawMessage = (rawData: any) => {
+  const updateCountFromSSE = (rawData: any) => {
     if (!rawData) return;
 
     const eventType = (rawData.eventType ?? "").toString().trim().toLowerCase();
 
-    if (eventType === "slide_scan_status") {
-      const payload = rawData.payload as SSESlidePayload;
-      if (payload) processSSEPayload(payload);
-    }
-  };
+    if (eventType !== "slide_scan_status") return;
 
-  const scheduleReconnect = () => {
-    if (!isMountedRef.current) return;
-    const attempts = reconnectAttemptsRef.current;
-    if (attempts >= 5) return;
-    const delay = Math.min(5000 * Math.pow(2, attempts), 30000);
-    reconnectTimeoutRef.current = setTimeout(() => {
-      reconnectAttemptsRef.current += 1;
-      connectStream();
-    }, delay);
+    const payload = rawData.payload;
+
+    if (!payload?.id) return;
+
+    const slideId = payload.id as string;
+
+    const scanStatus = (payload.scanStatus ?? "")
+      .toString()
+      .trim()
+      .toLowerCase();
+
+    const isTerminal = !scanStatus.includes("in") && !scanStatus.includes("progress");
+
+    const wasTracked = trackedSlidesRef.current.has(slideId);
+
+    clearPendingTimer(slideId);
+
+    if (isTerminal) {
+      if (wasTracked) {
+        const timer = setTimeout(() => {
+          pendingTerminalTimersRef.current.delete(slideId);
+          trackedSlidesRef.current.delete(slideId);
+          setInProgressCount((prev) => Math.max(0, prev - 1));
+        }, BANNER_BUFFER_MS);
+
+        pendingTerminalTimersRef.current.set(slideId, timer);
+      }
+    } else {
+      if (!wasTracked) {
+        trackedSlidesRef.current.add(slideId);
+
+        setInProgressCount((prev) => prev + 1);
+      }
+    }
   };
 
   const connectStream = () => {
@@ -154,30 +118,41 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
       eventSource.onmessage = (event) => {
         try {
-          handleRawMessage(JSON.parse(event.data));
+          updateCountFromSSE(JSON.parse(event.data));
         } catch {}
       };
 
-      eventSource.addEventListener("slide_scan_status", (event) => {
-        try {
-          const parsed = JSON.parse((event as MessageEvent).data);
-          const payload = parsed?.payload ?? parsed;
-          if (payload) processSSEPayload(payload);
-        } catch {}
-      });
-
       eventSource.onerror = () => {
         if (!isMountedRef.current) return;
+
         eventSource.close();
         eventSourceRef.current = null;
 
         apiClient
           .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=1`)
-          .then(() => scheduleReconnect())
+          .then(() => {
+            if (!isMountedRef.current) return;
+            const attempts = reconnectAttemptsRef.current;
+            if (attempts < 5) {
+              const delay = Math.min(5000 * Math.pow(2, attempts), 30000);
+              reconnectTimeoutRef.current = setTimeout(() => {
+                reconnectAttemptsRef.current += 1;
+                connectStream();
+              }, delay);
+            }
+          })
           .catch((err) => {
             const status = err?.response?.status;
             if (status === 401 || status === 403) return;
-            scheduleReconnect();
+            if (!isMountedRef.current) return;
+            const attempts = reconnectAttemptsRef.current;
+            if (attempts < 5) {
+              const delay = Math.min(5000 * Math.pow(2, attempts), 30000);
+              reconnectTimeoutRef.current = setTimeout(() => {
+                reconnectAttemptsRef.current += 1;
+                connectStream();
+              }, delay);
+            }
           });
       };
     } catch {}
@@ -188,6 +163,8 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMountedRef.current = false;
       cleanup();
+      pendingTerminalTimersRef.current.forEach((timer) => clearTimeout(timer));
+      pendingTerminalTimersRef.current.clear();
     };
   }, []);
 
@@ -197,24 +174,28 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       setInProgressCount(0);
       reconnectAttemptsRef.current = 0;
       trackedSlidesRef.current.clear();
+      pendingTerminalTimersRef.current.forEach((timer) => clearTimeout(timer));
+      pendingTerminalTimersRef.current.clear();
       return;
     }
 
     apiClient
-      .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=${pageSize}`)
+      .get(
+        `${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=${pageSize}`,
+      )
       .then((res) => {
         if (!isMountedRef.current) return;
-
         const data = normalisePageable(res.data);
-        const totalElements = data?.totalElements ?? 0;
+        const count = data?.totalElements ?? 0;
+        setInProgressCount(count);
 
         trackedSlidesRef.current.clear();
         const content: any[] = data?.content ?? [];
         content.forEach((slide: any) => {
-          if (slide.id) trackedSlidesRef.current.add(slide.id);
+          if (slide.id) {
+            trackedSlidesRef.current.add(slide.id);
+          }
         });
-
-        setInProgressCount(totalElements);
 
         connectStream();
       })
@@ -227,7 +208,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   }, [isLoggedIn]);
 
   return (
-    <SlideScanContext.Provider value={{ inProgressCount, subscribeToSSE }}>
+    <SlideScanContext.Provider value={{ inProgressCount }}>
       {children}
     </SlideScanContext.Provider>
   );
