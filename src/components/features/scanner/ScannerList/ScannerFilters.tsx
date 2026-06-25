@@ -22,8 +22,7 @@ export function ScannerFilters({
   const canCreateScanner = canAccess(API_URLS.scanners.create.path, API_URLS.scanners.create.method);
 
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   return (
     <div className="grid grid-cols-12 gap-6 items-center py-4 min-h-[80px]">

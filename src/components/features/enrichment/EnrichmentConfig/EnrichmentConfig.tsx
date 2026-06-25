@@ -93,8 +93,7 @@ export function EnrichmentToolConfig() {
     email:      canAccess(API_URLS.enrichment.updateTool, { toolKey: ENRICHMENT_TOOLS.EMAIL_SERVICE }),
   };
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false,

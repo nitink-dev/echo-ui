@@ -5,13 +5,15 @@ import { BASE_URL } from "../../../utils/constants";
 
 const SlideScanContext = createContext({
   inProgressCount: 0,
+  isBannerVisible: false,
 });
 
 export const useSlideScan = () => useContext(SlideScanContext);
 
 const pageSize = 10;
-
 const BANNER_BUFFER_MS = 5 * 60 * 1000;
+
+const TERMINAL_STATUSES = new Set(["completed", "failed"]);
 
 const normalisePageable = (data: any) => {
   if (!data) return data;
@@ -31,16 +33,29 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useSelector((s: any) => s.auth.isLoggedIn);
 
   const [inProgressCount, setInProgressCount] = useState(0);
+  const [isBannerVisible, setIsBannerVisible] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
-  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-    null,
-  );
+  const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
   const trackedSlidesRef = useRef<Set<string>>(new Set());
-  const pendingTerminalTimersRef = useRef<Map<string, ReturnType<typeof setTimeout>>>(
-    new Map(),
-  );
+  const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const clearBannerTimer = () => {
+    if (bannerTimerRef.current) {
+      clearTimeout(bannerTimerRef.current);
+      bannerTimerRef.current = null;
+    }
+  };
+
+  const extendBannerVisibility = () => {
+    clearBannerTimer();
+    setIsBannerVisible(true);
+    bannerTimerRef.current = setTimeout(() => {
+      setIsBannerVisible(false);
+      bannerTimerRef.current = null;
+    }, BANNER_BUFFER_MS);
+  };
 
   const cleanup = () => {
     eventSourceRef.current?.close();
@@ -51,52 +66,34 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const clearPendingTimer = (slideId: string) => {
-    const existing = pendingTerminalTimersRef.current.get(slideId);
-    if (existing) {
-      clearTimeout(existing);
-      pendingTerminalTimersRef.current.delete(slideId);
-    }
-  };
-
   const updateCountFromSSE = (rawData: any) => {
     if (!rawData) return;
 
     const eventType = (rawData.eventType ?? "").toString().trim().toLowerCase();
 
-    if (eventType !== "slide_scan_status") return;
+    if (eventType === "heartbeat") return;
 
     const payload = rawData.payload;
-
     if (!payload?.id) return;
 
     const slideId = payload.id as string;
+    const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
+    const isTerminal = TERMINAL_STATUSES.has(scanStatus);
 
-    const scanStatus = (payload.scanStatus ?? "")
-      .toString()
-      .trim()
-      .toLowerCase();
-
-    const isTerminal = !scanStatus.includes("in") && !scanStatus.includes("progress");
+    if (!isTerminal) {
+      extendBannerVisibility();
+    }
 
     const wasTracked = trackedSlidesRef.current.has(slideId);
 
-    clearPendingTimer(slideId);
-
     if (isTerminal) {
       if (wasTracked) {
-        const timer = setTimeout(() => {
-          pendingTerminalTimersRef.current.delete(slideId);
-          trackedSlidesRef.current.delete(slideId);
-          setInProgressCount((prev) => Math.max(0, prev - 1));
-        }, BANNER_BUFFER_MS);
-
-        pendingTerminalTimersRef.current.set(slideId, timer);
+        trackedSlidesRef.current.delete(slideId);
+        setInProgressCount((prev) => Math.max(0, prev - 1));
       }
     } else {
       if (!wasTracked) {
         trackedSlidesRef.current.add(slideId);
-
         setInProgressCount((prev) => prev + 1);
       }
     }
@@ -163,38 +160,34 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     return () => {
       isMountedRef.current = false;
       cleanup();
-      pendingTerminalTimersRef.current.forEach((timer) => clearTimeout(timer));
-      pendingTerminalTimersRef.current.clear();
+      clearBannerTimer();
     };
   }, []);
 
   useEffect(() => {
     if (!isLoggedIn) {
       cleanup();
+      clearBannerTimer();
       setInProgressCount(0);
+      setIsBannerVisible(false);
       reconnectAttemptsRef.current = 0;
       trackedSlidesRef.current.clear();
-      pendingTerminalTimersRef.current.forEach((timer) => clearTimeout(timer));
-      pendingTerminalTimersRef.current.clear();
       return;
     }
 
     apiClient
-      .get(
-        `${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=${pageSize}`,
-      )
+      .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=${pageSize}`)
       .then((res) => {
         if (!isMountedRef.current) return;
         const data = normalisePageable(res.data);
         const count = data?.totalElements ?? 0;
         setInProgressCount(count);
+        if (count > 0) setIsBannerVisible(true);
 
         trackedSlidesRef.current.clear();
         const content: any[] = data?.content ?? [];
         content.forEach((slide: any) => {
-          if (slide.id) {
-            trackedSlidesRef.current.add(slide.id);
-          }
+          if (slide.id) trackedSlidesRef.current.add(slide.id);
         });
 
         connectStream();
@@ -208,7 +201,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   }, [isLoggedIn]);
 
   return (
-    <SlideScanContext.Provider value={{ inProgressCount }}>
+    <SlideScanContext.Provider value={{ inProgressCount, isBannerVisible }}>
       {children}
     </SlideScanContext.Provider>
   );

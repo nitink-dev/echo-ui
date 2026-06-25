@@ -36,8 +36,7 @@ const canCreate = canAccess(API_URLS.qaAnalysis.create.path, API_URLS.qaAnalysis
 const canEdit   = canAccess(API_URLS.qaAnalysis.base.path,   "PATCH");
 const canDelete = canAccess(API_URLS.qaAnalysis.base.path,   "DELETE");
   
-const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+const { isBannerVisible: isScanInProgress } = useSlideScan();
   if (!qaParameters || qaParameters.length === 0) {
     return (
       <div className="text-center py-12">

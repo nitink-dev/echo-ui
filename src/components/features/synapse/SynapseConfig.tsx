@@ -166,8 +166,8 @@ export function SynapseConfig() {
 
   const { canAccess } = usePermissions();
   const canEditSynapse = canAccess(API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE }), API_URLS.enrichment.updateTool.method);
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   useEffect(() => {
     const loadData = async () => {

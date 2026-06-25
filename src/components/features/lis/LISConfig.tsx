@@ -83,8 +83,7 @@ export function LisConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS }))

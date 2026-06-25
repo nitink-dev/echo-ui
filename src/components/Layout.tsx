@@ -250,8 +250,7 @@ export function Layout({
   onNavigate,
 }: LayoutProps) {
   const dispatch = useAppDispatch();
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible : isScanInProgress} = useSlideScan();
 
   const username = useSelector((state: any) => state.auth.displayName) as
     | string
@@ -362,7 +361,7 @@ export function Layout({
               <span className="font-semibold text-white">
                 Scan in progress —{" "}
               </span>
-              {inProgressCount} slide{inProgressCount !== 1 ? "s are" : " is"} currently being scanned. Configuration editing is disabled until all scans complete.
+              Configuration editing is disabled until all scans complete.
             </p>
           </div>
         )}

@@ -86,8 +86,7 @@ export function ScannerTable({
   const [researchMap, setResearchMap] =
     useState<Record<string, boolean>>(initialResearch);
 
-    const { inProgressCount } = useSlideScan();
-    const isScanInProgress = inProgressCount > 0;
+    const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   useEffect(() => setConnectedMap(initialConnected), [initialConnected]);
   useEffect(() => setResearchMap(initialResearch), [initialResearch]);

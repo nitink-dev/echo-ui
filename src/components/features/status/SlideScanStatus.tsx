@@ -218,8 +218,8 @@ export function SlideScanStatus() {
     if (!slideData?.id) return;
 
     const status = (slideData.scanStatus ?? "").toString().trim().toLowerCase();
-
-    const isTerminal = !status.includes("in") && !status.includes("progress");
+    
+    const isTerminal = status === "completed" || status === "failed";
 
     setStatusData((prev) => {
       const currentData = prev.inProgress;

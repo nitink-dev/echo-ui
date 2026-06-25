@@ -53,8 +53,7 @@ export function QAConfig() {
 
   const { canAccess } = usePermissions();
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   return (
     <div className="space-y-6">
