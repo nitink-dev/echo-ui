@@ -4,7 +4,6 @@ import apiClient from "../../../api/services/apiClient";
 import { BASE_URL } from "../../../utils/constants";
 
 const SlideScanContext = createContext({
-  inProgressCount: 0,
   isBannerVisible: false,
 });
 
@@ -12,33 +11,16 @@ export const useSlideScan = () => useContext(SlideScanContext);
 
 const pageSize = 10;
 const BANNER_BUFFER_MS = 5 * 60 * 1000;
-
 const TERMINAL_STATUSES = new Set(["completed", "failed"]);
-
-const normalisePageable = (data: any) => {
-  if (!data) return data;
-  const totalElements = Number.isFinite(Number(data.totalElements))
-    ? Number(data.totalElements)
-    : 0;
-  const totalPages = Number.isFinite(Number(data.totalPages))
-    ? Math.max(1, Number(data.totalPages))
-    : Math.max(1, Math.ceil(totalElements / pageSize));
-  const page = Number.isFinite(Number(data.page ?? data.number))
-    ? Number(data.page ?? data.number)
-    : 0;
-  return { ...data, totalElements, totalPages, page };
-};
 
 export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useSelector((s: any) => s.auth.isLoggedIn);
 
-  const [inProgressCount, setInProgressCount] = useState(0);
   const [isBannerVisible, setIsBannerVisible] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
-  const trackedSlidesRef = useRef<Set<string>>(new Set());
   const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const clearBannerTimer = () => {
@@ -66,7 +48,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const updateCountFromSSE = (rawData: any) => {
+  const updateFromSSE = (rawData: any) => {
     if (!rawData) return;
 
     const eventType = (rawData.eventType ?? "").toString().trim().toLowerCase();
@@ -76,26 +58,11 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     const payload = rawData.payload;
     if (!payload?.id) return;
 
-    const slideId = payload.id as string;
     const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
     const isTerminal = TERMINAL_STATUSES.has(scanStatus);
 
     if (!isTerminal) {
       extendBannerVisibility();
-    }
-
-    const wasTracked = trackedSlidesRef.current.has(slideId);
-
-    if (isTerminal) {
-      if (wasTracked) {
-        trackedSlidesRef.current.delete(slideId);
-        setInProgressCount((prev) => Math.max(0, prev - 1));
-      }
-    } else {
-      if (!wasTracked) {
-        trackedSlidesRef.current.add(slideId);
-        setInProgressCount((prev) => prev + 1);
-      }
     }
   };
 
@@ -115,7 +82,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
       eventSource.onmessage = (event) => {
         try {
-          updateCountFromSSE(JSON.parse(event.data));
+          updateFromSSE(JSON.parse(event.data));
         } catch {}
       };
 
@@ -168,28 +135,17 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     if (!isLoggedIn) {
       cleanup();
       clearBannerTimer();
-      setInProgressCount(0);
       setIsBannerVisible(false);
       reconnectAttemptsRef.current = 0;
-      trackedSlidesRef.current.clear();
       return;
     }
 
     apiClient
-      .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=${pageSize}`)
+      .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=1`)
       .then((res) => {
         if (!isMountedRef.current) return;
-        const data = normalisePageable(res.data);
-        const count = data?.totalElements ?? 0;
-        setInProgressCount(count);
-        if (count > 0) setIsBannerVisible(true);
-
-        trackedSlidesRef.current.clear();
-        const content: any[] = data?.content ?? [];
-        content.forEach((slide: any) => {
-          if (slide.id) trackedSlidesRef.current.add(slide.id);
-        });
-
+        const total = res.data?.totalElements ?? 0;
+        if (total > 0) setIsBannerVisible(true);
         connectStream();
       })
       .catch((err) => {
@@ -201,7 +157,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   }, [isLoggedIn]);
 
   return (
-    <SlideScanContext.Provider value={{ inProgressCount, isBannerVisible }}>
+    <SlideScanContext.Provider value={{ isBannerVisible }}>
       {children}
     </SlideScanContext.Provider>
   );
