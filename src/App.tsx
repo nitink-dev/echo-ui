@@ -57,13 +57,12 @@ const normalizeStoredPage = (page: string | null): PageType => {
 const getSavedPageForUser = (user: string | null): PageType =>
   normalizeStoredPage(localStorage.getItem(`${STORAGE_KEY_PREFIX}${user}`));
 
-const savePageForCurrentUser = (page: PageType): PageType => {
+const savePageForCurrentUser = (page: PageType): void => {
   const user = localStorage.getItem("auth_user");
   const normalizedPage = normalizeStoredPage(page);
   if (user) {
     localStorage.setItem(`${STORAGE_KEY_PREFIX}${user}`, normalizedPage);
   }
-  return normalizedPage;
 };
 
 export default function App() {
@@ -138,14 +137,13 @@ export default function App() {
       return;
     }
 
-    const normalizedPage = normalizeStoredPage(page);
-    savePageForCurrentUser(normalizedPage);
+    savePageForCurrentUser(page);
 
     isNavigating.current = true;
-    window.history.pushState({ page: normalizedPage }, "", window.location.pathname);
+    window.history.pushState({ page }, "", window.location.pathname);
     isNavigating.current = false;
 
-    setCurrentPage(normalizedPage);
+    setCurrentPage(page);
     setSelectedScanner(scanner || null);
   };
 
@@ -186,7 +184,7 @@ export default function App() {
       return;
     }
     try {
-      await dispatch(deleteScanner(id));     
+      await dispatch(deleteScanner(id));
     } catch (err: any) {
       toast.error(err.message || "Error deleting scanner");
     }
@@ -206,10 +204,8 @@ export default function App() {
             }
           )
         );
-      
       } else {
         await dispatch(addScanner(sanitizedData as Omit<SlideScanner, "id">));
-     
       }
 
       navigateToPage("list");
