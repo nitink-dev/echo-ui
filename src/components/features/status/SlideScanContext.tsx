@@ -55,6 +55,11 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
     if (eventType === "heartbeat") return;
 
+    if (eventType === "research") {
+      extendBannerVisibility();
+      return;
+    }
+
     const payload = rawData.payload;
     if (!payload?.id) return;
 
