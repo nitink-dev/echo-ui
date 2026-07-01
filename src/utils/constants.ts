@@ -1,6 +1,11 @@
 
 export const BASE_URL = import.meta.env.VITE_API_URL ;
 
+if (!BASE_URL) {
+  console.warn('BASE_URL is empty. Check .env variables.');
+}
+
+
 export const REQUIRED_SCANNER_FIELDS = [
   'name',
   'aeTitle',

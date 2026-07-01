@@ -282,6 +282,7 @@ export function SynapseConfig() {
   );
 
   const handleEdit = (enable: boolean) => {
+    console.log("handleEdit called with enable:", enable, "isScanInProgress:", isScanInProgress);
     if (enable && isScanInProgress) {
       toast.warning(
         "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",

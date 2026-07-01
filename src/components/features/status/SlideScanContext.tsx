@@ -9,14 +9,21 @@ const SlideScanContext = createContext({
 
 export const useSlideScan = () => useContext(SlideScanContext);
 
-const pageSize = 10;
-const BANNER_BUFFER_MS = 5 * 60 * 1000;
+const getNumberEnv = (key: string, def: number) => {
+  const val = Number(import.meta.env[key]);
+  return Number.isFinite(val) && val > 0 ? val : def;
+};
+
+export const BANNER_BUFFER_MS =
+  getNumberEnv('VITE_BANNER_TIMEOUT_MIN', 1) * 60 * 1000;
+
 const TERMINAL_STATUSES = new Set(["completed", "failed"]);
 
 export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useSelector((s: any) => s.auth.isLoggedIn);
 
   const [isBannerVisible, setIsBannerVisible] = useState(false);
+
   const eventSourceRef = useRef<EventSource | null>(null);
   const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const reconnectAttemptsRef = useRef(0);
@@ -55,7 +62,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
     if (eventType === "heartbeat") return;
 
-    if (eventType === "research") {
+    if (eventType === "research_event") {
       extendBannerVisibility();
       return;
     }
@@ -149,8 +156,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=1`)
       .then((res) => {
         if (!isMountedRef.current) return;
-        const total = res.data?.totalElements ?? 0;
-        if (total > 0) setIsBannerVisible(true);
         connectStream();
       })
       .catch((err) => {
@@ -167,3 +172,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     </SlideScanContext.Provider>
   );
 }
+
+
+

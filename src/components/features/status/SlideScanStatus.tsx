@@ -73,7 +73,7 @@ const SCAN_STATUS_TO_TAB = {
   failed: "failed",
 };
 
-const pageSize = 9;
+const pageSize = 10;
 
 const singleSlideToPageable = (slide) => ({
   content: [slide],

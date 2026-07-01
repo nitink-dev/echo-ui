@@ -106,9 +106,7 @@ export function CompletedRecordsRow({ record, index }) {
                     >
                       {/* Scan Status */}
                       <div className="text-xs font-medium text-orange-800">
-                        {/* {toTitleCase(warning.scanStatus)} */}
-                        {console.log("record CR: ", record)}
-                          {record.scanStatus}
+                         {toTitleCase(warning.scanStatus)} 
                       </div>
 
                       {/* Message */}

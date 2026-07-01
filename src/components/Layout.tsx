@@ -252,6 +252,7 @@ export function Layout({
   const dispatch = useAppDispatch();
   const { isBannerVisible : isScanInProgress} = useSlideScan();
 
+
   const username = useSelector((state: any) => state.auth.displayName) as
     | string
     | null;
@@ -349,7 +350,7 @@ export function Layout({
             </DropdownMenu>
           </div>
         </div>
-
+        {console.log("isScanInProgress in Layout:", isScanInProgress)}
         {isScanInProgress && (
           <div className="w-full bg-[#1a3a5c] border-b border-[#1e4976] flex items-center gap-3 px-6 py-2">
             <span className="relative flex h-3 w-3 shrink-0">

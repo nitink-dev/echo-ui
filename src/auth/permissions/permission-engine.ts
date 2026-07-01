@@ -34,14 +34,17 @@ export class PermissionEngine {
     return hasScope;
   }
 
-  private find(api: string, method: string): SecurityConfigEntry | undefined {
-    const candidates = this.apiConfig.filter(cfg =>
-      cfg.methods.includes(method.toUpperCase()) && this.matches(cfg.api, api)
-    );
-    if (candidates.length === 0) return undefined;
-    const exact = candidates.find(cfg => cfg.api === api);
-    if (exact) return exact;
-    return candidates.sort((a, b) => b.api.length - a.api.length)[0];
+  private find(
+    api: string,
+    method: string
+  ): SecurityConfigEntry | undefined {
+
+    const result = this.apiConfig.find(cfg => {
+      const methodMatch = cfg.methods.includes(method.toUpperCase());
+      const apiMatch = this.matches(cfg.api, api);
+      return methodMatch && apiMatch;
+    });
+    return result;
   }
 
   private matches(
