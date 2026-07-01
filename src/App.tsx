@@ -28,6 +28,8 @@ import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
 import { API_URLS } from "./auth/permissions/apiConfig";
+import { useIdleTimeout } from "./hooks/useIdleTimeout";
+import { IdleTimeoutModal } from "./components/common/TimeoutModal/IdleTimeoutModal";
 
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
@@ -81,6 +83,10 @@ export default function App() {
   const currentUser = useSelector((state: any) => state.auth.user);
 
   useCrossTabAuth(currentUser);
+  const idleTimeoutMinutes = Number(import.meta.env.VITE_IDLE_TIMEOUT_MINUTES ?? 2);
+  const { isIdle, resetTimer } = useIdleTimeout( isLoggedIn ? idleTimeoutMinutes : 0 );
+  const handleIdleContinue = () => resetTimer();
+  const handleIdleLogout = async () => { await dispatch(logoutUser()); };
   const { canAccess, configLoaded } = usePermissions();
   const canGetScanners = canAccess(API_URLS.scanners.base.path, API_URLS.scanners.base.method);
   const canEditScanners = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
@@ -367,6 +373,12 @@ export default function App() {
           },
         }}
       />
+       {isLoggedIn && isIdle && (
+        <IdleTimeoutModal
+          onContinue={handleIdleContinue}
+          onLogout={handleIdleLogout}
+        />
+      )}
     </div>
   );
 }
