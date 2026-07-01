@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { setUnauthorizedHandler } from "./api/services/apiClient";
@@ -83,10 +83,24 @@ export default function App() {
   const currentUser = useSelector((state: any) => state.auth.user);
 
   useCrossTabAuth(currentUser);
-  const idleTimeoutMinutes = Number(import.meta.env.VITE_IDLE_TIMEOUT_MINUTES ?? 2);
-  const { isIdle, resetTimer } = useIdleTimeout( isLoggedIn ? idleTimeoutMinutes : 0 );
-  const handleIdleContinue = () => resetTimer();
-  const handleIdleLogout = async () => { await dispatch(logoutUser()); };
+  
+  const sessionTimeoutMinutes = useSelector(
+    (state: any) => state.auth.sessionTimeoutMinutes  
+  );
+
+  const handleIdleLogout = useCallback(async () => {
+    await dispatch(logoutUser());
+  }, [dispatch]);
+
+  const { isIdle, secondsLeft, countdownSeconds, resetTimer, dismissModal } =
+  useIdleTimeout({
+    sessionTimeoutMinutes: isLoggedIn ? sessionTimeoutMinutes : 0,
+    onAutoLogout: handleIdleLogout,
+  });
+
+  const handleIdleContinue = () => resetTimer();  
+  const handleIdleCancel   = () => dismissModal(); 
+
   const { canAccess, configLoaded } = usePermissions();
   const canGetScanners = canAccess(API_URLS.scanners.base.path, API_URLS.scanners.base.method);
   const canEditScanners = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
@@ -373,10 +387,12 @@ export default function App() {
           },
         }}
       />
-       {isLoggedIn && isIdle && (
+      {isLoggedIn && isIdle && (
         <IdleTimeoutModal
+          secondsLeft={secondsLeft}
+          totalSeconds={countdownSeconds}
           onContinue={handleIdleContinue}
-          onLogout={handleIdleLogout}
+          onCancel={handleIdleCancel}
         />
       )}
     </div>
