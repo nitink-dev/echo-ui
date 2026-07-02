@@ -3,10 +3,10 @@ import { Clock } from "lucide-react";
 import { Button } from "../../ui/button";
 
 interface IdleTimeoutModalProps {
-  secondsLeft:      number;
-  totalSeconds:     number;
-  onContinue:       () => void; 
-  onCancel:         () => void; 
+  secondsLeft:  number;
+  totalSeconds: number;
+  onContinue:   () => void;
+  onCancel:     () => void;
 }
 
 export function IdleTimeoutModal({
@@ -15,25 +15,29 @@ export function IdleTimeoutModal({
   onContinue,
   onCancel,
 }: IdleTimeoutModalProps) {
-  const isUrgent      = secondsLeft <= Math.round(totalSeconds * 0.2); 
+  const isUrgent      = secondsLeft <= Math.round(totalSeconds * 0.2);
   const progressWidth = Math.max(0, (secondsLeft / totalSeconds) * 100);
-
-  const mins = Math.floor(secondsLeft / 60);
-  const secs = secondsLeft % 60;
-  const display = mins > 0
-    ? `${mins}:${String(secs).padStart(2, "0")}`
-    : `${secs}s`;
+  const mins          = Math.floor(secondsLeft / 60);
+  const secs          = secondsLeft % 60;
+  const display       = mins > 0 ? `${mins}:${String(secs).padStart(2, "0")}` : `${secs}s`;
 
   return (
+    
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="idle-title"
       aria-describedby="idle-desc"
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+      onMouseDown={(e) => e.stopPropagation()} 
+      onClick={(e) => e.stopPropagation()}
     >
-      <div className="bg-white rounded-xl border border-gray-200 shadow-sm w-[380px] overflow-hidden">
-
+      {/* Card — stop event bubbling to backdrop too */}
+      <div
+        className="bg-white rounded-xl border border-gray-200 shadow-sm w-[380px] overflow-hidden"
+        onMouseDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="px-6 py-5 border-b border-gray-200 flex items-center gap-3">
           <div className="flex items-center justify-center w-9 h-9 rounded-full bg-amber-50 border border-amber-200 shrink-0">
@@ -69,11 +73,11 @@ export function IdleTimeoutModal({
         {/* Body */}
         <div className="px-6 py-4">
           <p id="idle-desc" className="text-sm text-gray-600 leading-relaxed text-center">
-            Your session will automatically expire due to inactivity.
-            Click <span className="font-medium text-gray-800">OK</span> to
-            stay logged in, or{" "}
-            <span className="font-medium text-gray-800">Cancel</span> to
-            let the session expire.
+            Your session will automatically expire due to inactivity. Click{" "}
+            <span className="font-medium text-gray-800">OK</span> to stay
+            logged in, or{" "}
+            <span className="font-medium text-gray-800">Cancel</span> to let
+            the session expire.
           </p>
         </div>
 
@@ -93,7 +97,6 @@ export function IdleTimeoutModal({
             OK
           </Button>
         </div>
-
       </div>
     </div>
   );
