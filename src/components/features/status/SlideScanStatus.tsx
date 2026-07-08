@@ -218,7 +218,7 @@ export function SlideScanStatus() {
     if (!slideData?.id) return;
 
     const status = (slideData.scanStatus ?? "").toString().trim().toLowerCase();
-    
+
     const isTerminal = status === "completed" || status === "failed";
 
     setStatusData((prev) => {
@@ -235,16 +235,6 @@ export function SlideScanStatus() {
       if (isTerminal) {
         if (existingIndex !== -1) {
           updatedContent.splice(existingIndex, 1);
-        }
-
-        if (
-          currentPageRef.current.completed === 0 ||
-          currentPageRef.current.failed === 0
-        ) {
-          setTimeout(() => {
-            fetchData("completed", currentPageRef.current.completed);
-            fetchData("failed", currentPageRef.current.failed);
-          }, 0);
         }
       } else {
         if (existingIndex !== -1) {
@@ -271,6 +261,37 @@ export function SlideScanStatus() {
 
       prevInProgressCountRef.current = totalElements;
 
+      let targetUpdate = {};
+
+      if (isTerminal) {
+        const targetData = prev[status];
+        if (targetData?.content && currentPageRef.current[status] === 0) {
+          let targetContent = [...targetData.content];
+          const targetIndex = targetContent.findIndex((s) => s.id === slideData.id);
+
+          if (targetIndex === -1) {
+            targetContent.unshift(slideData);
+            if (targetContent.length > pageSize) {
+              targetContent = targetContent.slice(0, pageSize);
+            }
+          } else {
+            targetContent[targetIndex] = { ...targetContent[targetIndex], ...slideData };
+          }
+
+          const targetTotal =
+            targetIndex === -1 ? targetData.totalElements + 1 : targetData.totalElements;
+
+          targetUpdate = {
+            [status]: normalisePageable({
+              ...targetData,
+              content: targetContent,
+              totalElements: targetTotal,
+              totalPages: Math.max(1, Math.ceil(targetTotal / pageSize)),
+            }),
+          };
+        }
+      }
+
       return {
         ...prev,
         inProgress: normalisePageable({
@@ -279,9 +300,11 @@ export function SlideScanStatus() {
           totalElements,
           totalPages: Math.max(1, Math.ceil(totalElements / pageSize)),
         }),
+        ...targetUpdate,
         lastFetched: {
           ...prev.lastFetched,
           inProgress: Date.now(),
+          ...(isTerminal ? { [status]: Date.now() } : {}),
         },
       };
     });
