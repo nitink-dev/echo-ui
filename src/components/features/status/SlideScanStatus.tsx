@@ -202,16 +202,6 @@ export function SlideScanStatus() {
     }
   };
 
-  const refreshPanelsForStatus = (normalizedStatus) => {
-    const pageSnapshot = currentPageRef.current;
-    if (normalizedStatus === "completed")
-      fetchData("completed", pageSnapshot.completed);
-    else if (normalizedStatus === "failed")
-      fetchData("failed", pageSnapshot.failed);
-    if (pageSnapshot.inProgress !== 0)
-      fetchData("inProgress", pageSnapshot.inProgress);
-  };
-
   const updateInProgressWithSSE = (eventData) => {
     const slideData = eventData?.payload;
 

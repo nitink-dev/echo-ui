@@ -3,9 +3,7 @@ import { useSelector } from "react-redux";
 import apiClient from "../../../api/services/apiClient";
 import { BASE_URL } from "../../../utils/constants";
 
-const SlideScanContext = createContext({
-  isBannerVisible: false,
-});
+const SlideScanContext = createContext({ isBannerVisible: false });
 
 export const useSlideScan = () => useContext(SlideScanContext);
 
@@ -14,10 +12,9 @@ const getNumberEnv = (key: string, def: number) => {
   return Number.isFinite(val) && val > 0 ? val : def;
 };
 
-export const BANNER_BUFFER_MS =
-  getNumberEnv('VITE_BANNER_TIMEOUT_MIN', 5) * 60 * 1000;
+export const BANNER_BUFFER_MS = getNumberEnv('VITE_BANNER_TIMEOUT_MIN', 5) * 60 * 1000;
 
-const TERMINAL_STATUSES = new Set(["completed", "failed"]);
+const BANNER_STORAGE_KEY = "slideScanBannerExpiresAt";
 
 export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useSelector((s: any) => s.auth.isLoggedIn);
@@ -29,7 +26,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
   const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const BANNER_STORAGE_KEY = "slideScanBannerExpiresAt";
 
   const clearBannerTimer = () => {
     if (bannerTimerRef.current) {
@@ -43,6 +39,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     const expiresAt = Date.now() + BANNER_BUFFER_MS;
     localStorage.setItem(BANNER_STORAGE_KEY, String(expiresAt));
     setIsBannerVisible(true);
+
     bannerTimerRef.current = setTimeout(() => {
       localStorage.removeItem(BANNER_STORAGE_KEY);
       setIsBannerVisible(false);
@@ -52,7 +49,10 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
   const restoreBannerFromStorage = () => {
     const stored = localStorage.getItem(BANNER_STORAGE_KEY);
-    if (!stored) return;
+    if (!stored) {
+      setIsBannerVisible(false);
+      return;
+    }
 
     const expiresAt = Number(stored);
     const remaining = expiresAt - Date.now();
@@ -66,6 +66,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       }, remaining);
     } else {
       localStorage.removeItem(BANNER_STORAGE_KEY);
+      setIsBannerVisible(false);
     }
   };
 
@@ -82,23 +83,9 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     if (!rawData) return;
 
     const eventType = (rawData.eventType ?? "").toString().trim().toLowerCase();
-
     if (eventType === "heartbeat") return;
 
-    if (eventType === "research_event") {
-      extendBannerVisibility();
-      return;
-    }
-
-    const payload = rawData.payload;
-    if (!payload?.id) return;
-
-    const scanStatus = (payload.scanStatus ?? "").toString().trim().toLowerCase();
-    const isTerminal = TERMINAL_STATUSES.has(scanStatus);
-
-    if (!isTerminal) {
-      extendBannerVisibility();
-    }
+    extendBannerVisibility();
   };
 
   const connectStream = () => {
@@ -127,32 +114,14 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
         eventSource.close();
         eventSourceRef.current = null;
 
-        apiClient
-          .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=1`)
-          .then(() => {
-            if (!isMountedRef.current) return;
-            const attempts = reconnectAttemptsRef.current;
-            if (attempts < 5) {
-              const delay = Math.min(5000 * Math.pow(2, attempts), 30000);
-              reconnectTimeoutRef.current = setTimeout(() => {
-                reconnectAttemptsRef.current += 1;
-                connectStream();
-              }, delay);
-            }
-          })
-          .catch((err) => {
-            const status = err?.response?.status;
-            if (status === 401 || status === 403) return;
-            if (!isMountedRef.current) return;
-            const attempts = reconnectAttemptsRef.current;
-            if (attempts < 5) {
-              const delay = Math.min(5000 * Math.pow(2, attempts), 30000);
-              reconnectTimeoutRef.current = setTimeout(() => {
-                reconnectAttemptsRef.current += 1;
-                connectStream();
-              }, delay);
-            }
-          });
+        const attempts = reconnectAttemptsRef.current;
+        if (attempts >= 5) return;
+
+        const delay = Math.min(5000 * Math.pow(2, attempts), 30000);
+        reconnectTimeoutRef.current = setTimeout(() => {
+          reconnectAttemptsRef.current += 1;
+          connectStream();
+        }, delay);
       };
     } catch {}
   };
@@ -160,6 +129,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     isMountedRef.current = true;
     restoreBannerFromStorage();
+
     return () => {
       isMountedRef.current = false;
       cleanup();
@@ -174,19 +144,8 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       if (!e.newValue) {
         clearBannerTimer();
         setIsBannerVisible(false);
-        return;
-      }
-
-      const expiresAt = Number(e.newValue);
-      const remaining = expiresAt - Date.now();
-      if (remaining > 0) {
-        clearBannerTimer();
-        setIsBannerVisible(true);
-        bannerTimerRef.current = setTimeout(() => {
-          localStorage.removeItem(BANNER_STORAGE_KEY);
-          setIsBannerVisible(false);
-          bannerTimerRef.current = null;
-        }, remaining);
+      } else {
+        restoreBannerFromStorage();
       }
     };
 
@@ -204,18 +163,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    apiClient
-      .get(`${BASE_URL}/api/slide-scan-status/in-progress?page=0&size=1`)
-      .then((res) => {
-        if (!isMountedRef.current) return;
-        connectStream();
-      })
-      .catch((err) => {
-        const status = err?.response?.status;
-        if (status === 401 || status === 403) return;
-        if (!isMountedRef.current) return;
-        connectStream();
-      });
+    connectStream();
   }, [isLoggedIn]);
 
   return (
