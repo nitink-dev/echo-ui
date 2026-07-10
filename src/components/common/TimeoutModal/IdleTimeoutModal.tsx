@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Clock } from "lucide-react";
 import { Button } from "../../ui/button";
 
@@ -20,6 +20,12 @@ export function IdleTimeoutModal({
   const mins          = Math.floor(secondsLeft / 60);
   const secs          = secondsLeft % 60;
   const display       = mins > 0 ? `${mins}:${String(secs).padStart(2, "0")}` : `${secs}s`;
+
+  useEffect(() => {
+       if (secondsLeft <= 0) {
+      onCancel();
+    }
+  }, [secondsLeft, onCancel]);
 
   return (
     

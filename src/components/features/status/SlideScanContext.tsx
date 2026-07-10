@@ -15,10 +15,9 @@ const getNumberEnv = (key: string, def: number) => {
 };
 
 export const BANNER_BUFFER_MS =
-  getNumberEnv('VITE_BANNER_TIMEOUT_MIN', 1) * 60 * 1000;
+  getNumberEnv('VITE_BANNER_TIMEOUT_MIN', 5) * 60 * 1000;
 
 const TERMINAL_STATUSES = new Set(["completed", "failed"]);
-const BANNER_STORAGE_KEY = "slideScanBannerUntil";
 
 export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const isLoggedIn = useSelector((s: any) => s.auth.isLoggedIn);
@@ -38,29 +37,13 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const hideBanner = () => {
-    setIsBannerVisible(false);
-    localStorage.removeItem(BANNER_STORAGE_KEY);
-    bannerTimerRef.current = null;
-  };
-
   const extendBannerVisibility = () => {
     clearBannerTimer();
     setIsBannerVisible(true);
-    const until = Date.now() + BANNER_BUFFER_MS;
-    localStorage.setItem(BANNER_STORAGE_KEY, String(until));
-    bannerTimerRef.current = setTimeout(hideBanner, BANNER_BUFFER_MS);
-  };
-
-  const restoreBannerVisibility = () => {
-    const stored = Number(localStorage.getItem(BANNER_STORAGE_KEY));
-    if (stored && stored > Date.now()) {
-      clearBannerTimer();
-      setIsBannerVisible(true);
-      bannerTimerRef.current = setTimeout(hideBanner, stored - Date.now());
-    } else if (stored) {
-      localStorage.removeItem(BANNER_STORAGE_KEY);
-    }
+    bannerTimerRef.current = setTimeout(() => {
+      setIsBannerVisible(false);
+      bannerTimerRef.current = null;
+    }, BANNER_BUFFER_MS);
   };
 
   const cleanup = () => {
@@ -153,7 +136,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     isMountedRef.current = true;
-    restoreBannerVisibility();
     return () => {
       isMountedRef.current = false;
       cleanup();
@@ -166,7 +148,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       cleanup();
       clearBannerTimer();
       setIsBannerVisible(false);
-      localStorage.removeItem(BANNER_STORAGE_KEY);
       reconnectAttemptsRef.current = 0;
       return;
     }
@@ -191,3 +172,6 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     </SlideScanContext.Provider>
   );
 }
+
+
+
