@@ -29,6 +29,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   const reconnectAttemptsRef = useRef(0);
   const isMountedRef = useRef(true);
   const bannerTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const BANNER_STORAGE_KEY = "slideScanBannerExpiresAt";
 
   const clearBannerTimer = () => {
     if (bannerTimerRef.current) {
@@ -39,11 +40,33 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
   const extendBannerVisibility = () => {
     clearBannerTimer();
+    const expiresAt = Date.now() + BANNER_BUFFER_MS;
+    localStorage.setItem(BANNER_STORAGE_KEY, String(expiresAt));
     setIsBannerVisible(true);
     bannerTimerRef.current = setTimeout(() => {
+      localStorage.removeItem(BANNER_STORAGE_KEY);
       setIsBannerVisible(false);
       bannerTimerRef.current = null;
     }, BANNER_BUFFER_MS);
+  };
+
+  const restoreBannerFromStorage = () => {
+    const stored = localStorage.getItem(BANNER_STORAGE_KEY);
+    if (!stored) return;
+
+    const expiresAt = Number(stored);
+    const remaining = expiresAt - Date.now();
+
+    if (remaining > 0) {
+      setIsBannerVisible(true);
+      bannerTimerRef.current = setTimeout(() => {
+        localStorage.removeItem(BANNER_STORAGE_KEY);
+        setIsBannerVisible(false);
+        bannerTimerRef.current = null;
+      }, remaining);
+    } else {
+      localStorage.removeItem(BANNER_STORAGE_KEY);
+    }
   };
 
   const cleanup = () => {
@@ -136,6 +159,7 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     isMountedRef.current = true;
+    restoreBannerFromStorage();
     return () => {
       isMountedRef.current = false;
       cleanup();
@@ -144,10 +168,38 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key !== BANNER_STORAGE_KEY) return;
+
+      if (!e.newValue) {
+        clearBannerTimer();
+        setIsBannerVisible(false);
+        return;
+      }
+
+      const expiresAt = Number(e.newValue);
+      const remaining = expiresAt - Date.now();
+      if (remaining > 0) {
+        clearBannerTimer();
+        setIsBannerVisible(true);
+        bannerTimerRef.current = setTimeout(() => {
+          localStorage.removeItem(BANNER_STORAGE_KEY);
+          setIsBannerVisible(false);
+          bannerTimerRef.current = null;
+        }, remaining);
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+    return () => window.removeEventListener("storage", handleStorageChange);
+  }, []);
+
+  useEffect(() => {
     if (!isLoggedIn) {
       cleanup();
       clearBannerTimer();
       setIsBannerVisible(false);
+      localStorage.removeItem(BANNER_STORAGE_KEY);
       reconnectAttemptsRef.current = 0;
       return;
     }
@@ -172,6 +224,3 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
     </SlideScanContext.Provider>
   );
 }
-
-
-
