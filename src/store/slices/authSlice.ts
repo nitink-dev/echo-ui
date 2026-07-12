@@ -85,8 +85,12 @@ export const loadStoredSession = createAsyncThunk(
 export const logoutUser = createAsyncThunk(
   "auth/logoutUser",
   async (_, { dispatch }) => {
-    dispatch(clearAuthState());
-    authService.logout().catch(() => {});
+    try {
+      await authService.logout();
+    } catch {}
+    finally {
+      dispatch(clearAuthState());
+    }
   }
 );
 

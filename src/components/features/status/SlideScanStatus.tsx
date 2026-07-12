@@ -14,16 +14,6 @@ import { StatusPanel } from "./StatusPanel";
 import { StatusPanelCompleted } from "./StatusPanelCompleted";
 import { StatusPanelFailed } from "./StatusPanelFailed";
 
-// ---- Logging helper ---------------------------------------------------
-// Tag: [STATUS][t=Xms][SUBTAG] message
-// Use the SAME clock (performance.now()) as SlideScanContext's [PROVIDER]
-// logs so you can interleave both logs by t= value and see true ordering.
-const slog = (tag: string, ...args: any[]) => {
-  const ts = Math.round(performance.now());
-  // eslint-disable-next-line no-console
-  console.log(`[STATUS][t=${ts}ms][${tag}]`, ...args);
-};
-
 const TABS = [
   {
     key: "inProgress",
@@ -147,30 +137,18 @@ export function SlideScanStatus() {
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const prevInProgressCountRef = useRef(null);
   const currentPageRef = useRef(currentPage);
-  const renderCountRef = useRef(0);
-
-  renderCountRef.current += 1;
-  slog("RENDER", `render #${renderCountRef.current}`, {
-    activeTab,
-    isStreamConnected,
-    reconnectAttempts,
-  });
-
   useEffect(() => {
     currentPageRef.current = currentPage;
-    slog("PAGE-REF-SYNC", "currentPageRef updated to", currentPage);
   }, [currentPage]);
 
   const appliedFiltersRef = useRef(appliedFilters);
   useEffect(() => {
     appliedFiltersRef.current = appliedFilters;
-    slog("FILTERS-REF-SYNC", "appliedFiltersRef updated to", appliedFilters);
   }, [appliedFilters]);
 
   const toApiStatus = (key) => (key === "inProgress" ? "in-progress" : key);
 
   const fetchData = async (statusKey, page, overrideFilters) => {
-    slog("FETCH-START", `fetchData(${statusKey}, page=${page})`, { overrideFilters });
     setStatusData((prev) => ({
       ...prev,
       loading: { ...prev.loading, [statusKey]: true },
@@ -184,19 +162,15 @@ export function SlideScanStatus() {
         : "";
 
       const url = `${BASE_URL}/api/slide-scan-status/${apiStatus}?page=${page}&size=${pageSize}${barcodeParam}`;
-      slog("FETCH-REQUEST", `GET ${url}`);
       const response = await apiClient.get(url);
       const data = normalisePageable(response.data);
-      slog("FETCH-SUCCESS", `${statusKey} totalElements=${data?.totalElements}`, data);
 
       setStatusData((prev) => {
         if (statusKey === "inProgress") {
           const newCount = data?.totalElements ?? 0;
           const oldCount = prevInProgressCountRef.current;
-          slog("FETCH-INPROGRESS-COMPARE", "oldCount=", oldCount, "newCount=", newCount);
 
           if (oldCount !== null && newCount < oldCount) {
-            slog("FETCH-INPROGRESS-COMPARE", "count DECREASED -> scheduling completed/failed refetch");
             const pageSnap = currentPageRef.current;
             setTimeout(() => {
               fetchData("completed", pageSnap.completed);
@@ -218,7 +192,6 @@ export function SlideScanStatus() {
 
       return data;
     } catch (error) {
-      slog("FETCH-ERROR", `${statusKey} failed:`, error?.message || error);
       setStatusData((prev) => ({
         ...prev,
         [statusKey]: emptyPageable(),
@@ -229,47 +202,45 @@ export function SlideScanStatus() {
     }
   };
 
+  const refreshPanelsForStatus = (normalizedStatus) => {
+    const pageSnapshot = currentPageRef.current;
+    if (normalizedStatus === "completed")
+      fetchData("completed", pageSnapshot.completed);
+    else if (normalizedStatus === "failed")
+      fetchData("failed", pageSnapshot.failed);
+    if (pageSnapshot.inProgress !== 0)
+      fetchData("inProgress", pageSnapshot.inProgress);
+  };
+
   const updateInProgressWithSSE = (eventData) => {
-    slog("SSE-APPLY", "updateInProgressWithSSE() called with eventData:", eventData);
     const slideData = eventData?.payload;
 
-    if (!slideData?.id) {
-      slog("SSE-APPLY", "no slideData.id -> ignoring event");
-      return;
-    }
+    if (!slideData?.id) return;
 
     const status = (slideData.scanStatus ?? "").toString().trim().toLowerCase();
-    const isTerminal = status === "completed" || status === "failed" || status === "warning-completed";
-    slog("SSE-APPLY", `slide id=${slideData.id} status="${status}" isTerminal=${isTerminal}`);
+    
+    const isTerminal = status === "completed" || status === "failed" ||  status === "warning-completed" ;
 
     setStatusData((prev) => {
       const currentData = prev.inProgress;
 
-      if (!currentData?.content) {
-        slog("SSE-APPLY", "prev.inProgress.content missing -> no-op, returning prev unchanged");
-        return prev;
-      }
+      if (!currentData?.content) return prev;
 
       let updatedContent = [...currentData.content];
 
       const existingIndex = updatedContent.findIndex(
         (s) => s.id === slideData.id,
       );
-      slog("SSE-APPLY", "existingIndex in inProgress list =", existingIndex);
 
       if (isTerminal) {
         if (existingIndex !== -1) {
           updatedContent.splice(existingIndex, 1);
-          slog("SSE-APPLY", "TERMINAL: removed slide from inProgress content");
-        } else {
-          slog("SSE-APPLY", "TERMINAL: slide was not in current inProgress content (maybe different page)");
         }
 
         if (
           currentPageRef.current.completed === 0 ||
           currentPageRef.current.failed === 0
         ) {
-          slog("SSE-APPLY", "TERMINAL: scheduling completed/failed refetch (page 0 visible)");
           setTimeout(() => {
             fetchData("completed", currentPageRef.current.completed);
             fetchData("failed", currentPageRef.current.failed);
@@ -281,17 +252,12 @@ export function SlideScanStatus() {
             ...updatedContent[existingIndex],
             ...slideData,
           };
-          slog("SSE-APPLY", "NON-TERMINAL: updated existing slide in place");
         } else if (currentPageRef.current.inProgress === 0) {
           updatedContent.unshift(slideData);
-          slog("SSE-APPLY", "NON-TERMINAL: new slide unshifted onto inProgress list");
 
           if (updatedContent.length > pageSize) {
             updatedContent = updatedContent.slice(0, pageSize);
-            slog("SSE-APPLY", "trimmed inProgress content to pageSize=", pageSize);
           }
-        } else {
-          slog("SSE-APPLY", "NON-TERMINAL: new slide but not on page 0 -> not inserted into visible list");
         }
       }
 
@@ -302,8 +268,6 @@ export function SlideScanStatus() {
         : existingIndex === -1
           ? currentData.totalElements + 1
           : currentData.totalElements;
-
-      slog("SSE-APPLY", "new totalElements for inProgress =", totalElements, "(was", currentData.totalElements, ")");
 
       prevInProgressCountRef.current = totalElements;
 
@@ -324,64 +288,46 @@ export function SlideScanStatus() {
   };
 
   const connectToInProgressStream = () => {
-    slog("CONNECT", "connectToInProgressStream() called");
     if (reconnectTimeoutRef.current) {
       clearTimeout(reconnectTimeoutRef.current);
       reconnectTimeoutRef.current = null;
-      slog("CONNECT", "cleared pending reconnect timeout");
     }
     if (eventSourceRef.current) {
-      slog("CONNECT", "closing existing EventSource before reconnecting, readyState=", eventSourceRef.current.readyState);
       eventSourceRef.current.close();
       eventSourceRef.current = null;
     }
 
     const url = `${BASE_URL}/api/slide-scan-status/stream/in-progress`;
-    slog("CONNECT", "opening new EventSource to", url);
 
     try {
       const eventSource = new EventSource(url, { withCredentials: true });
       eventSourceRef.current = eventSource;
-      slog("CONNECT", "EventSource created, initial readyState=", eventSource.readyState);
 
       eventSource.onopen = () => {
-        slog("SSE-OPEN", "EventSource OPENED. readyState=", eventSource.readyState);
         setIsStreamConnected(true);
         setReconnectAttempts(0);
       };
 
       eventSource.addEventListener("slide_scan_status", (event) => {
-        slog("SSE-NAMED-LISTENER", "named event 'slide_scan_status' fired. raw data=", event.data);
         try {
           const parsed = JSON.parse(event.data);
           updateInProgressWithSSE(parsed);
-        } catch (e) {
-          slog("SSE-NAMED-LISTENER", "JSON.parse FAILED:", e);
-        }
+        } catch (e) {}
       });
 
       eventSource.onmessage = (event) => {
-        slog("SSE-ONMESSAGE", "onmessage fired. raw data=", event.data);
         try {
           const parsed = JSON.parse(event.data);
-          slog("SSE-ONMESSAGE", "parsed.eventType=", parsed?.eventType);
 
           if (parsed?.eventType?.toLowerCase() === "slide_scan_status") {
-            slog("SSE-ONMESSAGE", "eventType matches slide_scan_status -> applying via onmessage path");
             updateInProgressWithSSE(parsed);
-          } else {
-            slog("SSE-ONMESSAGE", "eventType does NOT match slide_scan_status -> ignoring (likely heartbeat/research_event)");
           }
-        } catch (e) {
-          slog("SSE-ONMESSAGE", "JSON.parse or handling FAILED:", e);
-        }
+        } catch (e) {}
       };
 
-      eventSource.onerror = (err) => {
-        slog("SSE-ERROR", "onerror fired. readyState=", eventSource.readyState, "(0=CONNECTING,1=OPEN,2=CLOSED)", err);
+      eventSource.onerror = () => {
         setIsStreamConnected(false);
         if (eventSource.readyState === EventSource.CLOSED) {
-          slog("SSE-ERROR", "readyState is CLOSED -> setting error state + scheduling reconnect logic");
           setStatusData((prev) => ({
             ...prev,
             error: {
@@ -398,21 +344,14 @@ export function SlideScanStatus() {
               5000 * Math.pow(2, reconnectAttempts),
               30000,
             );
-            slog("SSE-ERROR", `scheduling reconnect in ${delay}ms (attempt ${reconnectAttempts + 1})`);
             reconnectTimeoutRef.current = setTimeout(() => {
               setReconnectAttempts((prev) => prev + 1);
-              slog("SSE-ERROR", "reconnect timer fired -> connectToInProgressStream() again");
               connectToInProgressStream();
             }, delay);
-          } else {
-            slog("SSE-ERROR", "max reconnect attempts reached -> giving up");
           }
-        } else {
-          slog("SSE-ERROR", "readyState is not CLOSED (probably CONNECTING, browser auto-retrying natively)");
         }
       };
     } catch (error) {
-      slog("CONNECT", "EXCEPTION creating EventSource:", error);
       setStatusData((prev) => ({
         ...prev,
         error: {
@@ -424,21 +363,16 @@ export function SlideScanStatus() {
   };
 
   useEffect(() => {
-    slog("MOUNT-EFFECT", "=== SlideScanStatus MOUNTED === initial fetch + stream connect starting");
     fetchData("failed", 0, null);
     fetchData("completed", 0, null);
     fetchData("inProgress", 0, null).then((data) => {
       if (data) {
         prevInProgressCountRef.current = data.totalElements ?? 0;
-        slog("MOUNT-EFFECT", "initial inProgress fetch done, totalElements=", data.totalElements, "-> connecting stream");
         connectToInProgressStream();
-      } else {
-        slog("MOUNT-EFFECT", "initial inProgress fetch returned null -> NOT connecting stream");
       }
     });
 
     return () => {
-      slog("UNMOUNT-EFFECT", "=== SlideScanStatus UNMOUNTING === closing EventSource + clearing timers");
       eventSourceRef.current?.close();
       if (reconnectTimeoutRef.current)
         clearTimeout(reconnectTimeoutRef.current);
@@ -446,14 +380,11 @@ export function SlideScanStatus() {
   }, []);
 
   useEffect(() => {
-    if (currentPage.inProgress !== 0) {
-      slog("PAGE-CHANGE-EFFECT", "inProgress page changed to", currentPage.inProgress, "-> fetching");
+    if (currentPage.inProgress !== 0)
       fetchData("inProgress", currentPage.inProgress, null);
-    }
   }, [currentPage.inProgress]);
 
   const handleRefresh = () => {
-    slog("USER-ACTION", "handleRefresh() clicked by user");
     fetchData("failed", currentPageRef.current.failed, null);
     fetchData("completed", currentPageRef.current.completed, null);
     fetchData("inProgress", currentPageRef.current.inProgress, null);
@@ -469,8 +400,6 @@ export function SlideScanStatus() {
     const preVal = Math.max(0, currentPageNum - 1);
     const newPage = direction === "next" ? nextVal : preVal;
 
-    slog("USER-ACTION", `handlePageChange(${tab}, ${direction}) -> newPage=${newPage} (was ${currentPageNum})`);
-
     if (newPage === currentPageNum) return;
 
     currentPageRef.current = { ...currentPageRef.current, [tab]: newPage };
@@ -483,7 +412,6 @@ export function SlideScanStatus() {
   const handleApplyFilters = async () => {
     const trimmed = barcodeFilter.trim();
     if (!trimmed) return;
-    slog("USER-ACTION", "handleApplyFilters() searching barcode=", trimmed);
 
     setAppliedFilters({ barcode: trimmed, deviceId: "" });
     setCurrentPage({ completed: 0, failed: 0, inProgress: 0 });
@@ -495,7 +423,6 @@ export function SlideScanStatus() {
         `${BASE_URL}/api/slide-scan-status/barcode/${encodeURIComponent(trimmed)}`,
       );
       const slide = response.data;
-      slog("USER-ACTION", "barcode search result:", slide);
 
       if (!slide) {
         setStatusData((prev) => ({
@@ -514,7 +441,6 @@ export function SlideScanStatus() {
         .trim()
         .toLowerCase();
       const matchedTab = SCAN_STATUS_TO_TAB[rawStatus] ?? null;
-      slog("USER-ACTION", "matchedTab for search result =", matchedTab);
 
       const inProgressData =
         matchedTab === "inProgress"
@@ -550,7 +476,6 @@ export function SlideScanStatus() {
         setActiveTab("inProgress");
       }
     } catch (err) {
-      slog("USER-ACTION", "barcode search FAILED:", err);
       setStatusData((prev) => ({
         ...prev,
         inProgress: emptyPageable(),
@@ -564,7 +489,6 @@ export function SlideScanStatus() {
   };
 
   const handleClearSearch = () => {
-    slog("USER-ACTION", "handleClearSearch() called");
     setBarcodeFilter("");
     const emptyFilters = { barcode: "", deviceId: "" };
     setAppliedFilters(emptyFilters);
