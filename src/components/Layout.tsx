@@ -117,7 +117,7 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
   const [expandedSections, setExpandedSections] = useState<string[]>(() => {
     const activeSection = findSectionForPage(currentPage);
-    const defaults = ["devices", "clinical-apps"];
+    const defaults = ["devices", "clinical-apps","operations"];
     return activeSection && !defaults.includes(activeSection)
       ? [...defaults, activeSection]
       : defaults;
