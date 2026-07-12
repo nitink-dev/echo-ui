@@ -134,6 +134,15 @@ export function SlideScanProvider({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    const payload = rawData.payload;
+    const scanStatus = (payload?.scanStatus ?? "").toString().trim().toLowerCase();
+    const isTerminal = scanStatus === "completed" || scanStatus === "failed";
+ 
+    if (isTerminal) {
+      plog("SSE-DATA", "terminal status -> NOT extending, letting timer expire naturally");
+      return;
+    }
+
     plog("SSE-DATA", "eventType is NOT heartbeat -> calling extendBannerVisibility()");
     extendBannerVisibility();
   };
