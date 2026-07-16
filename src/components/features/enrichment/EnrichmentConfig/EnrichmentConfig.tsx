@@ -128,28 +128,32 @@ export function EnrichmentToolConfig() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<any>({
-    dicomReceiver: { aet: "", ipAddress: "", port: "", networkDrive: "" },
+    dicomReceiver: { aet: "", ipAddress: "", port: "", networkDrive: "", serviceIpAddress: "" },
     lisConnector: {
       applicationName: "",
       receivingPort: "",
       sendingFacility: "",
+      serviceIpAddress: "",
     },
-    enrichmentService: { messageType: "" },
+    enrichmentService: { messageType: "", serviceIpAddress: "" },
     exportService: {
       synapseEnabled: false,
       visioPharmEnabled: false,
       ibexEnabled: false,
+      serviceIpAddress: "",
     },
     hl7Messaging: {
       applicationName: "",
       ipAddress: "",
       receivingPort: "",
       sendingFacility: "",
+      serviceIpAddress: "",
     },
     emailService: {
       emailFrom: "",
       emailTo: [] as string[],
       emailIbexTo: [] as string[],
+      serviceIpAddress: "",
     },
   });
 
@@ -216,6 +220,7 @@ export function EnrichmentToolConfig() {
         dicomReceiver["network-drive"] ||
         dicomReceiver["storescp.storage.path"] ||
         "",
+      serviceIpAddress: dicomReceiver.serviceIpAddress || "",
     });
   }, [dicomReceiver]);
 
@@ -226,6 +231,7 @@ export function EnrichmentToolConfig() {
       ipAddress: "",
       receivingPort: lisConnector.port?.toString() || "",
       sendingFacility: lisConnector.sendingFacility || "",
+      serviceIpAddress: lisConnector.serviceIpAddress || "",
     });
   }, [lisConnector]);
 
@@ -233,6 +239,7 @@ export function EnrichmentToolConfig() {
     if (!enrichmentService || initializedSections.enrichment) return;
     syncSection("enrichment", "enrichmentService", {
       messageType: enrichmentService.messageType || "OUL",
+      serviceIpAddress: enrichmentService.serviceIpAddress || "",
     });
   }, [enrichmentService]);
 
@@ -243,6 +250,7 @@ export function EnrichmentToolConfig() {
       synapseEnabled: bool(exportService.synapseEnabled),
       visioPharmEnabled: bool(exportService.visioPharmEnabled),
       ibexEnabled: bool(exportService.ibexEnabled),
+      serviceIpAddress: exportService.serviceIpAddress || "",
     });
   }, [exportService]);
 
@@ -260,6 +268,7 @@ export function EnrichmentToolConfig() {
       receivingPort:
         raw["receive-port"]?.toString() || raw.receivePort?.toString() || "",
       sendingFacility: raw.sendingFacility || "",
+      serviceIpAddress: raw.serviceIpAddress || "",
     });
   }, [hl7Connector]);
 
@@ -286,6 +295,7 @@ export function EnrichmentToolConfig() {
         : emailService.emailFrom || "",
       emailTo: toArr(emailService.emailTo),
       emailIbexTo: toArr(emailService.emailIbexTo),
+      serviceIpAddress: emailService.serviceIpAddress || "",
     });
   }, [emailService]);
 
@@ -876,6 +886,7 @@ export function EnrichmentToolConfig() {
           {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
           {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
           {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
+          {renderInput("dicomReceiver", "serviceIpAddress", "Service IP Address", true)}
         </>,
       )}
 
@@ -887,6 +898,7 @@ export function EnrichmentToolConfig() {
           {renderInput("lisConnector", "applicationName", "Application Name", !editMode.lis)}
           {renderInput("lisConnector", "receivingPort", "LIS Connector Port", !editMode.lis)}
           {renderInput("lisConnector", "sendingFacility", "Application Facility", !editMode.lis)}
+          {renderInput("lisConnector", "serviceIpAddress", "Service IP Address", true)}
         </>,
       )}
 
@@ -915,6 +927,7 @@ export function EnrichmentToolConfig() {
               <option value="OML">DPIA Profile (OML)</option>
             </select>
           </div>
+          {renderInput("enrichmentService", "serviceIpAddress", "Service IP Address", true)}
         </>,
       )}
 
@@ -953,6 +966,7 @@ export function EnrichmentToolConfig() {
               ))}
             </div>
           </div>
+          {renderInput("exportService", "serviceIpAddress", "Service IP Address", true)}
         </>,
       )}
 
@@ -965,6 +979,7 @@ export function EnrichmentToolConfig() {
           {renderInput("hl7Messaging", "ipAddress", "IP Address (HL7 Provider)", !editMode.hl7)}
           {renderInput("hl7Messaging", "receivingPort", "Receiving Port (HL7 Provider)", !editMode.hl7)}
           {renderInput("hl7Messaging", "sendingFacility", "Application Facility", !editMode.hl7)}
+          {renderInput("hl7Messaging", "serviceIpAddress", "Service IP Address", true)}
         </>,
       )}
 
@@ -999,7 +1014,7 @@ export function EnrichmentToolConfig() {
                 </p>
               )}
           </div>
-          <div />
+          {renderInput("emailService", "serviceIpAddress", "Service IP Address", true)}
           {renderEmailList(
             "emailTo",
             "Registered Email Ids for Enrichment Service Notifications",
