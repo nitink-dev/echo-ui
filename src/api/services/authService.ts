@@ -8,6 +8,7 @@ export interface LoginResponse {
   roles: string[];   
   scopes: string[]; 
   displayName: string; 
+  sessionTimeoutMinutes: number;
 }
 
 
@@ -25,8 +26,9 @@ export const authService = {
       payload,
       { headers: { "Content-Type": "application/json" } }
     );
-
-    return response.data as LoginResponse;
+    const data = response.data as LoginResponse;
+    data.sessionTimeoutMinutes = 6;
+    return data;
   },
 
   logout: async (): Promise<void> => {
