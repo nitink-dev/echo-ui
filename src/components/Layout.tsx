@@ -4,6 +4,7 @@ import {
   ChevronDown,
   ChevronRight,
   Cpu,
+  Clock,
   HelpCircle,
   Microscope,
   Monitor,
@@ -305,10 +306,17 @@ export function Layout({
 
           {sessionSummary && (
             <div className="lg:flex flex-1 items-center justify-center px-4">
-              <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur-sm">
-                <span className="font-semibold">Logged In:</span> {sessionSummary.loggedInAt}
-                <span className="mx-2 text-white/60">•</span>
-                <span className="font-semibold">Session Expires In:</span> {sessionSummary.expiresIn}
+              <div className="flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-1 py-1 shadow-sm">
+                <div className="flex items-center gap-2 px-3 py-1">
+                  <Clock className="h-3.5 w-3.5 text-white/60" />
+                  <span className="text-[11px] uppercase tracking-wide text-white/60">Logged in</span>
+                  <span className="text-xs font-semibold text-white">{sessionSummary.loggedInAt}</span>
+                </div>
+                <div className="h-4 w-px bg-white/20" />
+                <div className="flex items-center gap-2 px-3 py-1">
+                  <span className="text-[11px] uppercase tracking-wide text-white/60">Expires in</span>
+                  <span className="text-xs font-semibold text-white">{sessionSummary.expiresIn}</span>
+                </div>
               </div>
             </div>
           )}
