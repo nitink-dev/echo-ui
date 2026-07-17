@@ -40,7 +40,7 @@ export function IdleTimeoutModal({
     >
       {/* Card — stop event bubbling to backdrop too */}
       <div
-        className="bg-white rounded-xl border border-gray-200 shadow-sm w-[380px] overflow-hidden"
+        className="bg-white rounded-xl border border-gray-200 shadow-xl w-[380px] overflow-hidden"
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -79,16 +79,16 @@ export function IdleTimeoutModal({
         {/* Body */}
         <div className="px-6 py-4">
           <p id="idle-desc" className="text-sm text-gray-600 leading-relaxed text-center">
-            Your session will automatically expire due to inactivity. Click{" "}
-            <span className="font-medium text-gray-800">OK</span> to stay
-            logged in, or{" "}
-            <span className="font-medium text-gray-800">Cancel</span> to let
-            the session expire.
+            Your session will automatically expire due to inactivity.
+            <br />
+            Click <span className="font-medium text-gray-800">OK</span> to stay
+            logged in, or <span className="font-medium text-gray-800">Cancel</span> to
+            let it expire.
           </p>
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-5 flex gap-3">
+        <div className="px-6 pb-7 pt-1 flex gap-4">
           <Button
             variant="outline"
             onClick={onCancel}
