@@ -74,6 +74,8 @@ export default function App() {
     getSavedPageForUser(localStorage.getItem("auth_user"))
   );
   const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
+  const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
   const isNavigating = useRef(false);
 
   const scanners = useSelector((state: any) => state.scanners.items);
@@ -92,10 +94,18 @@ export default function App() {
     await dispatch(logoutUser());
   }, [dispatch]);
 
+  const handleSessionActivity = useCallback(() => {
+    if (!isLoggedIn) return;
+
+    const timeoutMinutes = Math.max(1, Number(sessionTimeoutMinutes) || 6);
+    setSessionExpiresAt(new Date(Date.now() + timeoutMinutes * 60 * 1000));
+  }, [isLoggedIn, sessionTimeoutMinutes]);
+
   const { isIdle, secondsLeft, countdownSeconds, resetTimer, dismissModal } =
   useIdleTimeout({
     sessionTimeoutMinutes: isLoggedIn ? sessionTimeoutMinutes : 0,
     onAutoLogout: handleIdleLogout,
+    onActivity: handleSessionActivity,
   });
 
   const handleIdleContinue = () => resetTimer();  
@@ -109,6 +119,19 @@ export default function App() {
   useEffect(() => {
     dispatch(loadStoredSession());
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setSessionStartedAt(null);
+      setSessionExpiresAt(null);
+      return;
+    }
+
+    const timeoutMinutes = Math.max(1, Number(sessionTimeoutMinutes) || 6);
+    const now = new Date();
+    setSessionStartedAt((previous) => previous ?? now);
+    setSessionExpiresAt(new Date(now.getTime() + timeoutMinutes * 60 * 1000));
+  }, [isLoggedIn, sessionTimeoutMinutes, currentUser?.username]);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -356,6 +379,9 @@ export default function App() {
         currentPage={currentPage}
         breadcrumbs={getBreadcrumbs()}
         onNavigate={(pageId) => navigateToPage(pageId as PageType)}
+        sessionStartedAt={sessionStartedAt}
+        sessionExpiresAt={sessionExpiresAt}
+        sessionTimeoutMinutes={isLoggedIn ? sessionTimeoutMinutes : 0}
       >
         {renderCurrentPage()}
       </Layout>

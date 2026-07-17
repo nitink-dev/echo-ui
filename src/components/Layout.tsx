@@ -40,12 +40,16 @@ import {
 import { useSlideScan } from "./features/status/SlideScanContext";
 import { usePermissions } from "../auth/permissions/usePermissions";
 import { API_URLS } from "../auth/permissions/apiConfig";
+import { formatSessionClockTime, formatSessionDuration } from "../utils/sessionTime";
 
 interface LayoutProps {
   children: React.ReactNode;
   currentPage: string;
   breadcrumbs?: Array<{ label: string; href?: string }>;
   onNavigate: (pageId: string) => void;
+  sessionStartedAt?: Date | null;
+  sessionExpiresAt?: Date | null;
+  sessionTimeoutMinutes?: number;
 }
 
 interface NavigationItem {
@@ -117,7 +121,7 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
   const [expandedSections, setExpandedSections] = useState<string[]>(() => {
     const activeSection = findSectionForPage(currentPage);
-    const defaults = ["devices", "clinical-apps","operations"];
+    const defaults = ["devices", "clinical-apps"];
     return activeSection && !defaults.includes(activeSection)
       ? [...defaults, activeSection]
       : defaults;
@@ -248,19 +252,44 @@ export function Layout({
   currentPage,
   breadcrumbs = [],
   onNavigate,
+  sessionStartedAt,
+  sessionExpiresAt,
+  sessionTimeoutMinutes = 0,
 }: LayoutProps) {
   const dispatch = useAppDispatch();
   const { isBannerVisible : isScanInProgress} = useSlideScan();
-
+  const [currentTime, setCurrentTime] = useState(() => new Date());
 
   const username = useSelector((state: any) => state.auth.displayName) as
     | string
     | null;
 
+  useEffect(() => {
+    if (!sessionExpiresAt || sessionTimeoutMinutes <= 0) return;
+
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [sessionExpiresAt, sessionTimeoutMinutes]);
+
   const handleLogout = async () => {
     await dispatch(logoutUser());
     onNavigate("login");
   };
+
+  const sessionExpiresInSeconds =
+    sessionExpiresAt && sessionTimeoutMinutes > 0
+      ? Math.max(0, Math.round((sessionExpiresAt.getTime() - currentTime.getTime()) / 1000))
+      : 0;
+
+  const sessionSummary = sessionStartedAt && sessionExpiresAt
+    ? {
+        loggedInAt: formatSessionClockTime(sessionStartedAt),
+        expiresIn: formatSessionDuration(sessionExpiresInSeconds),
+      }
+    : null;
 
   return (
     <div className="min-h-screen bg-[#fafbff]">
@@ -273,6 +302,16 @@ export function Layout({
               className="h-8 sm:h-7 object-contain transition-all duration-200 hover:opacity-90 header-logo"
             />
           </div>
+
+          {sessionSummary && (
+            <div className="lg:flex flex-1 items-center justify-center px-4">
+              <div className="rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs text-white/90 backdrop-blur-sm">
+                <span className="font-semibold">Logged In:</span> {sessionSummary.loggedInAt}
+                <span className="mx-2 text-white/60">•</span>
+                <span className="font-semibold">Session Expires In:</span> {sessionSummary.expiresIn}
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center gap-2 pr-6 sm:pr-4 header-nav-buttons">
             <DropdownMenu>

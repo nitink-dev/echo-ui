@@ -7,9 +7,14 @@ const IDLE_EVENTS: (keyof WindowEventMap)[] = [
 interface UseIdleTimeoutOptions {
   sessionTimeoutMinutes: number;
   onAutoLogout: () => void;
+  onActivity?: () => void;
 }
 
-export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout }: UseIdleTimeoutOptions) {
+const logIdleEvent = (message: string) => {
+  console.info(`[${new Date().toISOString()}] ${message}`);
+};
+
+export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout, onActivity }: UseIdleTimeoutOptions) {
   const warningAfterMs   = sessionTimeoutMinutes * 0.9 * 60 * 1000;
   const countdownSeconds = Math.round(sessionTimeoutMinutes * 0.1 * 60);
 
@@ -38,6 +43,7 @@ export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout }: UseIdleT
     idleTimerRef.current = setTimeout(() => {
       isWarningActive.current = true;
       setIsIdle(true);
+      logIdleEvent(`idle warning started with ${countdownSeconds}s remaining`);
 
       let remaining = countdownSeconds;
       setSecondsLeft(remaining);
@@ -50,16 +56,25 @@ export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout }: UseIdleT
         if (remaining <= 0) {
           clearCountdown();
           isWarningActive.current = false;
+          logIdleEvent("idle countdown expired; auto logout triggered");
           onAutoLogoutRef.current(); 
         }
       }, 1000);
     }, warningAfterMs);
   }, [sessionTimeoutMinutes, countdownSeconds, warningAfterMs]);
 
-  const handleActivity = useCallback(() => {
-    if (isWarningActive.current) return;
+  const handleActivity = useCallback((event: Event) => {
+    const eventName = event?.type ?? "activity";
+
+    if (isWarningActive.current) {
+      logIdleEvent(`${eventName} ignored while warning is active`);
+      return;
+    }
+
+    logIdleEvent(`${eventName} refreshed the idle timer`);
+    onActivity?.();
     scheduleIdleTimer();
-  }, [scheduleIdleTimer]);
+  }, [onActivity, scheduleIdleTimer]);
 
   const resetTimer = useCallback(() => {
     clearIdleTimer();
@@ -67,8 +82,10 @@ export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout }: UseIdleT
     isWarningActive.current = false;
     setIsIdle(false);
     setSecondsLeft(countdownSeconds);
+    onActivity?.();
+    logIdleEvent("idle timer reset manually");
     scheduleIdleTimer();
-  }, [countdownSeconds, scheduleIdleTimer]);
+  }, [countdownSeconds, onActivity, scheduleIdleTimer]);
 
   const dismissModal = useCallback(() => {
     setIsIdle(false);
@@ -78,12 +95,12 @@ export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout }: UseIdleT
     if (sessionTimeoutMinutes <= 0) return;
 
     scheduleIdleTimer();
-    IDLE_EVENTS.forEach((e) => window.addEventListener(e, handleActivity));
+    IDLE_EVENTS.forEach((e) => window.addEventListener(e, handleActivity as EventListener));
 
     return () => {
       clearIdleTimer();
       clearCountdown();
-      IDLE_EVENTS.forEach((e) => window.removeEventListener(e, handleActivity));
+      IDLE_EVENTS.forEach((e) => window.removeEventListener(e, handleActivity as EventListener));
     };
   }, [scheduleIdleTimer, handleActivity, sessionTimeoutMinutes]);
 
