@@ -35,7 +35,7 @@ export const loginUser = createAsyncThunk(
   "auth/loginUser",
   async (payload: { username: string; password: string }, { rejectWithValue, dispatch }) => {
     try {
-      const data = await authService.login(payload);      
+      const data = await authService.login(payload);
       dispatch(fetchSecurityConfig());
       return data;
     } catch (err: any) {
@@ -108,7 +108,7 @@ const authSlice = createSlice({
       state.error = null;
       state.displayName = "";
 
-      state.sessionTimeoutMinutes = 6;                         
+      state.sessionTimeoutMinutes = 30;                         
       localStorage.removeItem("auth_session_timeout");           
       localStorage.removeItem("auth_user");
       localStorage.removeItem("auth_role");
@@ -131,7 +131,7 @@ const authSlice = createSlice({
       state.role = action.payload.role;
       state.scopes = action.payload.scopes;
       state.displayName = action.payload.displayName;
-      state.sessionTimeoutMinutes = 6;//action.payload.sessionTimeoutMinutes;  
+      state.sessionTimeoutMinutes = action.payload.sessionTimeoutMinutes;  
     },
   },
 
@@ -148,7 +148,7 @@ const authSlice = createSlice({
         state.user = action.payload.username;
         state.scopes = action.payload.scopes ?? [];
         state.displayName = action.payload.displayName;
-        state.sessionTimeoutMinutes=6//= action.payload.sessionTimeoutMinutes;
+        state.sessionTimeoutMinutes = action.payload.sessionTimeoutMinutes;
         const backendRole = (action.payload.roles?.[0] as Role) ?? null;
         state.role = backendRole;
 
@@ -156,7 +156,7 @@ const authSlice = createSlice({
         localStorage.setItem("auth_display", action.payload.displayName);
         localStorage.setItem(                                                       
           "auth_session_timeout",
-          String(6)
+          String(action.payload.sessionTimeoutMinutes ?? 30)
         );
         if (state.role) {
           localStorage.setItem("auth_role", state.role);

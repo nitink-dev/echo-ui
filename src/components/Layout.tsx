@@ -4,7 +4,6 @@ import {
   ChevronDown,
   ChevronRight,
   Cpu,
-  Clock,
   HelpCircle,
   Microscope,
   Monitor,
@@ -42,6 +41,7 @@ import { useSlideScan } from "./features/status/SlideScanContext";
 import { usePermissions } from "../auth/permissions/usePermissions";
 import { API_URLS } from "../auth/permissions/apiConfig";
 import { formatSessionClockTime, formatSessionDuration } from "../utils/sessionTime";
+import { Clock3, Timer } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -122,7 +122,7 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
 
   const [expandedSections, setExpandedSections] = useState<string[]>(() => {
     const activeSection = findSectionForPage(currentPage);
-    const defaults = ["devices", "clinical-apps"];
+    const defaults = ["devices", "clinical-apps","operations"];
     return activeSection && !defaults.includes(activeSection)
       ? [...defaults, activeSection]
       : defaults;
@@ -304,22 +304,45 @@ export function Layout({
             />
           </div>
 
-          {sessionSummary && (
-            <div className="lg:flex flex-1 items-center justify-center px-4">
-              <div className="flex items-center rounded-full border border-white/20 bg-white/10 backdrop-blur-sm px-1 py-1 shadow-sm">
-                <div className="flex items-center gap-2 px-3 py-1">
-                  <Clock className="h-3.5 w-3.5 text-white/60" />
-                  <span className="text-[11px] uppercase tracking-wide text-white/60">Logged in</span>
-                  <span className="text-xs font-semibold text-white">{sessionSummary.loggedInAt}</span>
-                </div>
-                <div className="h-4 w-px bg-white/20" />
-                <div className="flex items-center gap-2 px-3 py-1">
-                  <span className="text-[11px] uppercase tracking-wide text-white/60">Expires in</span>
-                  <span className="text-xs font-semibold text-white">{sessionSummary.expiresIn}</span>
-                </div>
-              </div>
-            </div>
-          )}
+{sessionSummary && (
+  <div className="flex items-center ml-auto mr-5 gap-2">
+    {/* Session Badge */}
+    <div className="bg-white border border-white rounded-md px-1 flex items-center justify-center shadow-sm">
+      <span
+        className="text-[8px] font-semibold text-blue-600 tracking-wider whitespace-nowrap"
+       
+      >
+        &nbsp; SESSION &nbsp;
+      </span>
+    </div>
+
+    {/* Session Details */}
+    
+    
+
+<div className="rounded-lg border border-white/30 bg-blue-500/90 px-3 py-2 shadow-md">
+  <div className="flex items-center gap-2 text-xs font-medium text-white">
+    <Clock3 className="h-2 w-2 text-blue-100" />
+    <span>Started: {sessionSummary.loggedInAt}</span>
+  </div>
+
+  <div className="mt-1 flex items-center gap-2 text-xs font-medium text-white">
+    <Timer className="h-4 w-4 text-blue-100" />
+    <span>Expires: {sessionSummary.expiresIn} min</span>
+  </div>
+</div>
+
+    <div className="rounded-md border border-white bg-blue-600 px-3 py-1 shadow-sm">
+      <div className="text-xs text-white/90 leading-tight">
+        Started: {sessionSummary.loggedInAt}
+      </div>
+      <div className="text-xs text-white/90 leading-tight">
+        Expires: {sessionSummary.expiresIn} min
+      </div>
+    </div>
+  </div>
+)}
+
 
           <div className="flex items-center gap-2 pr-6 sm:pr-4 header-nav-buttons">
             <DropdownMenu>
@@ -397,7 +420,7 @@ export function Layout({
             </DropdownMenu>
           </div>
         </div>
-        {console.log("isScanInProgress in Layout:", isScanInProgress)}
+     
         {isScanInProgress && (
           <div className="w-full bg-[#1a3a5c] border-b border-[#1e4976] flex items-center gap-3 px-6 py-2">
             <span className="relative flex h-3 w-3 shrink-0">

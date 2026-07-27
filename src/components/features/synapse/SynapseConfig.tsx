@@ -74,7 +74,7 @@ export const patchSynapse = createAsyncThunk<
 
 const FIELD_RULES: Record<string, FieldRule> = {
   imsName: {
-    label: "IMS Name",
+    label: "Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
@@ -89,14 +89,14 @@ const FIELD_RULES: Record<string, FieldRule> = {
     required: true,
   },
   receivingPort: {
-    label: "IMS Port",
+    label: "Port",
     allowedPattern: PORT_ALLOWED_PATTERN,
     validate: isValidPort,
     errorMessage: PORT_ERROR_MESSAGE,
     required: true,
   },
   networkFolder: {
-    label: "Network Folder Location",
+    label: "Network Folder Location 1",
     allowedPattern: /^[a-zA-Z0-9 /\\:_\-.]*$/,
     validPattern: /^[a-zA-Z0-9 /\\:_\-.]{1,260}$/,
     errorMessage:
@@ -434,13 +434,14 @@ export function SynapseConfig() {
 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {renderInput("imsName", !editMode)}
               {renderInput("applicationName", !editMode)}
               {renderInput("ipAddress", !editMode)}
               {renderInput("receivingPort", !editMode)}
               {renderInput("networkFolder", !editMode)}
-              {renderInput("receivingFacility", !editMode)}
-              {renderInput("imsName", !editMode)}
-              {renderInput("networkFolder2", !editMode)}
+               {renderInput("networkFolder2", !editMode)}
+              {renderInput("receivingFacility", !editMode)}            
+             
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">

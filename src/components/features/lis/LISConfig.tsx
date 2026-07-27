@@ -24,7 +24,7 @@ import { ENRICHMENT_TOOLS } from "../../../utils/constants";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
-    label: "LIS App Name",
+    label: "Application Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
@@ -32,14 +32,14 @@ const FIELD_RULES: Record<string, FieldRule> = {
     required: true,
   },
   ipAddress: {
-    label: "LIS IP Address",
+    label: "IP Address",
     allowedPattern: IP_ALLOWED_PATTERN,
     validate: isValidIP,
     errorMessage: IP_ERROR_MESSAGE,
     required: true,
   },
   receivingFacility: {
-    label: "LIS Facility",
+    label: "Application Facility",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:

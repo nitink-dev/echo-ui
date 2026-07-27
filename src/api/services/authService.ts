@@ -27,7 +27,8 @@ export const authService = {
       { headers: { "Content-Type": "application/json" } }
     );
     const data = response.data as LoginResponse;
-    data.sessionTimeoutMinutes = 6;
+    // For testing purposes, we can override the sessionTimeoutMinutes here if needed
+    // data.sessionTimeoutMinutes = 6;
     return data;
   },
 

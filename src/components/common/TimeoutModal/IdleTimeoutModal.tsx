@@ -34,13 +34,16 @@ export function IdleTimeoutModal({
       aria-modal="true"
       aria-labelledby="idle-title"
       aria-describedby="idle-desc"
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/40"
+      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 backdrop-blur-[1px]"
       onMouseDown={(e) => e.stopPropagation()} 
       onClick={(e) => e.stopPropagation()}
     >
       {/* Card — stop event bubbling to backdrop too */}
-      <div
-        className="bg-white rounded-xl border border-gray-200 shadow-xl w-[380px] overflow-hidden"
+      <div      
+        
+        className="bg-white border border-gray-200 shadow-sm rounded-xl border border-black/10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] w-[380px] "
+        
+
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >
@@ -88,7 +91,8 @@ export function IdleTimeoutModal({
         </div>
 
         {/* Footer */}
-        <div className="px-6 pb-7 pt-1 flex gap-4">
+        <div className="px-6 pt-2 pb-16 flex gap-4">
+           
           <Button
             variant="outline"
             onClick={onCancel}
@@ -102,7 +106,9 @@ export function IdleTimeoutModal({
           >
             OK
           </Button>
+          
         </div>
+        <div className="h-6"></div>
       </div>
     </div>
   );
