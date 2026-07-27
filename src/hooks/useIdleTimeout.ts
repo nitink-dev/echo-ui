@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSelector } from "react-redux";
 
 const IDLE_EVENTS: (keyof WindowEventMap)[] = [
   "keydown",
@@ -34,6 +35,7 @@ export function useIdleTimeout({
   const onAutoLogoutRef = useRef(onAutoLogout);
   const warningStartsAtRef = useRef(0);
   const warningEndsAtRef = useRef(0);
+  const isLoggedIn = useSelector((state: any) => state.auth.isLoggedIn);
 
   const handleActivityRef = useRef<EventListener | null>(null);
 
@@ -208,6 +210,13 @@ useEffect(() => {
   setIsIdle(false);
   setSecondsLeft(countdownSeconds);
 }, [sessionTimeoutMinutes, countdownSeconds, detachActivityListeners]);
+
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    resetTimer();
+    logIdleEvent("Idle timer reset after login");
+  }, [isLoggedIn, resetTimer]);
+
 
   return {
     isIdle,
