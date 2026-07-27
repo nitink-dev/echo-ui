@@ -45,17 +45,18 @@ export function useIdleTimeout({ sessionTimeoutMinutes, onAutoLogout, onActivity
       setIsIdle(true);
       logIdleEvent(`idle warning started with ${countdownSeconds}s remaining`);
 
-      let remaining = countdownSeconds;
-      setSecondsLeft(remaining);
+      const warningEndsAt = Date.now() + countdownSeconds * 1000;
+      setSecondsLeft(countdownSeconds);
       clearCountdown();
 
       countdownRef.current = setInterval(() => {
-        remaining -= 1;
+        const remaining = Math.max(0, Math.round((warningEndsAt - Date.now()) / 1000));
         setSecondsLeft(remaining);
 
         if (remaining <= 0) {
           clearCountdown();
           isWarningActive.current = false;
+          setIsIdle(false);
           logIdleEvent("idle countdown expired; auto logout triggered");
           onAutoLogoutRef.current(); 
         }
