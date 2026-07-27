@@ -50,7 +50,6 @@ import { useSlideScan } from "../../status/SlideScanContext";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["samIpAddress"],
-  hl7Messaging: ["ipAddress"],
 };
 
 const PORT_FIELDS: Record<string, string[]> = {
@@ -144,7 +143,6 @@ export function EnrichmentToolConfig() {
     },
     hl7Messaging: {
       applicationName: "",
-      ipAddress: "",
       receivingPort: "",
       sendingFacility: "",
       serviceIpAddress: "",
@@ -264,7 +262,6 @@ export function EnrichmentToolConfig() {
     if (!raw || Object.keys(raw).length === 0) return;
     syncSection("hl7", "hl7Messaging", {
       applicationName: raw.appName || raw.name || "",
-      ipAddress: raw.ipAddress || "",
       receivingPort:
         raw["receive-port"]?.toString() || raw.receivePort?.toString() || "",
       sendingFacility: raw.sendingFacility || "",
@@ -543,7 +540,6 @@ export function EnrichmentToolConfig() {
         }
         body = {
           ...(d.applicationName && { appName: d.applicationName }),
-          ...(d.ipAddress && { ipAddress: d.ipAddress }),
           ...(d.receivingPort && {
             "receive-port": parseInt(d.receivingPort),
           }),
@@ -976,7 +972,6 @@ export function EnrichmentToolConfig() {
         "hl7",
         <>
           {renderInput("hl7Messaging", "applicationName", "Application Name", !editMode.hl7)}
-          {renderInput("hl7Messaging", "ipAddress", "IP Address (HL7 Provider)", !editMode.hl7)}
           {renderInput("hl7Messaging", "receivingPort", "Receiving Port (HL7 Provider)", !editMode.hl7)}
           {renderInput("hl7Messaging", "sendingFacility", "Application Facility", !editMode.hl7)}
           {renderInput("hl7Messaging", "serviceIpAddress", "Service IP Address", true)}
