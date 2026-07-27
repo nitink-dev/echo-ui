@@ -194,11 +194,26 @@ export function useIdleTimeout({
     detachActivityListeners,
   ]);
 
+useEffect(() => {
+  if (sessionTimeoutMinutes > 0) return;
+
+  clearIdleTimer();
+  clearCountdown();
+  detachActivityListeners();
+
+  isWarningActive.current = false;
+  warningStartsAtRef.current = 0;
+  warningEndsAtRef.current = 0;
+
+  setIsIdle(false);
+  setSecondsLeft(countdownSeconds);
+}, [sessionTimeoutMinutes, countdownSeconds, detachActivityListeners]);
+
   return {
     isIdle,
     secondsLeft,
     countdownSeconds,
     resetTimer,
-    dismissModal,
+    dismissModal
   };
 }
