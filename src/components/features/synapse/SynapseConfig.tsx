@@ -330,12 +330,12 @@ export function SynapseConfig() {
       body.receivingAppName = changes.applicationName;
     if (changes.ipAddress) body.ipAddress = changes.ipAddress;
     if (changes.receivingPort)
-      body["synapse-receive-port"] = parseInt(changes.receivingPort, 10);
+      body["receive-port"] = parseInt(changes.receivingPort, 10);
     if (changes.networkFolder) body.synapseServerFolder = changes.networkFolder;
     if (changes.receivingFacility)
       body.receivingFacility = changes.receivingFacility;
-    if (changes.imsName) body["ims-name"] = changes.imsName;
-    if (changes.networkFolder2) body.synapseServerFolder2 = changes.networkFolder2;
+    if (changes.imsName) body.imsName = changes.imsName;
+    if (changes.networkFolder2) body.networkFolder2 = changes.networkFolder2;
 
     setCardError(null);
     setLoading(true);
