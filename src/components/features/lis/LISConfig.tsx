@@ -45,19 +45,38 @@ const FIELD_RULES: Record<string, FieldRule> = {
     errorMessage:
       "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
     required: false,
-  }
+  },
+  port: {
+    label: "Port",
+    allowedPattern: /^[0-9]*$/,
+    validPattern: /^[0-9]{1,5}$/,
+    errorMessage: "Only numbers allowed (max 5 digits)",
+    required: true,
+  },
+  name: {
+    label: "LIS Name",
+    allowedPattern: /^[a-zA-Z0-9 _-]*$/,
+    validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
+    errorMessage:
+      "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
+    required: false,
+  },
 };
 
 type FormState = {
   applicationName: string;
   ipAddress: string;
   receivingFacility: string;
+  port: string;
+  name: string;
 };
 
 const INITIAL_FORM: FormState = {
   applicationName: "",
   ipAddress: "",
   receivingFacility: "",
+  port: "",
+  name: "",
 };
 
 export function LisConfig() {
@@ -102,6 +121,8 @@ export function LisConfig() {
       applicationName: lis.receivingAppName || "",
       ipAddress: lis.ipAddress || "",
       receivingFacility: lis.receivingFacility || "",
+      port: lis.port != null ? String(lis.port) : "",
+      name: lis.lisName || "",
     };
     setForm(newData);
     setOriginalForm(newData);
@@ -241,6 +262,10 @@ export function LisConfig() {
         body.ipAddress = changes.ipAddress;
       if (changes.receivingFacility !== undefined)
         body.receivingFacility = changes.receivingFacility;
+      if (changes.port)
+        body.port = Number(changes.port);
+      if (changes.name !== undefined)
+        body.lisName = changes.name;
 
     setCardError(null);
 
@@ -342,7 +367,9 @@ export function LisConfig() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {renderInput("applicationName", !editMode)}
               {renderInput("ipAddress", !editMode)}
+              {renderInput("port", !editMode)}
               {renderInput("receivingFacility", !editMode)}
+              {renderInput("name", !editMode)}
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
