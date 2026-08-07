@@ -134,7 +134,7 @@ export function EnrichmentToolConfig() {
       sendingFacility: "",
       serviceIpAddress: "",
     },
-    enrichmentService: { messageType: "", enableDirectoryWatcher: false, serviceIpAddress: "" },
+    enrichmentService: { messageType: "", watcher-active: false, serviceIpAddress: "" },
     exportService: {
       synapseEnabled: false,
       visioPharmEnabled: false,
@@ -238,7 +238,7 @@ export function EnrichmentToolConfig() {
     const bool = (v: any) => (typeof v === "boolean" ? v : v === "true");
     syncSection("enrichment", "enrichmentService", {
       messageType: enrichmentService.messageType || "OUL",
-      enableDirectoryWatcher: bool(enrichmentService.enableDirectoryWatcher),
+      watcher-active: bool(enrichmentService.watcher-active),
       serviceIpAddress: enrichmentService.serviceIpAddress || "",
     });
   }, [enrichmentService]);
@@ -505,8 +505,8 @@ export function EnrichmentToolConfig() {
         }
         body = {
           ...(d.messageType && { messageType: d.messageType }),
-          ...(d.enableDirectoryWatcher !== undefined && {
-            enableDirectoryWatcher: !!d.enableDirectoryWatcher,
+          ...(d.watcher-active !== undefined && {
+            watcher-active: !!d.watcher-active,
           }),
         };
         break;
@@ -916,9 +916,9 @@ export function EnrichmentToolConfig() {
               Enable Directory Watcher
             </Label>
             <Switch
-              checked={!!form.enrichmentService.enableDirectoryWatcher}
+              checked={!!form.enrichmentService.watcher-active}
               onCheckedChange={(v: boolean) =>
-                handleChange("enrichmentService", "enableDirectoryWatcher", v)
+                handleChange("enrichmentService", "watcher-active", v)
               }
               disabled={!editMode.enrichment}
             />
