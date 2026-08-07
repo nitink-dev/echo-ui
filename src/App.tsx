@@ -95,8 +95,6 @@ export default function App() {
   }, [dispatch]);
 
   const handleSessionActivity = useCallback(() => {
-    if (!isLoggedIn) return;
-
     const timeoutMinutes = Math.max(1, Number(sessionTimeoutMinutes) || 6);
     setSessionExpiresAt(new Date(Date.now() + timeoutMinutes * 60 * 1000));
   }, [isLoggedIn, sessionTimeoutMinutes]);

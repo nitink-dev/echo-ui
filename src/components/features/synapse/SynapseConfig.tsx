@@ -440,8 +440,8 @@ export function SynapseConfig() {
               {renderInput("receivingPort", !editMode)}
               {renderInput("networkFolder", !editMode)}
                {renderInput("networkFolder2", !editMode)}
-              {renderInput("receivingFacility", !editMode)}            
-             
+              {renderInput("receivingFacility", !editMode)}
+
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">

@@ -35,10 +35,6 @@ export function IdleTimeoutModal({
       aria-labelledby="idle-title"
       aria-describedby="idle-desc"
       className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/55 backdrop-blur-[1px]"
-      onPointerDown={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-      }}
       onMouseDown={(e) => e.stopPropagation()} 
       onClick={(e) => e.stopPropagation()}
     >
@@ -46,10 +42,8 @@ export function IdleTimeoutModal({
       <div      
         
         className="bg-white border border-gray-200 shadow-sm rounded-xl border border-black/10 shadow-[0_20px_50px_rgba(0,0,0,0.25)] w-[380px] "
-        onPointerDown={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-        }}
+        
+
         onMouseDown={(e) => e.stopPropagation()}
         onClick={(e) => e.stopPropagation()}
       >

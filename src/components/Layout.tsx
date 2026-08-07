@@ -317,17 +317,16 @@ export function Layout({
     </div>
 
     {/* Session Details */}
-    
-    
 
-<div className="rounded-lg border border-white/30 bg-blue-500/90 px-3 py-2 shadow-md">
+
+<div className="rounded-lg border border-white/30 bg-blue-500/90 px-2 py-1 shadow-md">
   <div className="flex items-center gap-2 text-xs font-medium text-white">
-    <Clock3 className="h-3.5 w-3.5 text-blue-100" />
+    <Clock3 className="h-3.5 w-3.5 text-blue-100" width="12" height="12" />
     <span>Started: {sessionSummary.loggedInAt}</span>
   </div>
 
   <div className="mt-1 flex items-center gap-2 text-xs font-medium text-white">
-    <Hourglass className="h-3.5 w-3.5 text-blue-100" />
+    <Hourglass className="h-3.5 w-3.5 text-blue-100" width="12" height="12"/>
     <span>Expires: {sessionSummary.expiresIn} min</span>
   </div>
 </div>

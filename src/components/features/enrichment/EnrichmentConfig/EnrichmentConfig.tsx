@@ -134,7 +134,7 @@ export function EnrichmentToolConfig() {
       sendingFacility: "",
       serviceIpAddress: "",
     },
-    enrichmentService: { messageType: "", watcher-active: false, serviceIpAddress: "" },
+    enrichmentService: { messageType: "", serviceIpAddress: "" },
     exportService: {
       synapseEnabled: false,
       visioPharmEnabled: false,
@@ -235,10 +235,8 @@ export function EnrichmentToolConfig() {
 
   useEffect(() => {
     if (!enrichmentService || initializedSections.enrichment) return;
-    const bool = (v: any) => (typeof v === "boolean" ? v : v === "true");
     syncSection("enrichment", "enrichmentService", {
       messageType: enrichmentService.messageType || "OUL",
-      watcher-active: bool(enrichmentService.watcher-active),
       serviceIpAddress: enrichmentService.serviceIpAddress || "",
     });
   }, [enrichmentService]);
@@ -494,21 +492,15 @@ export function EnrichmentToolConfig() {
       case "enrichment": {
         toolKey = "eh-dicom-enricher";
         sectionName = "Enrichment Service";
-        const d = getChangedFields(
+        body = getChangedFields(
           form.enrichmentService,
           originalForm.enrichmentService,
         );
-        if (!Object.keys(d).length) {
+        if (!Object.keys(body).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
           return;
         }
-        body = {
-          ...(d.messageType && { messageType: d.messageType }),
-          ...(d.watcher-active !== undefined && {
-            watcher-active: !!d.watcher-active,
-          }),
-        };
         break;
       }
       case "export": {
@@ -890,7 +882,7 @@ export function EnrichmentToolConfig() {
           {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
           {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
           {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
-          {renderInput("dicomReceiver", "serviceIpAddress", "Service IP Address", true)}
+          {renderInput("dicomReceiver", "serviceIpAddress", "IP Address", true)}
         </>,
       )}
 
@@ -900,9 +892,9 @@ export function EnrichmentToolConfig() {
         "lis",
         <>
           {renderInput("lisConnector", "applicationName", "Application Name", !editMode.lis)}
-          {renderInput("lisConnector", "receivingPort", "LIS Connector Port", !editMode.lis)}
+          {renderInput("lisConnector", "receivingPort", "Port", !editMode.lis)}
           {renderInput("lisConnector", "sendingFacility", "Application Facility", !editMode.lis)}
-          {renderInput("lisConnector", "serviceIpAddress", "Service IP Address", true)}
+          {renderInput("lisConnector", "serviceIpAddress", "IP Address", true)}
         </>,
       )}
 
@@ -911,18 +903,6 @@ export function EnrichmentToolConfig() {
         <Activity className="h-5 w-5 text-[#007BFF]" />,
         "enrichment",
         <>
-          <div className="col-span-2 flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg">
-            <Label className="text-sm font-medium text-gray-700">
-              Enable Directory Watcher
-            </Label>
-            <Switch
-              checked={!!form.enrichmentService.watcher-active}
-              onCheckedChange={(v: boolean) =>
-                handleChange("enrichmentService", "watcher-active", v)
-              }
-              disabled={!editMode.enrichment}
-            />
-          </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium text-gray-700">
               Message Type
@@ -939,11 +919,11 @@ export function EnrichmentToolConfig() {
                   : ""
               }`}
             >
-              <option value="OUL">Powerpath (OUL)</option>
-              <option value="OML">DPIA Profile (OML)</option>
+              <option value="ORU">Powerpath ( ORU )</option>
+              <option value="QBP">DPIA Profile ( QBP )</option>          
             </select>
           </div>
-          {renderInput("enrichmentService", "serviceIpAddress", "Service IP Address", true)}
+          {renderInput("enrichmentService", "serviceIpAddress", "IP Address", true)}
         </>,
       )}
 
@@ -982,19 +962,19 @@ export function EnrichmentToolConfig() {
               ))}
             </div>
           </div>
-          {renderInput("exportService", "serviceIpAddress", "Service IP Address", true)}
+          {renderInput("exportService", "serviceIpAddress", "IP Address", true)}
         </>,
       )}
 
       {renderDynamicCard(
-        "HL7 Messaging",
+        "HL7 Provider",
         <MessageSquare className="h-5 w-5 text-[#007BFF]" />,
         "hl7",
         <>
           {renderInput("hl7Messaging", "applicationName", "Application Name", !editMode.hl7)}
-          {renderInput("hl7Messaging", "receivingPort", "Receiving Port (HL7 Provider)", !editMode.hl7)}
+          {renderInput("hl7Messaging", "receivingPort", "Port", !editMode.hl7)}
           {renderInput("hl7Messaging", "sendingFacility", "Application Facility", !editMode.hl7)}
-          {renderInput("hl7Messaging", "serviceIpAddress", "Service IP Address", true)}
+          {renderInput("hl7Messaging", "serviceIpAddress", "IP Address", true)}
         </>,
       )}
 
@@ -1029,7 +1009,7 @@ export function EnrichmentToolConfig() {
                 </p>
               )}
           </div>
-          {renderInput("emailService", "serviceIpAddress", "Service IP Address", true)}
+          {renderInput("emailService", "serviceIpAddress", "IP Address", true)}
           {renderEmailList(
             "emailTo",
             "Registered Email Ids for Enrichment Service Notifications",
