@@ -134,7 +134,7 @@ export function EnrichmentToolConfig() {
       sendingFacility: "",
       serviceIpAddress: "",
     },
-    enrichmentService: { messageType: "", serviceIpAddress: "" },
+    enrichmentService: { messageType: "", enableDirectoryWatcher: false, serviceIpAddress: "" },
     exportService: {
       synapseEnabled: false,
       visioPharmEnabled: false,
@@ -235,8 +235,10 @@ export function EnrichmentToolConfig() {
 
   useEffect(() => {
     if (!enrichmentService || initializedSections.enrichment) return;
+    const bool = (v: any) => (typeof v === "boolean" ? v : v === "true");
     syncSection("enrichment", "enrichmentService", {
       messageType: enrichmentService.messageType || "OUL",
+      enableDirectoryWatcher: bool(enrichmentService.enableDirectoryWatcher),
       serviceIpAddress: enrichmentService.serviceIpAddress || "",
     });
   }, [enrichmentService]);
@@ -492,15 +494,21 @@ export function EnrichmentToolConfig() {
       case "enrichment": {
         toolKey = "eh-dicom-enricher";
         sectionName = "Enrichment Service";
-        body = getChangedFields(
+        const d = getChangedFields(
           form.enrichmentService,
           originalForm.enrichmentService,
         );
-        if (!Object.keys(body).length) {
+        if (!Object.keys(d).length) {
           toast.info("No changes");
           setEditMode((p) => ({ ...p, [type]: false }));
           return;
         }
+        body = {
+          ...(d.messageType && { messageType: d.messageType }),
+          ...(d.enableDirectoryWatcher !== undefined && {
+            enableDirectoryWatcher: !!d.enableDirectoryWatcher,
+          }),
+        };
         break;
       }
       case "export": {
@@ -903,6 +911,18 @@ export function EnrichmentToolConfig() {
         <Activity className="h-5 w-5 text-[#007BFF]" />,
         "enrichment",
         <>
+          <div className="col-span-2 flex items-center justify-between px-4 py-3 bg-white border border-gray-200 rounded-lg">
+            <Label className="text-sm font-medium text-gray-700">
+              Enable Directory Watcher
+            </Label>
+            <Switch
+              checked={!!form.enrichmentService.enableDirectoryWatcher}
+              onCheckedChange={(v: boolean) =>
+                handleChange("enrichmentService", "enableDirectoryWatcher", v)
+              }
+              disabled={!editMode.enrichment}
+            />
+          </div>
           <div className="space-y-2">
             <Label className="text-sm font-medium text-gray-700">
               Message Type
