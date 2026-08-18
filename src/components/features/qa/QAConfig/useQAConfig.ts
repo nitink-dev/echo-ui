@@ -83,6 +83,7 @@ export const useQAConfig = () => {
     try {
       if (editingParameter) {
         await dispatch(updateQAParameter(payload));
+        await dispatch(fetchQAParameters());
         toast.success('QA Slide Parameter updated successfully');
       } else {
         await dispatch(addQAParameter(payload));

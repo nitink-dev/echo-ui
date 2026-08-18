@@ -78,18 +78,13 @@ describe('qaService', () => {
   });
 
   describe('updateParameter', () => {
-    it('updates QA parameter and returns the server response', async () => {
+    it('updates QA parameter and returns payload', async () => {
       const payload = {
         barcode: 'BAR002',
         activationCode: 'ACT002'
       };
 
-      vi.mocked(apiClient.put).mockResolvedValue({
-        data: {
-          barcode: 'BAR002',
-          activationCode: 'ENCRYPTED002'
-        }
-      });
+      vi.mocked(apiClient.put).mockResolvedValue({});
 
       const result = await qaService.updateParameter(payload);
 
@@ -97,10 +92,7 @@ describe('qaService', () => {
         `${BASE_URL}/api/slides/BAR002`,
         payload
       );
-      expect(result).toEqual({
-        barcode: 'BAR002',
-        activationCode: 'ENCRYPTED002'
-      });
+      expect(result).toEqual(payload);
     });
   });
 
