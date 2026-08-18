@@ -20,8 +20,11 @@ export const qaService = {
   },
 
   updateParameter: async (payload: { barcode: string; activationCode: string }) => {
-    await apiClient.put(`${BASE_URL}${API_URLS.qaAnalysis.base.path}/${payload.barcode}`, payload);
-    return payload;
+    const res = await apiClient.put(`${BASE_URL}${API_URLS.qaAnalysis.base.path}/${payload.barcode}`, payload);
+    return {
+      barcode: res.data.barcode,
+      activationCode: res.data.activationCode,
+    };
   },
 
   deleteParameter: async (barcode: string) => {
