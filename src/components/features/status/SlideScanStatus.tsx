@@ -7,7 +7,6 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { toast } from "sonner";
 import apiClient from "../../../api/services/apiClient";
 import { BASE_URL } from "../../../utils/constants";
 import AutocompleteInput from "./AutocompleteInput";
@@ -74,7 +73,7 @@ const SCAN_STATUS_TO_TAB = {
   failed: "failed",
 };
 
-const pageSize = 9;
+const pageSize = 10;
 
 const singleSlideToPageable = (slide) => ({
   content: [slide],
@@ -138,6 +137,9 @@ export function SlideScanStatus() {
   const [reconnectAttempts, setReconnectAttempts] = useState(0);
   const prevInProgressCountRef = useRef(null);
   const currentPageRef = useRef(currentPage);
+  const renderCountRef = useRef(0);
+
+  renderCountRef.current += 1;
   useEffect(() => {
     currentPageRef.current = currentPage;
   }, [currentPage]);
@@ -165,12 +167,10 @@ export function SlideScanStatus() {
       const url = `${BASE_URL}/api/slide-scan-status/${apiStatus}?page=${page}&size=${pageSize}${barcodeParam}`;
       const response = await apiClient.get(url);
       const data = normalisePageable(response.data);
-
       setStatusData((prev) => {
         if (statusKey === "inProgress") {
           const newCount = data?.totalElements ?? 0;
           const oldCount = prevInProgressCountRef.current;
-
           if (oldCount !== null && newCount < oldCount) {
             const pageSnap = currentPageRef.current;
             setTimeout(() => {
@@ -178,7 +178,6 @@ export function SlideScanStatus() {
               fetchData("failed", pageSnap.failed);
             }, 0);
           }
-
           prevInProgressCountRef.current = newCount;
         }
 
@@ -203,57 +202,62 @@ export function SlideScanStatus() {
     }
   };
 
-  const refreshPanelsForStatus = (normalizedStatus) => {
-    const pageSnapshot = currentPageRef.current;
-    if (normalizedStatus === "completed")
-      fetchData("completed", pageSnapshot.completed);
-    else if (normalizedStatus === "failed")
-      fetchData("failed", pageSnapshot.failed);
-    if (pageSnapshot.inProgress !== 0)
-      fetchData("inProgress", pageSnapshot.inProgress);
-  };
+  const updateInProgressWithSSE = (eventData) => {
+    const slideData = eventData?.payload;
 
-  const updateInProgressWithSSE = (slideData) => {
-    const status = (slideData?.scanStatus ?? "")
-      .toString()
-      .trim()
-      .toLowerCase();
+    if (!slideData?.id) {
+      return;
+    }
 
+    const status = (slideData.scanStatus ?? "").toString().trim().toLowerCase();
+    const isTerminal = status === "completed" || status === "failed" || status === "warning-completed";
     setStatusData((prev) => {
       const currentData = prev.inProgress;
-      if (!currentData || !currentData.content) return prev;
+
+      if (!currentData?.content) {
+        return prev;
+      }
 
       let updatedContent = [...currentData.content];
+
       const existingIndex = updatedContent.findIndex(
         (s) => s.id === slideData.id,
       );
 
-      if (status === "completed") {
-        if (existingIndex !== -1) updatedContent.splice(existingIndex, 1);
-        refreshPanelsForStatus("completed");
-      } else if (status === "failed") {
-        if (existingIndex !== -1) updatedContent.splice(existingIndex, 1);
-        refreshPanelsForStatus("failed");
+      if (isTerminal) {
+        if (existingIndex !== -1) {
+          updatedContent.splice(existingIndex, 1);
+        } 
+        if (
+          currentPageRef.current.completed === 0 ||
+          currentPageRef.current.failed === 0
+        ) {
+          setTimeout(() => {
+            fetchData("completed", currentPageRef.current.completed);
+            fetchData("failed", currentPageRef.current.failed);
+          }, 0);
+        }
       } else {
         if (existingIndex !== -1) {
           updatedContent[existingIndex] = {
             ...updatedContent[existingIndex],
             ...slideData,
           };
-        } else {
+        } else if (currentPageRef.current.inProgress === 0) {
           updatedContent.unshift(slideData);
-          if (updatedContent.length > pageSize)
+          if (updatedContent.length > pageSize) {
             updatedContent = updatedContent.slice(0, pageSize);
-        }
+          }
+        } 
       }
 
-      const totalElements =
-        status !== "completed" && status !== "failed" && existingIndex === -1
+      const totalElements = isTerminal
+        ? existingIndex !== -1
+          ? Math.max(0, currentData.totalElements - 1)
+          : currentData.totalElements
+        : existingIndex === -1
           ? currentData.totalElements + 1
-          : (status === "completed" || status === "failed") &&
-              existingIndex !== -1
-            ? Math.max(0, currentData.totalElements - 1)
-            : currentData.totalElements;
+          : currentData.totalElements;
 
       prevInProgressCountRef.current = totalElements;
 
@@ -265,7 +269,10 @@ export function SlideScanStatus() {
           totalElements,
           totalPages: Math.max(1, Math.ceil(totalElements / pageSize)),
         }),
-        lastFetched: { ...prev.lastFetched, inProgress: Date.now() },
+        lastFetched: {
+          ...prev.lastFetched,
+          inProgress: Date.now(),
+        },
       };
     });
   };
@@ -285,7 +292,6 @@ export function SlideScanStatus() {
     try {
       const eventSource = new EventSource(url, { withCredentials: true });
       eventSourceRef.current = eventSource;
-
       eventSource.onopen = () => {
         setIsStreamConnected(true);
         setReconnectAttempts(0);
@@ -293,25 +299,25 @@ export function SlideScanStatus() {
 
       eventSource.addEventListener("slide_scan_status", (event) => {
         try {
-          updateInProgressWithSSE(JSON.parse(event.data));
+          const parsed = JSON.parse(event.data);
+          updateInProgressWithSSE(parsed);
         } catch (e) {
-          toast.error(
-            "SSE parse error:" + (e instanceof Error ? e.message : String(e)),
-          );
+          console.error("SSE-NAMED-LISTENER", "JSON.parse FAILED:", e);
         }
       });
 
       eventSource.onmessage = (event) => {
         try {
-          updateInProgressWithSSE(JSON.parse(event.data));
+          const parsed = JSON.parse(event.data);
+          if (parsed?.eventType?.toLowerCase() === "slide_scan_status") {
+            updateInProgressWithSSE(parsed);
+          } 
         } catch (e) {
-          toast.error(
-            "SSE parse error: " + (e instanceof Error ? e.message : String(e)),
-          );
+          console.error("SSE-ONMESSAGE", "JSON.parse or handling FAILED:", e);
         }
       };
 
-      eventSource.onerror = () => {
+      eventSource.onerror = (err) => {
         setIsStreamConnected(false);
         if (eventSource.readyState === EventSource.CLOSED) {
           setStatusData((prev) => ({
@@ -334,8 +340,8 @@ export function SlideScanStatus() {
               setReconnectAttempts((prev) => prev + 1);
               connectToInProgressStream();
             }, delay);
-          }
-        }
+          } 
+        } 
       };
     } catch (error) {
       setStatusData((prev) => ({
@@ -355,7 +361,7 @@ export function SlideScanStatus() {
       if (data) {
         prevInProgressCountRef.current = data.totalElements ?? 0;
         connectToInProgressStream();
-      }
+      } 
     });
 
     return () => {
@@ -366,8 +372,9 @@ export function SlideScanStatus() {
   }, []);
 
   useEffect(() => {
-    if (currentPage.inProgress !== 0)
+    if (currentPage.inProgress !== 0) {
       fetchData("inProgress", currentPage.inProgress, null);
+    }
   }, [currentPage.inProgress]);
 
   const handleRefresh = () => {
@@ -385,31 +392,15 @@ export function SlideScanStatus() {
     const nextVal = Math.min(currentPageNum + 1, totalPages - 1);
     const preVal = Math.max(0, currentPageNum - 1);
     const newPage = direction === "next" ? nextVal : preVal;
-
-    {
-      console.log(
-        "direction: " + direction + ",pVal:" + preVal + "nVal: " + nextVal,
-      );
-    }
-
     if (newPage === currentPageNum) return;
-
     currentPageRef.current = { ...currentPageRef.current, [tab]: newPage };
-
     setCurrentPage((prev) => ({ ...prev, [tab]: newPage }));
-
     fetchData(tab, newPage, null);
-    {
-      console.log(
-        "currentPageNum: " + currentPageNum + ",totalPages: " + totalPages,
-      );
-    }
   };
 
   const handleApplyFilters = async () => {
     const trimmed = barcodeFilter.trim();
     if (!trimmed) return;
-
     setAppliedFilters({ barcode: trimmed, deviceId: "" });
     setCurrentPage({ completed: 0, failed: 0, inProgress: 0 });
     currentPageRef.current = { completed: 0, failed: 0, inProgress: 0 };
@@ -420,7 +411,6 @@ export function SlideScanStatus() {
         `${BASE_URL}/api/slide-scan-status/barcode/${encodeURIComponent(trimmed)}`,
       );
       const slide = response.data;
-
       if (!slide) {
         setStatusData((prev) => ({
           ...prev,
@@ -437,7 +427,7 @@ export function SlideScanStatus() {
         .toString()
         .trim()
         .toLowerCase();
-      const matchedTab = SCAN_STATUS_TO_TAB[rawStatus] ?? null;
+      const matchedTab = SCAN_STATUS_TO_TAB[rawStatus] ?? null;   
 
       const inProgressData =
         matchedTab === "inProgress"

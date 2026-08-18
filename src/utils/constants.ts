@@ -1,6 +1,11 @@
 
 export const BASE_URL = import.meta.env.VITE_API_URL ;
 
+if (!BASE_URL) {
+  console.warn('BASE_URL is empty. Check .env variables.');
+}
+
+
 export const REQUIRED_SCANNER_FIELDS = [
   'name',
   'aeTitle',
@@ -14,6 +19,8 @@ export const REQUIRED_SCANNER_FIELDS = [
 export const REQUIRED_QA_FIELDS = ['barcode', 'activationCode'];
 
 export const ENRICHMENT_TOOLS = {
+  LIS: 'lis',
+  SYNAPSE: 'synapse',
   DICOM_RECEIVER: 'eh-dicom-receiver',
   LIS_CONNECTOR: 'eh-lis-connector',
   ENRICHMENT_SERVICE: 'eh-dicom-enricher',

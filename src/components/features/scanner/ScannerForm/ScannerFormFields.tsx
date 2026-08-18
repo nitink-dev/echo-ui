@@ -12,6 +12,9 @@ import {
   PORT_ERROR_MESSAGE,
   sanitizeByPattern,
 } from '../../../../utils/validation.constants';
+import { PermissionGuard } from '../../../../auth/permissions/PermissionGuard';
+import { API_URLS } from '../../../../auth/permissions/apiConfig';
+import { usePermissions } from '../../../../auth/permissions/usePermissions';
 
 const SERIAL_ALLOWED_PATTERN = /^[a-zA-Z0-9_-]$/;
 const sanitizeSerial = (value: string) =>
@@ -65,6 +68,9 @@ export function ScannerFormFields({
       onInputChange('deviceSerialNumber', cur.slice(0, start) + sanitized + cur.slice(end));
     }
   };
+  const { canAccess } = usePermissions();
+  const canReadHospital  = canAccess(API_URLS.hospital.all.path,       API_URLS.hospital.all.method);
+  const canReadDicomStore = canAccess(API_URLS.scanners.dicomStore.path, API_URLS.scanners.dicomStore.method);
 
   const handleIpChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const sanitized = sanitizeByPattern(e.target.value, IP_ALLOWED_PATTERN);
@@ -191,6 +197,9 @@ export function ScannerFormFields({
           <Label htmlFor="hospitalName" className="text-sm font-medium text-gray-700">
             Hospital Name *
           </Label>
+
+          <PermissionGuard allowed={canReadHospital} fallback={ 
+            <p className="text-sm text-gray-400">Permission Required</p>  }>
           <select
             id="hospitalName"
             value={formData.hospitalName}
@@ -203,6 +212,7 @@ export function ScannerFormFields({
               <option key={i} value={h}>{h}</option>
             ))}
           </select>
+          </PermissionGuard>
           {errors.hospitalName && (
             <p className="text-sm text-red-600">{errors.hospitalName}</p>
           )}
@@ -258,6 +268,8 @@ export function ScannerFormFields({
             <Label htmlFor="dicomStore" className="text-sm font-medium text-gray-700">
               Storage Location *
             </Label>
+            <PermissionGuard allowed={canReadDicomStore} fallback={ 
+              <p className="text-sm text-gray-400">Permission Required</p>  }>
             <select
               id="dicomStore"
               value={formData.dicomStore || ''}
@@ -269,7 +281,7 @@ export function ScannerFormFields({
                 <option key={i} value={store}>{store}</option>
               ))}
             </select>
-          
+            </PermissionGuard>
             {formData.research && (
               <p className="text-xs text-blue-600 font-medium">
                 Research mode enabled - storage will be assigned automatically

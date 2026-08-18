@@ -1,4 +1,4 @@
-import { Database, Edit, Save, X } from "lucide-react";
+import { AlertTriangle, Database, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -9,10 +9,7 @@ import { fetchEhTool, patchEhTool } from "../../../store/slices/ehToolsSlice";
 import {
   IP_ALLOWED_PATTERN,
   IP_ERROR_MESSAGE,
-  PORT_ALLOWED_PATTERN,
-  PORT_ERROR_MESSAGE,
   isValidIP,
-  isValidPort,
   sanitizeByPattern,
   type FieldRule,
 } from "../../../utils/validation.constants";
@@ -20,12 +17,14 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { SERVICE_URL } from "../../../api/services/enrichmentService";
+import { usePermissions } from "../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../status/SlideScanContext";
+import { ENRICHMENT_TOOLS } from "../../../utils/constants";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
-    label: "LIS App Name",
+    label: "Application Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
@@ -33,46 +32,62 @@ const FIELD_RULES: Record<string, FieldRule> = {
     required: true,
   },
   ipAddress: {
-    label: "LIS IP Address",
+    label: "IP Address",
     allowedPattern: IP_ALLOWED_PATTERN,
     validate: isValidIP,
     errorMessage: IP_ERROR_MESSAGE,
     required: true,
   },
   receivingFacility: {
-    label: "LIS Facility",
+    label: "Application Facility",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
       "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
     required: false,
   },
-  incomingPort: {
-    label: "LIS Port",
-    allowedPattern: PORT_ALLOWED_PATTERN,
-    validate: isValidPort,
-    errorMessage: PORT_ERROR_MESSAGE,
+  port: {
+    label: "Port",
+    allowedPattern: /^[0-9]*$/,
+    validPattern: /^[0-9]{1,5}$/,
+    errorMessage: "Only numbers allowed (max 5 digits)",
     required: true,
+  },
+  name: {
+    label: "LIS Name",
+    allowedPattern: /^[a-zA-Z0-9 _-]*$/,
+    validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
+    errorMessage:
+      "Only letters, numbers, spaces, hyphens and underscores allowed (max 100 chars)",
+    required: false,
   },
 };
 
 type FormState = {
   applicationName: string;
   ipAddress: string;
-  incomingPort: string;
   receivingFacility: string;
+  port: string;
+  name: string;
 };
 
 const INITIAL_FORM: FormState = {
   applicationName: "",
   ipAddress: "",
-  incomingPort: "",
   receivingFacility: "",
+  port: "",
+  name: "",
 };
 
 export function LisConfig() {
   const dispatch = useAppDispatch();
-  const { lisConnector, loading } = useSelector((s: any) => s.ehTools || {});
+  const { lis, loading } = useSelector((s: any) => s.ehTools || {});
+
+  const { canAccess } = usePermissions();
+  const canEditLis = canAccess(
+    API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.LIS }),
+    API_URLS.enrichment.updateTool.method,
+  );
 
   const [editMode, setEditMode] = useState(false);
   const [initialized, setInitialized] = useState(false);
@@ -87,33 +102,33 @@ export function LisConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   useEffect(() => {
-    dispatch(fetchEhTool({ toolKey: "eh-lis-connector" }))
+    dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS }))
       .unwrap()
       .catch((err: unknown) => {
         setCardError(extractApiErrorMessage(err));
       });
   }, [dispatch]);
 
-  useRefetchOnFocus([() => fetchEhTool({ toolKey: "eh-lis-connector" })]);
+  useRefetchOnFocus([() => fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS })]);
 
   useEffect(() => {
-    if (!lisConnector || Object.keys(lisConnector).length === 0 || initialized)
+    if (!lis || Object.keys(lis).length === 0 || initialized)
       return;
     const newData: FormState = {
-      applicationName: lisConnector.receivingAppName || lisConnector.name || "",
-      ipAddress: lisConnector.ipAddress || "",
-      incomingPort: lisConnector["incoming-port"]?.toString() || "",
-      receivingFacility: lisConnector.receivingFacility || "",
+      applicationName: lis.receivingAppName || "",
+      ipAddress: lis.ipAddress || "",
+      receivingFacility: lis.receivingFacility || "",
+      port: lis.port != null ? String(lis.port) : "",
+      name: lis.lisName || "",
     };
     setForm(newData);
     setOriginalForm(newData);
     setInitialized(true);
     setCardError(null);
-  }, [lisConnector, initialized]);
+  }, [lis, initialized]);
 
   const validateField = useCallback(
     (field: keyof FormState, value: string): string => {
@@ -241,18 +256,22 @@ export function LisConfig() {
     }
 
     const body: any = {};
-    if (changes.applicationName) body.appName = changes.applicationName;
-    if (changes.ipAddress) body.ipAddress = changes.ipAddress;
-    if (changes.incomingPort)
-      body["incoming-port"] = parseInt(changes.incomingPort, 10);
-    if (changes.receivingFacility !== undefined)
-      body.receivingFacility = changes.receivingFacility;
+      if (changes.applicationName)
+        body.receivingAppName = changes.applicationName;
+      if (changes.ipAddress)
+        body.ipAddress = changes.ipAddress;
+      if (changes.receivingFacility !== undefined)
+        body.receivingFacility = changes.receivingFacility;
+      if (changes.port)
+        body.port = Number(changes.port);
+      if (changes.name !== undefined)
+        body.lisName = changes.name;
 
     setCardError(null);
 
     try {
       await dispatch(
-        patchEhTool({ toolKey: "eh-lis-connector", body }),
+        patchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS, body }),
       ).unwrap();
       toast.success("LIS configuration updated successfully");
       setOriginalForm(form);
@@ -348,12 +367,13 @@ export function LisConfig() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {renderInput("applicationName", !editMode)}
               {renderInput("ipAddress", !editMode)}
+              {renderInput("port", !editMode)}
               {renderInput("receivingFacility", !editMode)}
-              {renderInput("incomingPort", !editMode)}
+              {renderInput("name", !editMode)}
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {(
+              {canEditLis && (
                 <>
                   {editMode ? (
                     <>

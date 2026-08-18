@@ -5,8 +5,7 @@ export const fetchHealthStatus = createAsyncThunk(
   'health/fetchHealthStatus',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await healthService.fetchHealthStatus();
-      console.log('Health status response:', res);
+      const res = await healthService.fetchHealthStatus();      
       return res;
     } catch (err: any) {
       return rejectWithValue(err.response?.data || 'Fetch failed');
@@ -66,8 +65,7 @@ const healthSlice = createSlice({
         state.loading = true;
         state.error = undefined;
       })
-      .addCase(fetchHealthStatus.fulfilled, (state, action) => {
-        console.log('Fetched health status:', action.payload);
+      .addCase(fetchHealthStatus.fulfilled, (state, action) => {        
         state.thirdParties = action.payload.thirdParties || [];
         state.microservices = action.payload.microservices || [];
         state.dependencies = action.payload.dependencies || null;

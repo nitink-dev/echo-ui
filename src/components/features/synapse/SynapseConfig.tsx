@@ -1,5 +1,5 @@
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import { Cloud, Edit, Save, X } from "lucide-react";
+import { AlertTriangle, Cloud, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
 import apiClient, { extractApiErrorMessage } from "../../../api/services/apiClient";
@@ -19,8 +19,10 @@ import { Button } from "../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../ui/card";
 import { Input } from "../../ui/input";
 import { Label } from "../../ui/label";
-import { SERVICE_URL } from "../../../api/services/enrichmentService";
 import { useSlideScan } from "../status/SlideScanContext";
+import { usePermissions } from "../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../auth/permissions/apiConfig";
+import { ENRICHMENT_TOOLS } from "../../../utils/constants";
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -28,7 +30,7 @@ export const fetchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/fetch", async (_, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get(SERVICE_URL + "/synapse");
+    const res = await apiClient.get(`${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`);
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -52,7 +54,7 @@ export const patchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/patch", async ({ body }, { rejectWithValue }) => {
   try {
-    const res = await apiClient.patch(SERVICE_URL + "/synapse", body);
+    const res = await apiClient.patch(`${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`, body);
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -72,7 +74,7 @@ export const patchSynapse = createAsyncThunk<
 
 const FIELD_RULES: Record<string, FieldRule> = {
   imsName: {
-    label: "IMS Name",
+    label: "Name",
     allowedPattern: /^[a-zA-Z0-9 _-]*$/,
     validPattern: /^[a-zA-Z0-9 _-]{1,100}$/,
     errorMessage:
@@ -87,14 +89,14 @@ const FIELD_RULES: Record<string, FieldRule> = {
     required: true,
   },
   receivingPort: {
-    label: "IMS Port",
+    label: "Port",
     allowedPattern: PORT_ALLOWED_PATTERN,
     validate: isValidPort,
     errorMessage: PORT_ERROR_MESSAGE,
     required: true,
   },
   networkFolder: {
-    label: "Network Folder Location",
+    label: "Network Folder Location 1",
     allowedPattern: /^[a-zA-Z0-9 /\\:_\-.]*$/,
     validPattern: /^[a-zA-Z0-9 /\\:_\-.]{1,260}$/,
     errorMessage:
@@ -162,8 +164,10 @@ export function SynapseConfig() {
 
   const [cardError, setCardError] = useState<string | null>(null);
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { canAccess } = usePermissions();
+  const canEditSynapse = canAccess(API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE }), API_URLS.enrichment.updateTool.method);
+  
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   useEffect(() => {
     const loadData = async () => {
@@ -175,11 +179,11 @@ export function SynapseConfig() {
           const newData: FormState = {
             applicationName: result.receivingAppName || "",
             ipAddress: result.ipAddress || "",
-            receivingPort: result["receive-port"]?.toString() || "",
+            receivingPort: result["synapse-receive-port"]?.toString() || "",
             networkFolder: result.synapseServerFolder || "",
             receivingFacility: result.receivingFacility || "",
-            imsName: result.imsName || "",
-            networkFolder2: result.networkFolder2 || "",
+            imsName: result["ims-name"]?.toString() || "",
+            networkFolder2: result.synapseServerFolder2 || "",
           };
           setForm(newData);
           setOriginalForm(newData);
@@ -278,6 +282,7 @@ export function SynapseConfig() {
   );
 
   const handleEdit = (enable: boolean) => {
+    console.log("handleEdit called with enable:", enable, "isScanInProgress:", isScanInProgress);
     if (enable && isScanInProgress) {
       toast.warning(
         "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
@@ -429,17 +434,18 @@ export function SynapseConfig() {
 
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              {renderInput("imsName", !editMode)}
               {renderInput("applicationName", !editMode)}
               {renderInput("ipAddress", !editMode)}
               {renderInput("receivingPort", !editMode)}
               {renderInput("networkFolder", !editMode)}
+               {renderInput("networkFolder2", !editMode)}
               {renderInput("receivingFacility", !editMode)}
-              {renderInput("imsName", !editMode)}
-              {renderInput("networkFolder2", !editMode)}
+
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
-              {(
+              {canEditSynapse && (
                 <>
                   {editMode ? (
                     <>

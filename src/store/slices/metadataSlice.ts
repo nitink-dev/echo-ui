@@ -8,7 +8,6 @@ export const fetchHospitalMetadata = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const res = await metadataService.fetchHospitalMetadata();
-      console.log("Hospital metadata response:", res);
       return res;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "Unknown error occurred";
@@ -51,7 +50,6 @@ const metadataSlice = createSlice({
     builder
       .addCase(fetchHospitalMetadata.pending, (state) => { state.loading = true; })
       .addCase(fetchHospitalMetadata.fulfilled, (state, action) => {
-        console.log("Fetched hospital metadata:", action.payload);
         state.hospitals = action.payload.names || [];
         state.locations = action.payload.locations || [];
         state.loading = false;

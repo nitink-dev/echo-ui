@@ -1,5 +1,4 @@
 import { BarChart3, Plus } from "lucide-react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,6 +21,9 @@ import { DicomStoreConfig } from "./DicomStoreConfig";
 import { QAParameterForm } from "./QAParameterForm";
 import { QAParameterTable } from "./QAParameterTable";
 import { useQAConfig } from "./useQAConfig";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../../status/SlideScanContext";
 
 export function QAConfig() {
@@ -49,12 +51,9 @@ export function QAConfig() {
     handleSaveDicomStore,
   } = useQAConfig();
 
-  const { canWrite } = usePermissions();
-  const canAdd = canWrite("qa-analysis");
+  const { canAccess } = usePermissions();
 
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
-  
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   return (
     <div className="space-y-6">
@@ -79,12 +78,12 @@ export function QAConfig() {
                 Manage barcode and activation code pairs for QA slides
               </CardDescription>
             </div>
-            {canAdd && (
-              <Button
+              <PermissionGuard allowed={canAccess(API_URLS.qaAnalysis.create, API_URLS.qaAnalysis.create.method)}>
+                <Button
                 onClick={handleAddParameter}
                 disabled={isScanInProgress}
                 title={
-                  isScanInProgress                    ? "A slide scan is currently in progress. Adding new parameters is disabled."
+                  isScanInProgress ? "A slide scan is currently in progress. Adding new parameters is disabled."
                   : undefined
                 }
                 className="bg-blue-600 hover:bg-blue-700"
@@ -92,7 +91,7 @@ export function QAConfig() {
                 <Plus className="h-4 w-4 mr-2" />
                 Add New
               </Button>
-            )}
+              </PermissionGuard>
           </div>
         </CardHeader>
         <CardContent>
@@ -123,12 +122,6 @@ export function QAConfig() {
         onSave={handleSaveParameter}
       />
 
-      {/*
-        FIX 1: onOpenChange was () => {} (no-op) — now wired to setDeleteDialogOpen
-                so Escape key and backdrop click also close the dialog.
-        FIX 2: AlertDialogCancel now calls handleDeleteCancel which clears both
-                deleteDialogOpen AND parameterToDelete state cleanly.
-      */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

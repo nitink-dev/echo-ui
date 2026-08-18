@@ -1,6 +1,5 @@
 import { Database, Edit } from "lucide-react";
 import { useEffect, useState } from "react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { Button } from "../../../ui/button";
 import {
   Card,
@@ -10,7 +9,10 @@ import {
   CardTitle,
 } from "../../../ui/card";
 import { Label } from "../../../ui/label";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -25,11 +27,10 @@ export function DicomStoreConfig({
 }: DicomStoreConfigProps) {
   const [isEditingDicom, setIsEditingDicom] = useState(false);
   const [tempDicomAddress, setTempDicomAddress] = useState(dicomStoreAddress);
-  const { canWrite } = usePermissions();
-  const canEditDicomStore = canWrite("qa-analysis");
 
-  const { inProgressCunt} = useSlideScan();
-  const isScanInProgress = inProgressCunt > 0;
+  const { canAccess } = usePermissions();
+
+  const { isBannerVisible: isScanInProgress } = useSlideScan();
 
     useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
@@ -87,7 +88,7 @@ export function DicomStoreConfig({
                   );
                 })}
               </select>
-              {canEditDicomStore && (
+                <PermissionGuard allowed={canAccess(API_URLS.config.dicomStore.path, "PATCH")}>
                 <>
                   {isEditingDicom ? (
                     <div className="flex gap-2">
@@ -120,7 +121,7 @@ export function DicomStoreConfig({
                     </Button>
                   )}
                 </>
-              )}
+              </PermissionGuard>
             </div>
             <p className="text-xs text-gray-500 mt-2">
               Full path to the Google Cloud DICOM store for QA slide storage

@@ -31,11 +31,12 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
-
 import { useDispatch } from "react-redux";
 import { toast } from "sonner";
-import { usePermissions } from "../../../../hooks/usePermissions";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
 
 interface ScannerTableProps {
   scanners: SlideScanner[];
@@ -58,9 +59,11 @@ export function ScannerTable({
   const [scannerToDelete, setScannerToDelete] = useState<SlideScanner | null>(
     null,
   );
-  const { canWrite, canDelete } = usePermissions();
-  const canEditScanner = canWrite("edit");
-  const canDeleteScanner = canDelete("list");
+
+  const { canAccess } = usePermissions();
+  const canEditScanner = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
+  const canCreateScanner = canAccess(API_URLS.scanners.create.path, API_URLS.scanners.create.method);
+  const canDeleteScanner = canAccess(API_URLS.scanners.delete.path, API_URLS.scanners.delete.method);
 
   const initialConnected = useMemo(() => {
     const map: Record<string, boolean> = {};
@@ -83,8 +86,7 @@ export function ScannerTable({
   const [researchMap, setResearchMap] =
     useState<Record<string, boolean>>(initialResearch);
 
-    const { inProgressCount } = useSlideScan();
-    const isScanInProgress = inProgressCount > 0;
+    const { isBannerVisible: isScanInProgress } = useSlideScan();
 
   useEffect(() => setConnectedMap(initialConnected), [initialConnected]);
   useEffect(() => setResearchMap(initialResearch), [initialResearch]);
@@ -111,10 +113,11 @@ export function ScannerTable({
         <h3 className="text-lg font-medium text-gray-900 mb-2">
           No registered scanners
         </h3>
-        <p className="text-gray-600 mb-6 max-w-md mx-auto">
-          Click "Add New Scanner" to register your first scanner.
-        </p>
-        <Button
+        <PermissionGuard allowed={canCreateScanner}>
+          <p className="text-gray-600 mb-6 max-w-md mx-auto">
+            Click "Add New Scanner" to register your first scanner.
+          </p>
+           <Button
           onClick={onAddScanner}
           disabled={isScanInProgress}
           title={
@@ -125,6 +128,8 @@ export function ScannerTable({
         >
           <Plus className="h-4 w-4 mr-2" /> Add New Scanner
         </Button>
+        </PermissionGuard>
+
       </div>
     );
   }
@@ -269,17 +274,28 @@ export function ScannerTable({
                     className="flex flex-col items-start"
                     onClick={(e) => e.stopPropagation()}
                   >
-                    <Switch
-                      checked={!!connected}
-                      disabled={!canEditScanner}
-                      onCheckedChange={(checked) => {
-                        if (!canEditScanner) return;
-                        const next = Boolean(checked);
-                        setConnectedMap((prev) => ({ ...prev, [key]: next }));
-                        dispatchUpdate({ connected: next });
-                      }}
-                      aria-label="Connected"
-                    />
+                    <div
+                      title={
+                        isScanInProgress
+                          ? "A slide scan is currently in progress. Scanner connection cannot be changed."
+                          : !canEditScanner
+                            ? "You do not have permission to edit scanner connection."
+                            : undefined
+                      }
+                    >
+                      <Switch
+                        checked={!!connected}
+                        disabled={!canEditScanner || isScanInProgress}
+                        onCheckedChange={(checked) => {
+                          if (!canEditScanner || isScanInProgress) return;
+
+                          const next = Boolean(checked);
+                          setConnectedMap((prev) => ({ ...prev, [key]: next }));
+                          dispatchUpdate({ connected: next });
+                        }}
+                        aria-label="Connected"
+                      />
+                    </div>
 
                     <span
                       className={`mt-1 text-sm ${
@@ -307,7 +323,7 @@ export function ScannerTable({
                       <DropdownMenuItem onClick={() => onViewScanner(scanner)}>
                         <Eye className="h-4 w-4 mr-2" /> View
                       </DropdownMenuItem>
-                      {canEditScanner && (
+                      <PermissionGuard allowed={canEditScanner}>
                         <DropdownMenuItem
                           onClick={() => onEditScanner(scanner)}
                              disabled={isScanInProgress}
@@ -318,9 +334,9 @@ export function ScannerTable({
                         >
                           <Edit className="h-4 w-4 mr-2" /> Edit
                         </DropdownMenuItem>
-                      )}
+                      </PermissionGuard>
                       <DropdownMenuSeparator />
-                      {canDeleteScanner && (
+                      <PermissionGuard allowed={canDeleteScanner}>
                         <DropdownMenuItem
                           onClick={() => handleDeleteClick(scanner)}
                              disabled={isScanInProgress}
@@ -332,7 +348,7 @@ export function ScannerTable({
                         >
                           <Trash2 className="h-4 w-4 mr-2" /> Delete
                         </DropdownMenuItem>
-                      )}
+                      </PermissionGuard>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </TableCell>

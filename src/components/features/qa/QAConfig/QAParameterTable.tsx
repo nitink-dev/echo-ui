@@ -1,5 +1,4 @@
 import { Edit, Eye, EyeOff, Plus, Trash2 } from "lucide-react";
-import { usePermissions } from "../../../../hooks/usePermissions";
 import { QASlideParameter } from "../../../../types/qa.types";
 import { Button } from "../../../ui/button";
 import {
@@ -10,7 +9,10 @@ import {
   TableHeader,
   TableRow,
 } from "../../../ui/table";
+import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { API_URLS } from "../../../../auth/permissions/apiConfig";
+import { usePermissions } from "../../../../auth/permissions/usePermissions";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -29,13 +31,12 @@ export function QAParameterTable({
   onDeleteParameter,
   onToggleVisibility,
 }: QAParameterTableProps) {
-  const { canWrite, canDelete: canDeleteFn } = usePermissions();
-  const canAdd = canWrite("qa-analysis");
-  const canEdit = canWrite("qa-analysis");
-  const canDelete = canDeleteFn("qa-analysis");
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
-
+  const { canAccess } = usePermissions();
+const canCreate = canAccess(API_URLS.qaAnalysis.create.path, API_URLS.qaAnalysis.create.method);
+const canEdit   = canAccess(API_URLS.qaAnalysis.base.path,   "PATCH");
+const canDelete = canAccess(API_URLS.qaAnalysis.base.path,   "DELETE");
+  
+const { isBannerVisible: isScanInProgress } = useSlideScan();
   if (!qaParameters || qaParameters.length === 0) {
     return (
       <div className="text-center py-12">
@@ -45,7 +46,7 @@ export function QAParameterTable({
         <p className="text-gray-600 mb-4">
           Add barcode and activation code pairs to get started
         </p>
-        {canAdd && (
+        <PermissionGuard allowed={canCreate}>
           <Button
             onClick={onAddParameter}
             disabled={isScanInProgress}
@@ -59,7 +60,7 @@ export function QAParameterTable({
             <Plus className="h-4 w-4 mr-2" />
             Add First Parameter
           </Button>
-        )}
+        </PermissionGuard>
       </div>
     );
   }
@@ -98,8 +99,8 @@ export function QAParameterTable({
 
             <TableCell>
               <div className="flex gap-1 flex-wrap">
-                {canEdit && (
-                  <Button
+                  <PermissionGuard allowed={canEdit}>
+                    <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onEditParameter(parameter)}
@@ -110,18 +111,17 @@ export function QAParameterTable({
                         : "Edit Parameter"
                     }
                     className="min-w-0"
-                    title="Edit Parameter"
                   >
                     <Edit className="h-4 w-4" />
                   </Button>
-                )}
-                {canDelete && (
-                  <Button
+                  </PermissionGuard>
+               
+                  <PermissionGuard allowed={canDelete}>
+                    <Button
                     variant="outline"
                     size="sm"
                     onClick={() => onDeleteParameter(parameter)}
                     className="text-red-600 hover:text-red-700 hover:border-red-300 min-w-0"
-                    title="Delete Parameter"
                     disabled={isScanInProgress}
                     title={
                       isScanInProgress
@@ -131,7 +131,7 @@ export function QAParameterTable({
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                )}
+                  </PermissionGuard>
               </div>
             </TableCell>
           </TableRow>

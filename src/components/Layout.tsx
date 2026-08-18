@@ -12,12 +12,10 @@ import {
   Stethoscope,
   User,
 } from "lucide-react";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { useAppDispatch } from "../hooks";
-import { usePermissions } from "../hooks/usePermissions";
 import { logoutUser } from "../store/slices/authSlice";
-import { useSlideScan } from "./features/status/SlideScanContext";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -39,29 +37,38 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "./ui/tooltip";
+import { useSlideScan } from "./features/status/SlideScanContext";
+import { usePermissions } from "../auth/permissions/usePermissions";
+import { API_URLS } from "../auth/permissions/apiConfig";
+import { formatSessionClockTime, formatSessionDuration } from "../utils/sessionTime";
+import { Clock3, Hourglass } from "lucide-react";
 
 interface LayoutProps {
   children: React.ReactNode;
   currentPage: string;
   breadcrumbs?: Array<{ label: string; href?: string }>;
   onNavigate: (pageId: string) => void;
+  sessionStartedAt?: Date | null;
+  sessionExpiresAt?: Date | null;
+  sessionTimeoutMinutes?: number;
 }
 
 interface NavigationItem {
   label: string;
   icon: React.ComponentType<any>;
   id: string;
+  permissionKey?: keyof ReturnType<typeof buildPermissionMap>;
   children?: NavigationItem[];
 }
 
 const navigationItems: NavigationItem[] = [
   {
     label: "Operations",
-    icon: Activity,
+    icon: MonitorCheckIcon,
     id: "operations",
     children: [
-      { label: "Telemetry", icon: MonitorCheckIcon, id: "slide-status" },
-      { label: "Health Status", icon: MonitorCheckIcon, id: "health-status" },
+      { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status", permissionKey: "slide-status" },
+      { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
     ],
   },
   {
@@ -69,7 +76,7 @@ const navigationItems: NavigationItem[] = [
     icon: Monitor,
     id: "devices",
     children: [
-      { label: "Slide Scanner", icon: Microscope, id: "list" },
+      { label: "Slide Scanner", icon: Microscope, id: "list", permissionKey: "list" },
     ],
   },
   {
@@ -77,13 +84,26 @@ const navigationItems: NavigationItem[] = [
     icon: Stethoscope,
     id: "clinical-apps",
     children: [
-      { label: "LIS", icon: Activity, id: "lis" },
-      { label: "IMS", icon: Settings, id: "synapse" },
-      { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis" },
-      { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool" },
+      { label: "LIS", icon: Activity, id: "lis", permissionKey: "lis" },
+      { label: "IMS", icon: Settings, id: "synapse", permissionKey: "synapse" },
+      { label: "Slide Image Analysis", icon: Microscope, id: "qa-analysis", permissionKey: "qa-analysis" },
+      { label: "Enrichment Tool", icon: Cpu, id: "enrichment-tool", permissionKey: "enrichment-tool" },
     ],
   },
 ];
+
+function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAccess"]) {
+  return {
+    list:              canAccess(API_URLS.scanners.base.path,          API_URLS.scanners.base.method),
+    lis:               canAccess(API_URLS.enrichment.lis.path,         API_URLS.enrichment.lis.method),
+    synapse:           canAccess(API_URLS.enrichment.synapse.path,     API_URLS.enrichment.synapse.method),
+    "qa-analysis":     canAccess(API_URLS.qaAnalysis.base.path,        API_URLS.qaAnalysis.base.method),
+    "enrichment-tool": canAccess(API_URLS.enrichment.tools.path,       API_URLS.enrichment.tools.method),
+    "health-status":   true,
+    "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
+    "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
+  };
+}
 
 interface NavigationProps {
   currentPage: string;
@@ -91,14 +111,31 @@ interface NavigationProps {
 }
 
 function Navigation({ currentPage, onNavigate }: NavigationProps) {
-  const { canRead, configLoaded } = usePermissions();
+  const { canAccess } = usePermissions();
+  const permissionMap = buildPermissionMap(canAccess);
 
-  const [expandedSections, setExpandedSections] = useState<string[]>([
-    "operations",
-    "devices",
-    "data-stores",
-    "clinical-apps",
-  ]);
+ 
+  const findSectionForPage = (page: string) =>
+    navigationItems.find((section) =>
+      section.children?.some((item) => item.id === page),
+    )?.id;
+
+  const [expandedSections, setExpandedSections] = useState<string[]>(() => {
+    const activeSection = findSectionForPage(currentPage);
+    const defaults = ["devices", "clinical-apps","operations"];
+    return activeSection && !defaults.includes(activeSection)
+      ? [...defaults, activeSection]
+      : defaults;
+  });
+
+  useEffect(() => {
+    const activeSection = findSectionForPage(currentPage);
+    if (activeSection) {
+      setExpandedSections((prev) =>
+        prev.includes(activeSection) ? prev : [...prev, activeSection],
+      );
+    }
+  }, [currentPage]);
 
   const toggleSection = (sectionId: string) => {
     setExpandedSections((prev) =>
@@ -111,9 +148,10 @@ function Navigation({ currentPage, onNavigate }: NavigationProps) {
   const filteredNavItems = navigationItems
     .map((section) => ({
       ...section,
-      children: section.children?.filter(
-        (item) => !configLoaded || canRead(item.id),
-      ),
+      children: section.children?.filter((item) => {
+        if (!item.permissionKey) return true;
+        return permissionMap[item.permissionKey] !== false;
+      }),
     }))
     .filter((section) => (section.children?.length ?? 0) > 0);
 
@@ -215,23 +253,44 @@ export function Layout({
   currentPage,
   breadcrumbs = [],
   onNavigate,
+  sessionStartedAt,
+  sessionExpiresAt,
+  sessionTimeoutMinutes = 0,
 }: LayoutProps) {
   const dispatch = useAppDispatch();
-  const { inProgressCount } = useSlideScan();
-  const isScanInProgress = inProgressCount > 0;
+  const { isBannerVisible : isScanInProgress} = useSlideScan();
+  const [currentTime, setCurrentTime] = useState(() => new Date());
 
   const username = useSelector((state: any) => state.auth.displayName) as
     | string
     | null;
+
+  useEffect(() => {
+    if (!sessionExpiresAt || sessionTimeoutMinutes <= 0) return;
+
+    const intervalId = window.setInterval(() => {
+      setCurrentTime(new Date());
+    }, 1000);
+
+    return () => window.clearInterval(intervalId);
+  }, [sessionExpiresAt, sessionTimeoutMinutes]);
 
   const handleLogout = async () => {
     await dispatch(logoutUser());
     onNavigate("login");
   };
 
-  const topOffset = isScanInProgress ? "top-16" : "top-16";
-  const sidebarTop = isScanInProgress ? "top-[100px]" : "top-16";
-  const mainPadding = isScanInProgress ? "pt-[100px]" : "pt-16";
+  const sessionExpiresInSeconds =
+    sessionExpiresAt && sessionTimeoutMinutes > 0
+      ? Math.max(0, Math.round((sessionExpiresAt.getTime() - currentTime.getTime()) / 1000))
+      : 0;
+
+  const sessionSummary = sessionStartedAt && sessionExpiresAt
+    ? {
+        loggedInAt: formatSessionClockTime(sessionStartedAt),
+        expiresIn: formatSessionDuration(sessionExpiresInSeconds),
+      }
+    : null;
 
   return (
     <div className="min-h-screen bg-[#fafbff]">
@@ -244,6 +303,36 @@ export function Layout({
               className="h-8 sm:h-7 object-contain transition-all duration-200 hover:opacity-90 header-logo"
             />
           </div>
+
+{sessionSummary && (
+  <div className="flex items-center ml-auto mr-5 gap-2">
+    {/* Session Badge */}
+    <div className="bg-white border border-white rounded-md px-1 flex items-center justify-center shadow-sm">
+      <span
+        className="text-[8px] font-semibold text-blue-600 tracking-wider whitespace-nowrap"
+       
+      >
+        &nbsp; SESSION &nbsp;
+      </span>
+    </div>
+
+    {/* Session Details */}
+
+
+<div className="rounded-lg border border-white/30 bg-blue-500/90 px-2 py-1 shadow-md">
+  <div className="flex items-center gap-2 text-xs font-medium text-white">
+    <Clock3 className="h-3.5 w-3.5 text-blue-100" width="12" height="12" />
+    <span>Started: {sessionSummary.loggedInAt}</span>
+  </div>
+
+  <div className="mt-1 flex items-center gap-2 text-xs font-medium text-white">
+    <Hourglass className="h-3.5 w-3.5 text-blue-100" width="12" height="12"/>
+    <span>Expires: {sessionSummary.expiresIn} min</span>
+  </div>
+</div>
+  </div>
+)}
+
 
           <div className="flex items-center gap-2 pr-6 sm:pr-4 header-nav-buttons">
             <DropdownMenu>
@@ -321,20 +410,19 @@ export function Layout({
             </DropdownMenu>
           </div>
         </div>
-
+     
         {isScanInProgress && (
           <div className="w-full bg-[#1a3a5c] border-b border-[#1e4976] flex items-center gap-3 px-6 py-2">
-       
             <span className="relative flex h-3 w-3 shrink-0">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#60a5fa] opacity-75" />
               <span className="animate-pulse relative inline-flex rounded-full h-3 w-3 bg-[#3b82f6]" />
-              </span> 
+            </span>
 
             <p className="text-sm text-[#93c5fd]">
               <span className="font-semibold text-white">
                 Scan in progress —{" "}
               </span>
-              {inProgressCount} slide{inProgressCount !== 1 ? "s are" : " is"} currently being scanned. Configuration editing is disabled until all scans complete.
+              Configuration editing is disabled until all scans complete.
             </p>
           </div>
         )}

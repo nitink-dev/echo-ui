@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
 import { setUnauthorizedHandler } from "./api/services/apiClient";
@@ -15,7 +15,7 @@ import { SlideScanStatus } from "./components/features/status/SlideScanStatus";
 import { SynapseConfig } from "./components/features/synapse/SynapseConfig";
 import { Toaster } from "./components/ui/sonner";
 import { useAppDispatch } from "./hooks";
-import { usePermissions } from "./hooks/usePermissions";
+import { usePermissions } from "./auth/permissions/usePermissions";
 import { loadStoredSession, logoutUser } from "./store/slices/authSlice";
 import {
   addScanner,
@@ -27,6 +27,9 @@ import { Breadcrumb, PageType } from "./types/common.types";
 import { SlideScanner } from "./types/scanner.types";
 import { sanitizeFormData } from "./utils/helpers";
 import { useCrossTabAuth } from "./hooks/useCrossTabAuth";
+import { API_URLS } from "./auth/permissions/apiConfig";
+import { useIdleTimeout } from "./hooks/useIdleTimeout";
+import { IdleTimeoutModal } from "./components/common/TimeoutModal/IdleTimeoutModal";
 
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
@@ -41,21 +44,38 @@ function PageLoader() {
   );
 }
 
+const STORAGE_KEY_PREFIX = "currentPage:";
+
+const normalizeStoredPage = (page: string | null): PageType => {
+  const safePage = page && VALID_PAGES.includes(page as PageType)
+    ? (page as PageType)
+    : "slide-status";
+
+  return safePage === "view" || safePage === "edit"
+    ? "list"
+    : safePage;
+};
+
+const getSavedPageForUser = (user: string | null): PageType =>
+  normalizeStoredPage(localStorage.getItem(`${STORAGE_KEY_PREFIX}${user}`));
+
+const savePageForCurrentUser = (page: PageType): void => {
+  const user = localStorage.getItem("auth_user");
+  const normalizedPage = normalizeStoredPage(page);
+  if (user) {
+    localStorage.setItem(`${STORAGE_KEY_PREFIX}${user}`, normalizedPage);
+  }
+};
+
 export default function App() {
   const dispatch = useAppDispatch();
 
-  const getInitialPage = (): PageType => {
-  const user = localStorage.getItem("auth_user");
-  if (!user) return "slide-status"; 
-
-  const saved = localStorage.getItem(`currentPage:${user}`) as PageType;
-  return saved && VALID_PAGES.includes(saved)
-    ? saved
-    : "slide-status"; 
-};
-
-  const [currentPage, setCurrentPage] = useState<PageType>(getInitialPage);
+  const [currentPage, setCurrentPage] = useState<PageType>(() =>
+    getSavedPageForUser(localStorage.getItem("auth_user"))
+  );
   const [selectedScanner, setSelectedScanner] = useState<SlideScanner | null>(null);
+  const [sessionStartedAt, setSessionStartedAt] = useState<Date | null>(null);
+  const [sessionExpiresAt, setSessionExpiresAt] = useState<Date | null>(null);
   const isNavigating = useRef(false);
 
   const scanners = useSelector((state: any) => state.scanners.items);
@@ -65,12 +85,51 @@ export default function App() {
   const currentUser = useSelector((state: any) => state.auth.user);
 
   useCrossTabAuth(currentUser);
+  
+  const sessionTimeoutMinutes = useSelector(
+    (state: any) => state.auth.sessionTimeoutMinutes  
+  );
 
-  const { canRead, canWrite, configLoaded } = usePermissions();
+  const handleIdleLogout = useCallback(async () => {
+    await dispatch(logoutUser());
+  }, [dispatch]);
+
+  const handleSessionActivity = useCallback(() => {
+    const timeoutMinutes = Math.max(1, Number(sessionTimeoutMinutes) || 6);
+    setSessionExpiresAt(new Date(Date.now() + timeoutMinutes * 60 * 1000));
+  }, [isLoggedIn, sessionTimeoutMinutes]);
+
+  const { isIdle, secondsLeft, countdownSeconds, resetTimer, dismissModal } =
+  useIdleTimeout({
+    sessionTimeoutMinutes: isLoggedIn ? sessionTimeoutMinutes : 0,
+    onAutoLogout: handleIdleLogout,
+    onActivity: handleSessionActivity,
+  });
+
+  const handleIdleContinue = () => resetTimer();  
+  const handleIdleCancel   = () => dismissModal(); 
+
+  const { canAccess, configLoaded } = usePermissions();
+  const canGetScanners = canAccess(API_URLS.scanners.base.path, API_URLS.scanners.base.method);
+  const canEditScanners = canAccess(API_URLS.scanners.update.path, API_URLS.scanners.update.method);
+  const canDeleteScanners = canAccess(API_URLS.scanners.delete.path, API_URLS.scanners.delete.method);
 
   useEffect(() => {
     dispatch(loadStoredSession());
   }, []);
+
+  useEffect(() => {
+    if (!isLoggedIn) {
+      setSessionStartedAt(null);
+      setSessionExpiresAt(null);
+      return;
+    }
+
+    const timeoutMinutes = Math.max(1, Number(sessionTimeoutMinutes) || 6);
+    const now = new Date();
+    setSessionStartedAt((previous) => previous ?? now);
+    setSessionExpiresAt(new Date(now.getTime() + timeoutMinutes * 60 * 1000));
+  }, [isLoggedIn, sessionTimeoutMinutes, currentUser?.username]);
 
   useEffect(() => {
     setUnauthorizedHandler(() => {
@@ -88,18 +147,17 @@ export default function App() {
     if (isLoggedIn && currentPage === "list") {
       dispatch(fetchScanners());
     }
-  }, [currentPage]);
+  }, [currentPage, dispatch, isLoggedIn]);
 
   useEffect(() => {
     if (!isLoggedIn) return;
 
     const handlePopState = (event: PopStateEvent) => {
       if (isNavigating.current) return;
-      const page = (event.state?.page as PageType) || "slide-status";
-      const safePage: PageType =
-        page === "view" || page === "edit" ? "list" : page;
-      localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, safePage);
-      setCurrentPage(safePage);
+      const page = (event.state?.page as string) || "slide-status";
+      const normalizedPage = normalizeStoredPage(page);
+      savePageForCurrentUser(normalizedPage);
+      setCurrentPage(normalizedPage);
       setSelectedScanner(null);
     };
 
@@ -107,20 +165,26 @@ export default function App() {
     return () => window.removeEventListener("popstate", handlePopState);
   }, [isLoggedIn]);
 
+  useEffect(() => {
+    if (isLoggedIn) {
+      const savedPage = getSavedPageForUser(localStorage.getItem("auth_user"));
+      setCurrentPage(savedPage);
+    }
+  }, [isLoggedIn]);
+
   const navigateToPage = (page: PageType, scanner?: SlideScanner) => {
-    if (configLoaded && !canRead(page)) {
+    if (configLoaded && !canGetScanners) {
       console.log("You don't have permission to access this page.", page);
       return;
     }
 
-    const storePage = page === "login" ? "list" : page;
-    localStorage.setItem(`currentPage:${localStorage.getItem("auth_user")}`, storePage);
+    savePageForCurrentUser(page);
 
     isNavigating.current = true;
-    window.history.pushState({ page: storePage }, "", window.location.pathname);
+    window.history.pushState({ page }, "", window.location.pathname);
     isNavigating.current = false;
 
-    setCurrentPage(storePage as PageType);
+    setCurrentPage(page);
     setSelectedScanner(scanner || null);
   };
 
@@ -134,7 +198,7 @@ export default function App() {
   }
 
   const handleAddScanner = () => {
-    if (!canWrite("list")) {
+    if (!canEditScanners) {
       toast.error("You don't have permission to add a scanner.");
       return;
     }
@@ -142,7 +206,7 @@ export default function App() {
   };
 
   const handleEditScanner = (scanner: SlideScanner) => {
-    if (!canWrite("list")) {
+    if (!canEditScanners) {
       toast.error("You don't have permission to edit a scanner.");
       return;
     }
@@ -156,13 +220,12 @@ export default function App() {
 
   const handleDeleteScanner = async (id?: string) => {
     if (!id) return;
-    if (!canWrite("list")) {
+    if (!canDeleteScanners) {
       toast.error("You don't have permission to delete a scanner.");
       return;
     }
     try {
       await dispatch(deleteScanner(id));
-      toast.success("Scanner deleted successfully");
     } catch (err: any) {
       toast.error(err.message || "Error deleting scanner");
     }
@@ -182,10 +245,8 @@ export default function App() {
             }
           )
         );
-        toast.success("Scanner updated successfully");
       } else {
         await dispatch(addScanner(sanitizedData as Omit<SlideScanner, "id">));
-        toast.success("Scanner added successfully");
       }
 
       navigateToPage("list");
@@ -257,7 +318,7 @@ export default function App() {
       return <PageLoader />;
     }
 
-    if (!canRead(currentPage)) {
+    if (!canGetScanners) {
       return <UnauthorizedPage />;
     }
 
@@ -277,7 +338,7 @@ export default function App() {
           onDeleteScanner={handleDeleteScanner}
         />
       ),
-      add: canWrite("list") ? (
+      add: canEditScanners ? (
         <ScannerForm
           onSave={handleSaveScanner}
           onCancel={handleCancelForm}
@@ -286,7 +347,7 @@ export default function App() {
       ) : (
         <UnauthorizedPage />
       ),
-      edit: canWrite("list") ? (
+      edit: canEditScanners ? (
         <ScannerForm
           scanner={selectedScanner!}
           onSave={handleSaveScanner}
@@ -316,6 +377,9 @@ export default function App() {
         currentPage={currentPage}
         breadcrumbs={getBreadcrumbs()}
         onNavigate={(pageId) => navigateToPage(pageId as PageType)}
+        sessionStartedAt={sessionStartedAt}
+        sessionExpiresAt={sessionExpiresAt}
+        sessionTimeoutMinutes={isLoggedIn ? sessionTimeoutMinutes : 0}
       >
         {renderCurrentPage()}
       </Layout>
@@ -347,6 +411,14 @@ export default function App() {
           },
         }}
       />
+      {isLoggedIn && isIdle && (
+        <IdleTimeoutModal
+          secondsLeft={secondsLeft}
+          totalSeconds={countdownSeconds}
+          onContinue={handleIdleContinue}
+          onCancel={handleIdleCancel}
+        />
+      )}
     </div>
   );
 }

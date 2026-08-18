@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import { BASE_URL } from "../../utils/constants";
 import apiClient from "../../api/services/apiClient";
+import { qaService } from "../../api/services/qaService";
 
 export interface QASlideParameter {
   id: string;
@@ -31,9 +32,6 @@ export const fetchQAParameters = createAsyncThunk<
   try {
     const res = await apiClient.get(`${BASE_URL}/api/slides`);
     const data = res.data;
-
-    console.log("📥 API /api/slides response:", data);
-
     if (data?.qaSlides && data?.dicomUrl) {
       const slides = data.qaSlides.map((slide: any) => ({
         ...slide,
@@ -87,13 +85,7 @@ export const addQAParameter = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const res = await apiClient.post(`${BASE_URL}/api/slides`, payload);
-      return {
-        id: res.data.id,
-        barcode: res.data.barcode,
-        activationCode: res.data.activationCode,
-        dicomWebUrl: res.data.dicomWebUrl,
-      } as QASlideParameter;
+      return qaService.addParameter(payload);
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
@@ -107,8 +99,7 @@ export const updateQAParameter = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      await apiClient.put(`${BASE_URL}/api/slides/${payload.barcode}`, payload);
-      return payload;
+      return qaService.updateParameter(payload);
     } catch (err: any) {
       return rejectWithValue(err.message);
     }
@@ -140,8 +131,7 @@ const qaSlice = createSlice({
         fetchQAParameters.fulfilled,
         (state, action: PayloadAction<{ slides: QASlideParameter[]; dicomUrl: string }>) => {
           state.loading = false;
-          state.qaParameters = action.payload.slides.map((slide) => ({
-            ...slide}));
+          state.qaParameters = action.payload.slides;
           state.dicomStoreAddress = action.payload.dicomUrl;
         }
       )

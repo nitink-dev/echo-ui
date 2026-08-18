@@ -1,5 +1,6 @@
 import React from "react";
 import { CheckCircle2, XCircle, Clock } from "lucide-react";
+import { toTitleCase } from "../../../../utils/helpers";
 
 export function RunningRecordsRow({ record, index }) {
   const statusConfig = {
@@ -42,7 +43,7 @@ export function RunningRecordsRow({ record, index }) {
         <div className={`inline-flex items-center gap-1.5 py-1 rounded-full `}>
           <StatusIcon className={`h-3.5 w-3.5 ${config.color}`} />
           <span className={`text-xs font-medium ${config.color} capitalize`}>
-            {record.scanStatus.replace("-", " ")}
+            {toTitleCase(record.scanStatus.replace("-", " "))}            
           </span>
         </div>
       </td>

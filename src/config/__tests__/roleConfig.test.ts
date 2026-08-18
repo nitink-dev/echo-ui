@@ -99,12 +99,9 @@ describe('roleConfig.ts', () => {
           requiredScopes: ['write'],
           isPublic: false
         }
-        // Note: no GET /api/scanners entry for read permission
+
       ];
-      // Since there's no entry for GET /api/scanners in config, 
-      // getRequiredScopes returns { required: [], isPublic: false }
-      // which allows access (no scopes required)
-      // So a user with platform.read would have access
+
       const result = canReadWithScopes('list', ['platform.read'], config, true);
       expect(result).toBe(true); // No restriction means accessible
     });
