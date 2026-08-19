@@ -36,6 +36,7 @@ import {
 } from "../../../../utils/validation.constants";
 import { Button } from "../../../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../../ui/card";
+import { Checkbox } from "../../../ui/checkbox";
 import {
   Collapsible,
   CollapsibleContent,
@@ -127,7 +128,7 @@ export function EnrichmentToolConfig() {
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const [form, setForm] = useState<any>({
-    dicomReceiver: { aet: "",  port: "", networkDrive: "", serviceIpAddress: "" },
+    dicomReceiver: { aet: "",  port: "", networkDrive: "", serviceIpAddress: "", watcherActive: false },
     lisConnector: {
       applicationName: "",
       receivingPort: "",
@@ -219,6 +220,7 @@ export function EnrichmentToolConfig() {
         dicomReceiver["storescp.storage.path"] ||
         "",
       serviceIpAddress: dicomReceiver.serviceIpAddress || "",
+      watcherActive: !!dicomReceiver["watcher-active"],
     });
   }, [dicomReceiver]);
 
@@ -465,6 +467,9 @@ export function EnrichmentToolConfig() {
           ...(d.port && { port: d.port }),
           // ...(d.ipAddress && { ipAddress: d.ipAddress }),
           ...(d.networkDrive && { "network-drive": d.networkDrive }),
+          ...(d.watcherActive !== undefined && {
+            "watcher-active": !!d.watcherActive,
+          }),
         };
         break;
       }
@@ -877,6 +882,22 @@ export function EnrichmentToolConfig() {
         <Network className="h-5 w-5 text-[#007BFF]" />,
         "dicom",
         <>
+          <div className="md:col-span-2 flex items-center gap-2">
+            <Checkbox
+              id="dicomReceiver-watcherActive"
+              checked={!!form.dicomReceiver.watcherActive}
+              onCheckedChange={(v: boolean) =>
+                handleChange("dicomReceiver", "watcherActive", v)
+              }
+              disabled={!editMode.dicom}
+            />
+            <Label
+              htmlFor="dicomReceiver-watcherActive"
+              className="text-sm font-medium text-gray-700"
+            >
+              Enable directory watcher
+            </Label>
+          </div>
           {renderInput("dicomReceiver", "aet", "AET", !editMode.dicom)}
           {/* {renderInput("dicomReceiver", "ipAddress", "IP Address", !editMode.dicom)} */}
           {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
