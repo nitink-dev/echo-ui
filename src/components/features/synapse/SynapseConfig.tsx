@@ -335,7 +335,7 @@ export function SynapseConfig() {
     if (changes.receivingFacility)
       body.receivingFacility = changes.receivingFacility;
     if (changes.imsName) body.imsName = changes.imsName;
-    if (changes.networkFolder2) body.networkFolder2 = changes.networkFolder2;
+    if (changes.networkFolder2) body.synapseServerFolder2 = changes.networkFolder2;
 
     setCardError(null);
     setLoading(true);
