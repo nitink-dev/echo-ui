@@ -882,6 +882,14 @@ export function EnrichmentToolConfig() {
         <Network className="h-5 w-5 text-[#007BFF]" />,
         "dicom",
         <>
+
+          {renderInput("dicomReceiver", "aet", "AET", !editMode.dicom)}
+          {/* {renderInput("dicomReceiver", "ipAddress", "IP Address", !editMode.dicom)} */}
+          {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
+          {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
+          {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
+          {renderInput("dicomReceiver", "serviceIpAddress", "IP Address", true)}
+
           <div className="md:col-span-2 flex items-center gap-2">
             <Checkbox
               id="dicomReceiver-watcherActive"
@@ -898,12 +906,7 @@ export function EnrichmentToolConfig() {
               Enable directory watcher
             </Label>
           </div>
-          {renderInput("dicomReceiver", "aet", "AET", !editMode.dicom)}
-          {/* {renderInput("dicomReceiver", "ipAddress", "IP Address", !editMode.dicom)} */}
-          {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
-          {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
-          {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
-          {renderInput("dicomReceiver", "serviceIpAddress", "IP Address", true)}
+
         </>,
       )}
 
