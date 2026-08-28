@@ -18,6 +18,9 @@ interface FormData {
   research: boolean;
   connected: boolean;
   storageStrategy: string;
+  remoteAeTitle: string;
+  remoteHost: string;
+  remotePort: string;
 }
 
 const initialFormData: FormData = {
@@ -35,10 +38,14 @@ const initialFormData: FormData = {
   otherIdentifier: '',
   research: false,
   connected: false,
-  storageStrategy: ''
+  storageStrategy: 'STOW-RS',
+  remoteAeTitle: '',
+  remoteHost: '',
+  remotePort: ''
 };
 
 const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
+const CSTORE_REQUIRED_FIELDS = ['remoteAeTitle', 'remoteHost', 'remotePort'];
 
 export function useScannerForm(scanner?: SlideScanner) {
   const [formData, setFormData] = useState<FormData>(initialFormData);
@@ -63,7 +70,10 @@ export function useScannerForm(scanner?: SlideScanner) {
         otherIdentifier: scanner.otherIdentifier || '',
         research: scanner.research || false,
         connected: scanner.connected || false,
-        storageStrategy: scanner.storageStrategy || ''
+        storageStrategy: scanner.storageStrategy || 'STOW-RS',
+        remoteAeTitle: scanner.remoteAeTitle || '',
+        remoteHost: scanner.remoteHost || '',
+        remotePort: scanner.remotePort || ''
       };
       setFormData(initialData);
       setOriginalData(initialData);
@@ -129,6 +139,15 @@ export function useScannerForm(scanner?: SlideScanner) {
       newErrors.deviceSerialNumber = 'Device Serial Number must be at least 3 characters long';
     }
 
+    if (formData.storageStrategy === 'C-STORE') {
+      CSTORE_REQUIRED_FIELDS.forEach((field) => {
+        const value = formData[field as keyof FormData];
+        if (typeof value === 'string' && !value.trim()) {
+          newErrors[field] = `${field.charAt(0).toUpperCase() + field.slice(1).replace(/([A-Z])/g, ' $1')} is required`;
+        }
+      });
+    }
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -150,7 +169,10 @@ export function useScannerForm(scanner?: SlideScanner) {
         otherIdentifier: scanner.otherIdentifier || '',
         research: scanner.research || false,
         connected: scanner.connected || false,
-        storageStrategy: scanner.storageStrategy || ''
+        storageStrategy: scanner.storageStrategy || 'STOW-RS',
+        remoteAeTitle: scanner.remoteAeTitle || '',
+        remoteHost: scanner.remoteHost || '',
+        remotePort: scanner.remotePort || ''
       };
       setFormData(resetData);
       setOriginalData(resetData);
@@ -167,7 +189,13 @@ export function useScannerForm(scanner?: SlideScanner) {
       const value = formData[field as keyof FormData];
       return typeof value === 'string' && value.trim();
     });
-    return allRequiredFieldsValid && Object.keys(errors).length === 0;
+    const cstoreFieldsValid =
+      formData.storageStrategy !== 'C-STORE' ||
+      CSTORE_REQUIRED_FIELDS.every(field => {
+        const value = formData[field as keyof FormData];
+        return typeof value === 'string' && value.trim();
+      });
+    return allRequiredFieldsValid && cstoreFieldsValid && Object.keys(errors).length === 0;
   }, [formData, errors]);
 
   return {

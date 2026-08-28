@@ -18,6 +18,9 @@ export interface SlideScanner {
   research: boolean;
   connected: boolean;
   storageStrategy?: string;
+  remoteAeTitle?: string;
+  remoteHost?: string;
+  remotePort?: string;
 }
 
 export interface ScannerFormData {
@@ -37,6 +40,9 @@ export interface ScannerFormData {
   research: boolean;
   connected: boolean;
   storageStrategy: string;
+  remoteAeTitle: string;
+  remoteHost: string;
+  remotePort: string;
 }
 
 export interface AnalysisReport {

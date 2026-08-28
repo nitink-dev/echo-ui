@@ -126,6 +126,62 @@ export function ScannerFormFields({
   const portInlineError =
     formData.port && !isValidPort(formData.port) ? PORT_ERROR_MESSAGE : '';
 
+  const handleRemoteHostChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeByPattern(e.target.value, IP_ALLOWED_PATTERN);
+    onInputChange('remoteHost', sanitized);
+  };
+
+  const handleRemoteHostKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
+    if (isCtrl) return;
+    if (!IP_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+  };
+
+  const handleRemoteHostPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text');
+    const sanitized = sanitizeByPattern(pasted, IP_ALLOWED_PATTERN);
+    if (sanitized !== pasted) {
+      e.preventDefault();
+      const inp = e.currentTarget;
+      const start = inp.selectionStart ?? 0;
+      const end = inp.selectionEnd ?? 0;
+      const cur = formData.remoteHost ?? '';
+      onInputChange('remoteHost', cur.slice(0, start) + sanitized + cur.slice(end));
+    }
+  };
+
+  const handleRemotePortChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const sanitized = sanitizeByPattern(e.target.value, PORT_ALLOWED_PATTERN);
+    onInputChange('remotePort', sanitized);
+  };
+
+  const handleRemotePortKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const isCtrl = e.ctrlKey || e.metaKey || e.key.length > 1;
+    if (isCtrl) return;
+    if (!PORT_ALLOWED_PATTERN.test(e.key)) e.preventDefault();
+  };
+
+  const handleRemotePortPaste = (e: React.ClipboardEvent<HTMLInputElement>) => {
+    const pasted = e.clipboardData.getData('text');
+    const sanitized = sanitizeByPattern(pasted, PORT_ALLOWED_PATTERN);
+    if (sanitized !== pasted) {
+      e.preventDefault();
+      const inp = e.currentTarget;
+      const start = inp.selectionStart ?? 0;
+      const end = inp.selectionEnd ?? 0;
+      const cur = formData.remotePort ?? '';
+      onInputChange('remotePort', cur.slice(0, start) + sanitized + cur.slice(end));
+    }
+  };
+
+  const remoteHostInlineError =
+    formData.remoteHost && !isValidIP(formData.remoteHost) ? IP_ERROR_MESSAGE : '';
+
+  const remotePortInlineError =
+    formData.remotePort && !isValidPort(formData.remotePort) ? PORT_ERROR_MESSAGE : '';
+
+  const isCStore = formData.storageStrategy === 'C-STORE';
+
   return (
     <>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -437,12 +493,11 @@ export function ScannerFormFields({
           </Label>
           <select
             id="storageStrategy"
-            value={formData.storageStrategy || ''}
+            value={formData.storageStrategy || 'STOW-RS'}
             onChange={(e) => onInputChange('storageStrategy', e.target.value)}
             className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.storageStrategy ? 'border-red-500 focus:border-red-500' : ''
               }`}
           >
-            <option value="">Select Storage Strategy</option>
             <option value="STOW-RS">STOW-RS</option>
             <option value="C-STORE">C-STORE</option>
           </select>
@@ -450,6 +505,98 @@ export function ScannerFormFields({
             <p className="text-sm text-red-600">{errors.storageStrategy}</p>
           )}
         </div>
+
+        {isCStore && (
+          <>
+            {/* Remote AE Title */}
+            <div className="space-y-2">
+              <Label htmlFor="remoteAeTitle" className="text-sm font-medium text-gray-700">
+                Remote AE Title *
+              </Label>
+              <Input
+                id="remoteAeTitle"
+                value={formData.remoteAeTitle}
+                onChange={(e) => {
+                  const value = e.target.value.toUpperCase();
+
+                  if (value === "" || /^[A-Z0-9_-]+$/.test(value)) {
+                    onInputChange("remoteAeTitle", value);
+                  }
+                }}
+                placeholder="e.g. STORESCP"
+                className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 font-mono ${errors.remoteAeTitle ? 'border-red-500 focus:border-red-500' : ''
+                  }`}
+              />
+              {errors.remoteAeTitle && (
+                <p className="text-sm text-red-600 flex items-center gap-1">{errors.remoteAeTitle}</p>
+              )}
+            </div>
+
+            {/* Remote Host */}
+            <div className="space-y-2">
+              <Label htmlFor="remoteHost" className="text-sm font-medium text-gray-700">
+                Remote Host *
+              </Label>
+              <Input
+                id="remoteHost"
+                value={formData.remoteHost ?? ''}
+                onChange={handleRemoteHostChange}
+                onKeyDown={handleRemoteHostKeyDown}
+                onPaste={handleRemoteHostPaste}
+                placeholder="e.g. 127.0.0.1"
+                aria-invalid={Boolean(errors.remoteHost || remoteHostInlineError)}
+                aria-describedby={
+                  errors.remoteHost || remoteHostInlineError ? 'remoteHost-error' : undefined
+                }
+                className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.remoteHost || remoteHostInlineError
+                    ? 'border-red-500 focus:border-red-500'
+                    : ''
+                  }`}
+              />
+              {(errors.remoteHost || remoteHostInlineError) && (
+                <p
+                  id="remoteHost-error"
+                  className="text-sm text-red-600 flex items-center gap-1"
+                >
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.remoteHost || remoteHostInlineError}
+                </p>
+              )}
+            </div>
+
+            {/* Remote Port */}
+            <div className="space-y-2">
+              <Label htmlFor="remotePort" className="text-sm font-medium text-gray-700">
+                Remote Port *
+              </Label>
+              <Input
+                id="remotePort"
+                value={formData.remotePort ?? ''}
+                onChange={handleRemotePortChange}
+                onKeyDown={handleRemotePortKeyDown}
+                onPaste={handleRemotePortPaste}
+                placeholder="e.g. 11112"
+                aria-invalid={Boolean(errors.remotePort || remotePortInlineError)}
+                aria-describedby={
+                  errors.remotePort || remotePortInlineError ? 'remotePort-error' : undefined
+                }
+                className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.remotePort || remotePortInlineError
+                    ? 'border-red-500 focus:border-red-500'
+                    : ''
+                  }`}
+              />
+              {(errors.remotePort || remotePortInlineError) && (
+                <p
+                  id="remotePort-error"
+                  className="text-sm text-red-600 flex items-center gap-1"
+                >
+                  <AlertCircle className="h-3 w-3" />
+                  {errors.remotePort || remotePortInlineError}
+                </p>
+              )}
+            </div>
+          </>
+        )}
       </div>
 
       {/* Research and Connected Flags */}
