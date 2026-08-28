@@ -101,6 +101,22 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
                 <p className="text-base">{scanner.storageStrategy}</p>
               </div>
             )}
+            {scanner.storageStrategy === 'C-STORE' && (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Remote AE Title</label>
+                  <p className="text-base font-mono">{scanner.remoteAeTitle}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Remote Host</label>
+                  <p className="text-base font-mono">{scanner.remoteHost}</p>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-gray-500">Remote Port</label>
+                  <p className="text-base font-mono">{scanner.remotePort}</p>
+                </div>
+              </>
+            )}
           </div>
 
        
