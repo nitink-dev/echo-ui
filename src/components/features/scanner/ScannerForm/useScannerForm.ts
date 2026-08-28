@@ -17,6 +17,7 @@ interface FormData {
   otherIdentifier: string;
   research: boolean;
   connected: boolean;
+  storageStrategy: string;
 }
 
 const initialFormData: FormData = {
@@ -33,7 +34,8 @@ const initialFormData: FormData = {
   vendor: '',
   otherIdentifier: '',
   research: false,
-  connected: false
+  connected: false,
+  storageStrategy: ''
 };
 
 const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
@@ -60,7 +62,8 @@ export function useScannerForm(scanner?: SlideScanner) {
         vendor: scanner.vendor || '',
         otherIdentifier: scanner.otherIdentifier || '',
         research: scanner.research || false,
-        connected: scanner.connected || false
+        connected: scanner.connected || false,
+        storageStrategy: scanner.storageStrategy || ''
       };
       setFormData(initialData);
       setOriginalData(initialData);
@@ -146,7 +149,8 @@ export function useScannerForm(scanner?: SlideScanner) {
         vendor: scanner.vendor || '',
         otherIdentifier: scanner.otherIdentifier || '',
         research: scanner.research || false,
-        connected: scanner.connected || false
+        connected: scanner.connected || false,
+        storageStrategy: scanner.storageStrategy || ''
       };
       setFormData(resetData);
       setOriginalData(resetData);

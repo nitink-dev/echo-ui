@@ -901,7 +901,7 @@ export function EnrichmentToolConfig() {
             />
             <Label
               htmlFor="dicomReceiver-watcherActive"
-              className="text-sm font-medium text-gray-700"
+              className="text-sm font-medium text-gray-700 !opacity-100"
             >
               Enable directory watcher
             </Label>

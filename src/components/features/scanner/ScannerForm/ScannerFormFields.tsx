@@ -429,6 +429,27 @@ export function ScannerFormFields({
           />
           <p className="text-xs text-gray-500">Optional field for additional identifiers</p>
         </div>
+
+        {/* Storage Strategy */}
+        <div className="space-y-2">
+          <Label htmlFor="storageStrategy" className="text-sm font-medium text-gray-700">
+            Storage Strategy
+          </Label>
+          <select
+            id="storageStrategy"
+            value={formData.storageStrategy || ''}
+            onChange={(e) => onInputChange('storageStrategy', e.target.value)}
+            className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.storageStrategy ? 'border-red-500 focus:border-red-500' : ''
+              }`}
+          >
+            <option value="">Select Storage Strategy</option>
+            <option value="STOW-RS">STOW-RS</option>
+            <option value="C-STORE">C-STORE</option>
+          </select>
+          {errors.storageStrategy && (
+            <p className="text-sm text-red-600">{errors.storageStrategy}</p>
+          )}
+        </div>
       </div>
 
       {/* Research and Connected Flags */}

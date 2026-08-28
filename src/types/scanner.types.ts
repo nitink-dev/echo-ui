@@ -17,6 +17,7 @@ export interface SlideScanner {
   status?: 'online' | 'offline' | 'maintenance';
   research: boolean;
   connected: boolean;
+  storageStrategy?: string;
 }
 
 export interface ScannerFormData {
@@ -35,6 +36,7 @@ export interface ScannerFormData {
   otherIdentifier: string;
   research: boolean;
   connected: boolean;
+  storageStrategy: string;
 }
 
 export interface AnalysisReport {
