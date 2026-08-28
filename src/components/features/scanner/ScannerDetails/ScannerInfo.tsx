@@ -95,6 +95,12 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
                 <p className="text-base">{scanner.otherIdentifier}</p>
               </div>
             )}
+            {scanner.storageStrategy && (
+              <div>
+                <label className="text-sm font-medium text-gray-500">Storage Strategy</label>
+                <p className="text-base">{scanner.storageStrategy}</p>
+              </div>
+            )}
           </div>
 
        
