@@ -93,7 +93,11 @@ export function useScannerForm(scanner?: SlideScanner) {
     setIsDirty(true);
 
     if (errors[field]) {
-      setErrors(prev => ({ ...prev, [field]: '' }));
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[field];
+        return newErrors;
+      });
     }
   };
 
