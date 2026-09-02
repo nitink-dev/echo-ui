@@ -898,10 +898,12 @@ export function EnrichmentToolConfig() {
                 handleChange("dicomReceiver", "watcherActive", v)
               }
               disabled={!editMode.dicom}
+              style={{ opacity: 1 }}
             />
             <Label
               htmlFor="dicomReceiver-watcherActive"
-              className="text-sm font-medium text-gray-700 !opacity-100"
+              className="text-sm font-medium text-gray-700"
+              style={{ opacity: 1 }}
             >
               Enable directory watcher
             </Label>
