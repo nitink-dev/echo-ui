@@ -25,11 +25,11 @@ export function ScannerList({
   const filteredScanners = scanners.filter((scanner) => {
     const term = searchTerm.toLowerCase();
     return (
-      scanner.name.toLowerCase().includes(term) ||
-      scanner.aeTitle.toLowerCase().includes(term) ||
-      scanner.deviceSerialNumber.toLowerCase().includes(term) ||
+      (scanner.name?.toLowerCase() || '').includes(term) ||
+      (scanner.aeTitle?.toLowerCase() || '').includes(term) ||
+      (scanner.deviceSerialNumber?.toLowerCase() || '').includes(term) ||
       (scanner.model?.toLowerCase() || '').includes(term) ||
-      scanner.location.toLowerCase().includes(term)
+      (scanner.location?.toLowerCase() || '').includes(term)
     );
   });
 
