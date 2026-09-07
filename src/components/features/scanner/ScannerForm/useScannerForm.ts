@@ -73,7 +73,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         storageStrategy: scanner.storageStrategy || 'STOW-RS',
         remoteAeTitle: scanner.remoteAeTitle || '',
         remoteHost: scanner.remoteHost || '',
-        remotePort: scanner.remotePort || ''
+        remotePort: scanner.remotePort != null ? String(scanner.remotePort) : ''
       };
       setFormData(initialData);
       setOriginalData(initialData);
@@ -176,7 +176,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         storageStrategy: scanner.storageStrategy || 'STOW-RS',
         remoteAeTitle: scanner.remoteAeTitle || '',
         remoteHost: scanner.remoteHost || '',
-        remotePort: scanner.remotePort || ''
+        remotePort: scanner.remotePort != null ? String(scanner.remotePort) : ''
       };
       setFormData(resetData);
       setOriginalData(resetData);
