@@ -109,6 +109,13 @@ export function QAParameterForm({
     [formData, onInputChange, sanitize]
   );
 
+  const hasChanges =
+  editingParameter &&
+  (
+    formData.barcode !== editingParameter.barcode ||
+    formData.activationCode !== editingParameter.activationCode
+  );
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent onClick={(e) => e.stopPropagation()}>
@@ -179,6 +186,7 @@ export function QAParameterForm({
           <Button
             type="button"
             onClick={onSave}
+            disabled={editingParameter ? !hasChanges : false}
             className="bg-green-600 hover:bg-green-700"
           >
             {editingParameter ? 'Update' : 'Save'}
