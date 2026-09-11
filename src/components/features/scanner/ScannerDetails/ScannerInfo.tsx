@@ -38,6 +38,12 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
               <label className="text-sm font-medium text-gray-500">Model</label>
               <p className="text-base">{scanner.model}</p>
             </div>
+            {scanner.scannerType && (
+              <div>
+                <label className="text-sm font-medium text-gray-500">Scanner Type</label>
+                <p className="text-base">{scanner.scannerType}</p>
+              </div>
+            )}
             <div>
               <label className="text-sm font-medium text-gray-500">Serial Number</label>
               <p className="text-base font-mono">{scanner.deviceSerialNumber}</p>

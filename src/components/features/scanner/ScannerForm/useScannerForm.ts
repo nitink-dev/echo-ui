@@ -6,6 +6,7 @@ interface FormData {
   name: string;
   aeTitle: string;
   model: string;
+  scannerType: string;
   hospitalName: string;
   department: string;
   location: string;
@@ -26,6 +27,7 @@ const initialFormData: FormData = {
   name: '',
   aeTitle: '',
   model: '',
+  scannerType: '',
   hospitalName: '',
   department: '',
   location: '',
@@ -42,7 +44,7 @@ const initialFormData: FormData = {
   remotePort: ''
 };
 
-const requiredFields = ['name', 'aeTitle', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
+const requiredFields = ['name', 'aeTitle', 'scannerType', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
 const CSTORE_REQUIRED_FIELDS = ['remoteAeTitle', 'remoteHost', 'remotePort'];
 
 export function useScannerForm(scanner?: SlideScanner) {
@@ -57,6 +59,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         name: scanner.name || '',
         aeTitle: scanner.aeTitle || '',
         model: scanner.model || '',
+        scannerType: scanner.scannerType || '',
         hospitalName: scanner.hospitalName || '',
         department: scanner.department || '',
         location: scanner.location || '',
@@ -159,6 +162,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         name: scanner.name || '',
         aeTitle: scanner.aeTitle || '',
         model: scanner.model || '',
+        scannerType: scanner.scannerType || '',
         hospitalName: scanner.hospitalName || '',
         department: scanner.department || '',
         location: scanner.location || '',

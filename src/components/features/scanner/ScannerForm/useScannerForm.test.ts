@@ -82,6 +82,7 @@ describe('useScannerForm Hook', () => {
         name: 'Scanner A',
         aeTitle: 'SCAN_AE',
         model: 'CT-64',
+        scannerType: 'Pathology',
         hospitalName: 'AIIMS Delhi',
         department: 'Radiology',
         location: 'Wing B - Room 12',

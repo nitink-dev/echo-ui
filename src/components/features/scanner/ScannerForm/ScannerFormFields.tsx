@@ -248,6 +248,29 @@ export function ScannerFormFields({
           />
         </div>
 
+        {/* Scanner Type */}
+        <div className="space-y-2">
+          <Label htmlFor="scannerType" className="text-sm font-medium text-gray-700">
+            Scanner Type *
+          </Label>
+          <select
+            id="scannerType"
+            value={formData.scannerType}
+            onChange={(e) => onInputChange('scannerType', e.target.value)}
+            className={`h-11 w-full rounded-md bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${errors.scannerType ? 'border-red-500 focus:border-red-500' : ''
+              }`}
+          >
+            <option value="">Select Scanner Type</option>
+            <option value="Cytology">Cytology</option>
+            <option value="Histology">Histology</option>
+            <option value="Microbiology">Microbiology</option>
+            <option value="Pathology">Pathology</option>
+          </select>
+          {errors.scannerType && (
+            <p className="text-sm text-red-600">{errors.scannerType}</p>
+          )}
+        </div>
+
         {/* Hospital Name */}
         <div className="space-y-2">
           <Label htmlFor="hospitalName" className="text-sm font-medium text-gray-700">

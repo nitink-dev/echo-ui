@@ -198,6 +198,7 @@ export function ScannerTable({
                     </div>
                     <div className="text-xs text-gray-500">
                       {scanner.department}
+                      {scanner.scannerType ? ` • ${scanner.scannerType}` : ''}
                     </div>
                   </div>
                 </TableCell>

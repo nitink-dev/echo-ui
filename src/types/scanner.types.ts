@@ -20,12 +20,14 @@ export interface SlideScanner {
   remoteAeTitle?: string;
   remoteHost?: string;
   remotePort?: string;
+  scannerType?: string;
 }
 
 export interface ScannerFormData {
   name: string;
   aeTitle: string;
   model: string;
+  scannerType: string;
   hospitalName: string;
   department: string;
   location: string;

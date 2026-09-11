@@ -29,7 +29,8 @@ export function ScannerList({
       (scanner.aeTitle?.toLowerCase() || '').includes(term) ||
       (scanner.deviceSerialNumber?.toLowerCase() || '').includes(term) ||
       (scanner.model?.toLowerCase() || '').includes(term) ||
-      (scanner.location?.toLowerCase() || '').includes(term)
+      (scanner.location?.toLowerCase() || '').includes(term) ||
+      (scanner.scannerType?.toLowerCase() || '').includes(term)
     );
   });
 

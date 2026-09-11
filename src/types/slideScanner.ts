@@ -13,5 +13,6 @@ export interface SlideScanner {
     dicomStore?: string;
     lastSeen?: string;
     status?: string;
+    scannerType?: string;
   }
   
