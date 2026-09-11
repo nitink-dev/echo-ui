@@ -89,12 +89,6 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
               <label className="text-sm font-medium text-gray-500">Vendor</label>
               <p className="text-base">{scanner.vendor}</p>
             </div>
-            {scanner.otherIdentifier && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">Other Identifier</label>
-                <p className="text-base">{scanner.otherIdentifier}</p>
-              </div>
-            )}
             {scanner.storageStrategy && (
               <div>
                 <label className="text-sm font-medium text-gray-500">Storage Strategy</label>

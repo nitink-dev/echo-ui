@@ -14,7 +14,6 @@ interface FormData {
   port: string;
   vendor: string;
   dicomStore: string;
-  otherIdentifier: string;
   research: boolean;
   connected: boolean;
   storageStrategy: string;
@@ -35,7 +34,6 @@ const initialFormData: FormData = {
   ipAddress: '',
   port: '',
   vendor: '',
-  otherIdentifier: '',
   research: false,
   connected: false,
   storageStrategy: 'STOW-RS',
@@ -67,7 +65,6 @@ export function useScannerForm(scanner?: SlideScanner) {
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
-        otherIdentifier: scanner.otherIdentifier || '',
         research: scanner.research || false,
         connected: scanner.connected || false,
         storageStrategy: scanner.storageStrategy || 'STOW-RS',
@@ -170,7 +167,6 @@ export function useScannerForm(scanner?: SlideScanner) {
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
-        otherIdentifier: scanner.otherIdentifier || '',
         research: scanner.research || false,
         connected: scanner.connected || false,
         storageStrategy: scanner.storageStrategy || 'STOW-RS',

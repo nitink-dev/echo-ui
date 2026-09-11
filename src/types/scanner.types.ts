@@ -10,7 +10,6 @@ export interface SlideScanner {
   ipAddress: string;
   port: string;
   vendor: string;
-  otherIdentifier?: string;
   dicomStore?: string;
   researchDicomStore?: string;
   lastSeen?: string;
@@ -36,7 +35,6 @@ export interface ScannerFormData {
   vendor: string;
   dicomStore: string;
   researchDicomStore?: string;
-  otherIdentifier: string;
   research: boolean;
   connected: boolean;
   storageStrategy: string;

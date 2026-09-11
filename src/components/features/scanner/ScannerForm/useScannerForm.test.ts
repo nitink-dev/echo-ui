@@ -90,7 +90,6 @@ describe('useScannerForm Hook', () => {
         ipAddress: '10.0.0.12',
         port: '104',
         vendor: 'Siemens',
-        otherIdentifier: 'UNIT-01'
       };
       
     const { result } = renderHook(() => useScannerForm(scanner));

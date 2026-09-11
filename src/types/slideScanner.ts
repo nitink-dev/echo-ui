@@ -10,7 +10,6 @@ export interface SlideScanner {
     ipAddress: string;
     port: string;
     vendor: string;
-    otherIdentifier?: string;
     dicomStore?: string;
     lastSeen?: string;
     status?: string;

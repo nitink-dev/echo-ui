@@ -470,22 +470,6 @@ export function ScannerFormFields({
           )}
         </div>
 
-        {/* Other Identifier */}
-        <div className="space-y-2">
-          <Label htmlFor="otherIdentifier" className="text-sm font-medium text-gray-700">
-            Other Identifier (Device ID)
-          </Label>
-          <Input
-            id="otherIdentifier"
-            disabled={isEdit}
-            value={formData.otherIdentifier}
-            onChange={(e) => onInputChange('otherIdentifier', e.target.value)}
-            placeholder="Optional additional identifier"
-            className="h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20"
-          />
-          <p className="text-xs text-gray-500">Optional field for additional identifiers</p>
-        </div>
-
         {/* Storage Strategy */}
         <div className="space-y-2">
           <Label htmlFor="storageStrategy" className="text-sm font-medium text-gray-700">
