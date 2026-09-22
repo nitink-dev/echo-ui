@@ -15,6 +15,8 @@ import {
 import { PermissionGuard } from '../../../../auth/permissions/PermissionGuard';
 import { API_URLS } from '../../../../auth/permissions/apiConfig';
 import { usePermissions } from '../../../../auth/permissions/usePermissions';
+import { useFormLabels } from '../../../../hooks/useFormLabels';
+import { SCANNER_FIELD_LABELS } from '../scannerLabels.constants';
 
 const SERIAL_ALLOWED_PATTERN = /^[a-zA-Z0-9_-]$/;
 const sanitizeSerial = (value: string) =>
@@ -45,6 +47,7 @@ export function ScannerFormFields({
   onSerialNumberBlur,
   checkingSerialNumber = false,
 }: ScannerFormFieldsProps) {
+  const labels = useFormLabels('scanner', SCANNER_FIELD_LABELS);
 
   const handleSerialChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     onInputChange('deviceSerialNumber', sanitizeSerial(e.target.value));
@@ -188,7 +191,7 @@ export function ScannerFormFields({
         {/* Name of Scanner */}
         <div className="space-y-2">
           <Label htmlFor="name" className="text-sm font-medium text-gray-700">
-            Name of Scanner *
+            {labels.name} *
           </Label>
           <Input
             id="name"
@@ -212,7 +215,7 @@ export function ScannerFormFields({
         {/* AE Title */}
         <div className="space-y-2">
           <Label htmlFor="aeTitle" className="text-sm font-medium text-gray-700">
-            AE Title *
+            {labels.aeTitle} *
           </Label>
           <Input
             id="aeTitle"
@@ -237,7 +240,7 @@ export function ScannerFormFields({
         {/* Model */}
         <div className="space-y-2">
           <Label htmlFor="model" className="text-sm font-medium text-gray-700">
-            Model
+            {labels.model}
           </Label>
           <Input
             id="model"
@@ -251,7 +254,7 @@ export function ScannerFormFields({
         {/* Scanner Type */}
         <div className="space-y-2">
           <Label htmlFor="scannerType" className="text-sm font-medium text-gray-700">
-            Scanner Type *
+            {labels.scannerType} *
           </Label>
           <select
             id="scannerType"
@@ -274,7 +277,7 @@ export function ScannerFormFields({
         {/* Hospital Name */}
         <div className="space-y-2">
           <Label htmlFor="hospitalName" className="text-sm font-medium text-gray-700">
-            Hospital Name *
+            {labels.hospitalName} *
           </Label>
 
           <PermissionGuard allowed={canReadHospital} fallback={ 
@@ -300,7 +303,7 @@ export function ScannerFormFields({
         {/* Department Name */}
         <div className="space-y-2">
           <Label htmlFor="department" className="text-sm font-medium text-gray-700">
-            Department Name *
+            {labels.department} *
           </Label>
           <select
             id="department"
@@ -322,7 +325,7 @@ export function ScannerFormFields({
         {/* Location */}
         <div className="space-y-2">
           <Label htmlFor="location" className="text-sm font-medium text-gray-700">
-            Location *
+            {labels.location} *
           </Label>
           <select
             id="location"
@@ -345,7 +348,7 @@ export function ScannerFormFields({
         {formData.department && (
           <div className="space-y-2">
             <Label htmlFor="dicomStore" className="text-sm font-medium text-gray-700">
-              Storage Location *
+              {labels.dicomStore} *
             </Label>
             <PermissionGuard allowed={canReadDicomStore} fallback={ 
               <p className="text-sm text-gray-400">Permission Required</p>  }>
@@ -375,7 +378,7 @@ export function ScannerFormFields({
         {/* Device Serial Number */}
         <div className="space-y-2">
           <Label htmlFor="deviceSerialNumber" className="text-sm font-medium text-gray-700">
-            Device Serial Number *
+            {labels.deviceSerialNumber} *
           </Label>
           <div className="relative">
             <Input
@@ -409,7 +412,7 @@ export function ScannerFormFields({
         {/* ── IP Address — with full validation ── */}
         <div className="space-y-2">
           <Label htmlFor="ipAddress" className="text-sm font-medium text-gray-700">
-            IP Address
+            {labels.ipAddress}
           </Label>
           <Input
             id="ipAddress"
@@ -446,7 +449,7 @@ export function ScannerFormFields({
         {/* ── Port — with full validation ── */}
         <div className="space-y-2">
           <Label htmlFor="port" className="text-sm font-medium text-gray-700">
-            Port
+            {labels.port}
           </Label>
           <Input
             id="port"
@@ -478,7 +481,7 @@ export function ScannerFormFields({
         {/* Vendor */}
         <div className="space-y-2">
           <Label htmlFor="vendor" className="text-sm font-medium text-gray-700">
-            Vendor
+            {labels.vendor}
           </Label>
           <Input
             id="vendor"
@@ -496,7 +499,7 @@ export function ScannerFormFields({
         {/* Storage Strategy */}
         <div className="space-y-2">
           <Label htmlFor="storageStrategy" className="text-sm font-medium text-gray-700">
-            Storage Strategy
+            {labels.storageStrategy}
           </Label>
           <select
             id="storageStrategy"
@@ -518,7 +521,7 @@ export function ScannerFormFields({
             {/* Remote AE Title */}
             <div className="space-y-2">
               <Label htmlFor="remoteAeTitle" className="text-sm font-medium text-gray-700">
-                Remote AE Title *
+                {labels.remoteAeTitle} *
               </Label>
               <Input
                 id="remoteAeTitle"
@@ -542,7 +545,7 @@ export function ScannerFormFields({
             {/* Remote Host */}
             <div className="space-y-2">
               <Label htmlFor="remoteHost" className="text-sm font-medium text-gray-700">
-                Remote Host *
+                {labels.remoteHost} *
               </Label>
               <Input
                 id="remoteHost"
@@ -574,7 +577,7 @@ export function ScannerFormFields({
             {/* Remote Port */}
             <div className="space-y-2">
               <Label htmlFor="remotePort" className="text-sm font-medium text-gray-700">
-                Remote Port *
+                {labels.remotePort} *
               </Label>
               <Input
                 id="remotePort"
@@ -614,7 +617,7 @@ export function ScannerFormFields({
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div>
               <label htmlFor="research" className="text-sm font-medium text-gray-700 block">
-                Research Mode
+                {labels.research}
               </label>
               <p className="text-xs text-gray-500 mt-2 font-semibold">
                 Storage location will be assigned automatically for research slides
@@ -635,7 +638,7 @@ export function ScannerFormFields({
           <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border border-gray-200">
             <div>
               <label htmlFor="connected" className="text-sm font-medium text-gray-700 block">
-                Connection Status
+                {labels.connected}
               </label>
               <p className="text-xs text-gray-500 mt-1">
                 {isEdit

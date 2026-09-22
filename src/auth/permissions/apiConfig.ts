@@ -42,6 +42,7 @@ export const API_URLS = {
   },
   config: {
     dicomStore: api("/api/config/path-qa/dicom-store", "GET"),
+    formLabels: dynamicApi<{ formKey: string }>(({ formKey }) => `/api/config/form-labels/${formKey}`, "GET"),
   },
   qaAnalysis: {
     base:   api("/api/slides", "GET"),
