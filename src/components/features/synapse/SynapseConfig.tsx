@@ -23,6 +23,7 @@ import { useSlideScan } from "../status/SlideScanContext";
 import { usePermissions } from "../../../auth/permissions/usePermissions";
 import { API_URLS } from "../../../auth/permissions/apiConfig";
 import { ENRICHMENT_TOOLS } from "../../../utils/constants";
+import { useFormLabels } from "../../../hooks/useFormLabels";
 
 export const fetchSynapse = createAsyncThunk<
   any,
@@ -149,6 +150,10 @@ const INITIAL_FORM: FormState = {
   networkFolder2: "",
 };
 
+const SYNAPSE_FIELD_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(FIELD_RULES).map(([field, rule]) => [field, rule.label]),
+);
+
 export function SynapseConfig() {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
@@ -168,6 +173,7 @@ export function SynapseConfig() {
   const canEditSynapse = canAccess(API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE }), API_URLS.enrichment.updateTool.method);
   
   const { isBannerVisible: isScanInProgress } = useSlideScan();
+  const labels = useFormLabels('synapse', SYNAPSE_FIELD_LABELS);
 
   useEffect(() => {
     const loadData = async () => {
@@ -356,7 +362,7 @@ export function SynapseConfig() {
 
   const renderInput = (field: keyof FormState, disabled: boolean) => {
     const rule = FIELD_RULES[field];
-    const label = rule?.label ?? field;
+    const label = labels[field] ?? rule?.label ?? field;
     const error = touched[field] ? errors[field] : "";
     const hasError = Boolean(error);
 

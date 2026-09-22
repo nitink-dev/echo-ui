@@ -21,6 +21,7 @@ import { usePermissions } from "../../../auth/permissions/usePermissions";
 import { API_URLS } from "../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../status/SlideScanContext";
 import { ENRICHMENT_TOOLS } from "../../../utils/constants";
+import { useFormLabels } from "../../../hooks/useFormLabels";
 
 const FIELD_RULES: Record<string, FieldRule> = {
   applicationName: {
@@ -79,6 +80,10 @@ const INITIAL_FORM: FormState = {
   name: "",
 };
 
+const LIS_FIELD_LABELS: Record<string, string> = Object.fromEntries(
+  Object.entries(FIELD_RULES).map(([field, rule]) => [field, rule.label]),
+);
+
 export function LisConfig() {
   const dispatch = useAppDispatch();
   const { lis, loading } = useSelector((s: any) => s.ehTools || {});
@@ -103,6 +108,7 @@ export function LisConfig() {
   const [cardError, setCardError] = useState<string | null>(null);
 
   const { isBannerVisible: isScanInProgress } = useSlideScan();
+  const labels = useFormLabels('lis', LIS_FIELD_LABELS);
 
   useEffect(() => {
     dispatch(fetchEhTool({ toolKey: ENRICHMENT_TOOLS.LIS }))
@@ -285,7 +291,7 @@ export function LisConfig() {
 
   const renderInput = (field: keyof FormState, disabled: boolean) => {
     const rule = FIELD_RULES[field];
-    const label = rule?.label ?? field;
+    const label = labels[field] ?? rule?.label ?? field;
     const error = touched[field] ? errors[field] : "";
     const hasError = Boolean(error);
 

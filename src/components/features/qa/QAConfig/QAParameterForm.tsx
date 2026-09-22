@@ -11,6 +11,8 @@ import {
   DialogTitle,
 } from '../../../ui/dialog';
 import { QAFormData, QASlideParameter } from '../../../../types/qa.types';
+import { useFormLabels } from '../../../../hooks/useFormLabels';
+import { QA_SLIDE_FIELD_LABELS } from './qaSlideLabels.constants';
 
 
 const FIELD_RULES = {
@@ -55,6 +57,7 @@ export function QAParameterForm({
   onInputChange,
   onSave,
 }: QAParameterFormProps) {
+  const labels = useFormLabels('qaSlide', QA_SLIDE_FIELD_LABELS);
 
   const handleCancel = useCallback(
     (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -135,7 +138,7 @@ export function QAParameterForm({
           {/* ── QA Slide Barcode ── */}
           <div className="space-y-2">
             <Label htmlFor="parameterBarcode">
-              QA Slide Barcode <span className="text-red-500">*</span>
+              {labels.barcode} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="parameterBarcode"
@@ -161,7 +164,7 @@ export function QAParameterForm({
           {/* ── Activation Code ── */}
           <div className="space-y-2">
             <Label htmlFor="parameterActivationCode">
-              Activation Code <span className="text-red-500">*</span>
+              {labels.activationCode} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="parameterActivationCode"

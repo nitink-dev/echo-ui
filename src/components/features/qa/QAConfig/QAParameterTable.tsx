@@ -13,6 +13,8 @@ import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
 import { API_URLS } from "../../../../auth/permissions/apiConfig";
 import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { useFormLabels } from "../../../../hooks/useFormLabels";
+import { QA_SLIDE_FIELD_LABELS } from "./qaSlideLabels.constants";
 
 interface QAParameterTableProps {
   qaParameters: QASlideParameter[];
@@ -37,6 +39,7 @@ const canEdit   = canAccess(API_URLS.qaAnalysis.base.path,   "PATCH");
 const canDelete = canAccess(API_URLS.qaAnalysis.base.path,   "DELETE");
   
 const { isBannerVisible: isScanInProgress } = useSlideScan();
+  const labels = useFormLabels('qaSlide', QA_SLIDE_FIELD_LABELS);
   if (!qaParameters || qaParameters.length === 0) {
     return (
       <div className="text-center py-12">
@@ -69,8 +72,8 @@ const { isBannerVisible: isScanInProgress } = useSlideScan();
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>QA Slide Barcode</TableHead>
-          <TableHead>Activation Code</TableHead>
+          <TableHead>{labels.barcode}</TableHead>
+          <TableHead>{labels.activationCode}</TableHead>
           {canEdit || canDelete ? (
             <TableHead className="w-[220px]">Actions</TableHead>
           ) : null}

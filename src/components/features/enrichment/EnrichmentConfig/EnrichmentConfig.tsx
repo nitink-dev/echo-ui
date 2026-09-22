@@ -48,6 +48,15 @@ import { Switch } from "../../../ui/switch";
 import { usePermissions } from "../../../../auth/permissions/usePermissions";
 import { API_URLS } from "../../../../auth/permissions/apiConfig";
 import { useSlideScan } from "../../status/SlideScanContext";
+import { useFormLabels } from "../../../../hooks/useFormLabels";
+import {
+  DICOM_RECEIVER_FIELD_LABELS,
+  LIS_CONNECTOR_FIELD_LABELS,
+  DICOM_ENRICHER_FIELD_LABELS,
+  EXPORT_SERVICE_FIELD_LABELS,
+  HL7_CONNECTOR_FIELD_LABELS,
+  EMAIL_SERVICE_FIELD_LABELS,
+} from "./enrichmentLabels.constants";
 
 const IP_FIELDS: Record<string, string[]> = {
   dicomReceiver: ["samIpAddress"],
@@ -94,6 +103,13 @@ export function EnrichmentToolConfig() {
   };
 
   const { isBannerVisible: isScanInProgress } = useSlideScan();
+
+  const dicomReceiverLabels = useFormLabels('eh-dicom-receiver', DICOM_RECEIVER_FIELD_LABELS);
+  const lisConnectorLabels = useFormLabels('eh-lis-connector', LIS_CONNECTOR_FIELD_LABELS);
+  const dicomEnricherLabels = useFormLabels('eh-dicom-enricher', DICOM_ENRICHER_FIELD_LABELS);
+  const exportServiceLabels = useFormLabels('eh-export-service', EXPORT_SERVICE_FIELD_LABELS);
+  const hl7ConnectorLabels = useFormLabels('eh-hl7-connector', HL7_CONNECTOR_FIELD_LABELS);
+  const emailServiceLabels = useFormLabels('eh-email-service', EMAIL_SERVICE_FIELD_LABELS);
 
   const [initializedSections, setInitializedSections] = useState({
     dicom: false,
@@ -883,12 +899,11 @@ export function EnrichmentToolConfig() {
         "dicom",
         <>
 
-          {renderInput("dicomReceiver", "aet", "AET", !editMode.dicom)}
-          {/* {renderInput("dicomReceiver", "ipAddress", "IP Address", !editMode.dicom)} */}
-          {renderInput("dicomReceiver", "samIpAddress", "SAM Server Address", !editMode.dicom)}
-          {renderInput("dicomReceiver", "port", "Port", !editMode.dicom)}
-          {renderInput("dicomReceiver", "networkDrive", "Network Drive", !editMode.dicom)}
-          {renderInput("dicomReceiver", "serviceIpAddress", "IP Address", true)}
+          {renderInput("dicomReceiver", "aet", dicomReceiverLabels.aet, !editMode.dicom)}
+          {renderInput("dicomReceiver", "samIpAddress", dicomReceiverLabels.samIpAddress, !editMode.dicom)}
+          {renderInput("dicomReceiver", "port", dicomReceiverLabels.port, !editMode.dicom)}
+          {renderInput("dicomReceiver", "networkDrive", dicomReceiverLabels.networkDrive, !editMode.dicom)}
+          {renderInput("dicomReceiver", "serviceIpAddress", dicomReceiverLabels.serviceIpAddress, true)}
 
           <div className="md:col-span-2 flex items-center gap-2">
             <Checkbox
@@ -905,7 +920,7 @@ export function EnrichmentToolConfig() {
               className="text-sm font-medium text-gray-700"
               style={{ opacity: 1 }}
             >
-              Enable directory watcher
+              {dicomReceiverLabels.watcherActive}
             </Label>
           </div>
 
@@ -917,10 +932,10 @@ export function EnrichmentToolConfig() {
         <Database className="h-5 w-5 text-[#007BFF]" />,
         "lis",
         <>
-          {renderInput("lisConnector", "applicationName", "Application Name", !editMode.lis)}
-          {renderInput("lisConnector", "receivingPort", "Port", !editMode.lis)}
-          {renderInput("lisConnector", "sendingFacility", "Application Facility", !editMode.lis)}
-          {renderInput("lisConnector", "serviceIpAddress", "IP Address", true)}
+          {renderInput("lisConnector", "applicationName", lisConnectorLabels.applicationName, !editMode.lis)}
+          {renderInput("lisConnector", "receivingPort", lisConnectorLabels.receivingPort, !editMode.lis)}
+          {renderInput("lisConnector", "sendingFacility", lisConnectorLabels.sendingFacility, !editMode.lis)}
+          {renderInput("lisConnector", "serviceIpAddress", lisConnectorLabels.serviceIpAddress, true)}
         </>,
       )}
 
@@ -931,7 +946,7 @@ export function EnrichmentToolConfig() {
         <>
           <div className="space-y-2">
             <Label className="text-sm font-medium text-gray-700">
-              Message Type
+              {dicomEnricherLabels.messageType}
             </Label>
             <select
               value={form.enrichmentService.messageType}
@@ -946,10 +961,10 @@ export function EnrichmentToolConfig() {
               }`}
             >
               <option value="ORU">Powerpath ( ORU )</option>
-              <option value="QBP">DPIA Profile ( QBP )</option>          
+              <option value="QBP">DPIA Profile ( QBP )</option>
             </select>
           </div>
-          {renderInput("enrichmentService", "serviceIpAddress", "IP Address", true)}
+          {renderInput("enrichmentService", "serviceIpAddress", dicomEnricherLabels.serviceIpAddress, true)}
         </>,
       )}
 
@@ -964,10 +979,10 @@ export function EnrichmentToolConfig() {
             </Label>
             <div className="border border-gray-200 rounded-lg overflow-hidden">
               {[
-                ["synapseEnabled", "Synapse Enabled"],
-                ["visioPharmEnabled", "VisioPharm Enabled"],
-                ["ibexEnabled", "IBEX Enabled"],
-              ].map(([field, label], idx, arr) => (
+                "synapseEnabled",
+                "visioPharmEnabled",
+                "ibexEnabled",
+              ].map((field, idx, arr) => (
                 <div
                   key={field}
                   className={`flex items-center justify-between px-4 py-3 bg-white ${
@@ -975,7 +990,7 @@ export function EnrichmentToolConfig() {
                   }`}
                 >
                   <Label className="text-sm font-medium text-gray-700">
-                    {label}
+                    {exportServiceLabels[field]}
                   </Label>
                   <Switch
                     checked={!!form.exportService[field]}
@@ -988,7 +1003,7 @@ export function EnrichmentToolConfig() {
               ))}
             </div>
           </div>
-          {renderInput("exportService", "serviceIpAddress", "IP Address", true)}
+          {renderInput("exportService", "serviceIpAddress", exportServiceLabels.serviceIpAddress, true)}
         </>,
       )}
 
@@ -997,10 +1012,10 @@ export function EnrichmentToolConfig() {
         <MessageSquare className="h-5 w-5 text-[#007BFF]" />,
         "hl7",
         <>
-          {renderInput("hl7Messaging", "applicationName", "Application Name", !editMode.hl7)}
-          {renderInput("hl7Messaging", "receivingPort", "Port", !editMode.hl7)}
-          {renderInput("hl7Messaging", "sendingFacility", "Application Facility", !editMode.hl7)}
-          {renderInput("hl7Messaging", "serviceIpAddress", "IP Address", true)}
+          {renderInput("hl7Messaging", "applicationName", hl7ConnectorLabels.applicationName, !editMode.hl7)}
+          {renderInput("hl7Messaging", "receivingPort", hl7ConnectorLabels.receivingPort, !editMode.hl7)}
+          {renderInput("hl7Messaging", "sendingFacility", hl7ConnectorLabels.sendingFacility, !editMode.hl7)}
+          {renderInput("hl7Messaging", "serviceIpAddress", hl7ConnectorLabels.serviceIpAddress, true)}
         </>,
       )}
 
@@ -1011,7 +1026,7 @@ export function EnrichmentToolConfig() {
         <>
           <div className="space-y-2">
             <Label htmlFor="emailFrom" className="text-sm font-medium text-gray-700">
-              Email From
+              {emailServiceLabels.emailFrom}
             </Label>
             <Input
               id="emailFrom"
@@ -1035,10 +1050,10 @@ export function EnrichmentToolConfig() {
                 </p>
               )}
           </div>
-          {renderInput("emailService", "serviceIpAddress", "IP Address", true)}
+          {renderInput("emailService", "serviceIpAddress", emailServiceLabels.serviceIpAddress, true)}
           {renderEmailList(
             "emailTo",
-            "Registered Email Ids for Enrichment Service Notifications",
+            emailServiceLabels.emailTo,
             emailToInput,
             setEmailToInput,
             emailToInputError,
@@ -1046,7 +1061,7 @@ export function EnrichmentToolConfig() {
           )}
           {renderEmailList(
             "emailIbexTo",
-            "Email for IBEX Slide Analysis Event",
+            emailServiceLabels.emailIbexTo,
             emailIbexInput,
             setEmailIbexInput,
             emailIbexInputError,

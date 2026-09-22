@@ -13,6 +13,11 @@ import { PermissionGuard } from "../../../../auth/permissions/PermissionGuard";
 import { useSlideScan } from "../../status/SlideScanContext";
 import { API_URLS } from "../../../../auth/permissions/apiConfig";
 import { usePermissions } from "../../../../auth/permissions/usePermissions";
+import { useFormLabels } from "../../../../hooks/useFormLabels";
+
+const DICOM_STORE_FIELD_LABELS: Record<string, string> = {
+  dicomStore: "DICOM Store Address",
+};
 
 interface DicomStoreConfigProps {
   dicomStores: string[];
@@ -31,6 +36,7 @@ export function DicomStoreConfig({
   const { canAccess } = usePermissions();
 
   const { isBannerVisible: isScanInProgress } = useSlideScan();
+  const labels = useFormLabels('dicomStore', DICOM_STORE_FIELD_LABELS);
 
     useEffect(() => {
     setTempDicomAddress(dicomStoreAddress);
@@ -66,7 +72,7 @@ export function DicomStoreConfig({
       <CardContent>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="dicomStore">DICOM Store Address</Label>
+            <Label htmlFor="dicomStore">{labels.dicomStore}</Label>
             <div className="flex gap-2 mt-2">
               <select
                 id="dicomStore"
