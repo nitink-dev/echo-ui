@@ -55,6 +55,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
+        
         research: scanner.research || false,
         connected: scanner.connected || false
       });
@@ -110,6 +111,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
+        
         research: scanner.research || false,
         connected: scanner.connected || false
       });
