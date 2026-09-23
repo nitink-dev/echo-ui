@@ -87,7 +87,7 @@ export function CompletedRecordsRow({ record, index }) {
                 <span
                   className={`text-xs font-medium ${config.color}`}
                 >
-                  {toTitleCase(record.scanStatus)}                
+                  {record.scanStatus === "warning-completed" ? "Completed" : toTitleCase(record.scanStatus)}
                 </span>
               </div>
             </TooltipTrigger>
