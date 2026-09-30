@@ -262,14 +262,14 @@ export function LisConfig() {
     }
 
     const body: any = {};
-      if (changes.applicationName)
+      if (changes.applicationName !== undefined)
         body.receivingAppName = changes.applicationName;
-      if (changes.ipAddress)
+      if (changes.ipAddress !== undefined)
         body.ipAddress = changes.ipAddress;
       if (changes.receivingFacility !== undefined)
         body.receivingFacility = changes.receivingFacility;
-      if (changes.port)
-        body.port = Number(changes.port);
+      if (changes.port !== undefined)
+        body.port = changes.port === '' ? null : Number(changes.port);
       if (changes.name !== undefined)
         body.lisName = changes.name;
 

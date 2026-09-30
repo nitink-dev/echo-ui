@@ -479,10 +479,10 @@ export function EnrichmentToolConfig() {
           return;
         }
         body = {
-          ...(d.aet && { aet: d.aet }),
-          ...(d.port && { port: d.port }),
+          ...(d.aet !== undefined && { aet: d.aet }),
+          ...(d.port !== undefined && { port: d.port }),
           // ...(d.ipAddress && { ipAddress: d.ipAddress }),
-          ...(d.networkDrive && { "network-drive": d.networkDrive }),
+          ...(d.networkDrive !== undefined && { "network-drive": d.networkDrive }),
           ...(d.watcherActive !== undefined && {
             "watcher-active": !!d.watcherActive,
           }),
@@ -502,8 +502,8 @@ export function EnrichmentToolConfig() {
           return;
         }
         body = {
-          ...(d.applicationName && { appName: d.applicationName }),
-          ...(d.receivingPort && { port: parseInt(d.receivingPort) }),
+          ...(d.applicationName !== undefined && { appName: d.applicationName }),
+          ...(d.receivingPort !== undefined && { port: d.receivingPort === '' ? null : parseInt(d.receivingPort) }),
           ...(d.sendingFacility !== undefined && {
             sendingFacility: d.sendingFacility,
           }),
@@ -560,9 +560,9 @@ export function EnrichmentToolConfig() {
           return;
         }
         body = {
-          ...(d.applicationName && { appName: d.applicationName }),
-          ...(d.receivingPort && {
-            "receive-port": parseInt(d.receivingPort),
+          ...(d.applicationName !== undefined && { appName: d.applicationName }),
+          ...(d.receivingPort !== undefined && {
+            "receive-port": d.receivingPort === '' ? null : parseInt(d.receivingPort),
           }),
           ...(d.sendingFacility !== undefined && {
             sendingFacility: d.sendingFacility,
