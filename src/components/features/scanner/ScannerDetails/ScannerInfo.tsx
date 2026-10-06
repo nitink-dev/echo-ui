@@ -99,12 +99,10 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
               <label className="text-sm font-medium text-gray-500">{labels.vendor}</label>
               <p className="text-base">{scanner.vendor}</p>
             </div>
-            {scanner.storageStrategy && (
-              <div>
-                <label className="text-sm font-medium text-gray-500">{labels.storageStrategy}</label>
-                <p className="text-base">{scanner.storageStrategy}</p>
-              </div>
-            )}
+            <div>
+              <label className="text-sm font-medium text-gray-500">{labels.storageStrategy}</label>
+              <p className="text-base">{scanner.storageStrategy || 'STOW-RS'}</p>
+            </div>
             {scanner.storageStrategy === 'C-STORE' && (
               <>
                 <div>
@@ -113,11 +111,11 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">{labels.remoteHost}</label>
-                  <p className="text-base font-mono">{scanner.remoteHost}</p>
+                  <p className="text-base font-mono">{scanner.remoteHost || '00:00:00:00'}</p>
                 </div>
                 <div>
                   <label className="text-sm font-medium text-gray-500">{labels.remotePort}</label>
-                  <p className="text-base font-mono">{scanner.remotePort}</p>
+                  <p className="text-base font-mono">{scanner.remotePort ?? 0}</p>
                 </div>
               </>
             )}

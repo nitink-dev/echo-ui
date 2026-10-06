@@ -44,7 +44,7 @@ const initialFormData: FormData = {
   remotePort: ''
 };
 
-const requiredFields = ['name', 'aeTitle', 'scannerType', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
+const requiredFields = ['name', 'aeTitle', 'scannerType', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore', 'storageStrategy'];
 const CSTORE_REQUIRED_FIELDS = ['remoteAeTitle', 'remoteHost', 'remotePort'];
 
 export function useScannerForm(scanner?: SlideScanner) {
