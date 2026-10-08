@@ -336,11 +336,11 @@ export function SynapseConfig() {
       body.receivingAppName = changes.applicationName;
     if (changes.ipAddress !== undefined) body.ipAddress = changes.ipAddress;
     if (changes.receivingPort !== undefined)
-      body["receive-port"] = changes.receivingPort === '' ? null : parseInt(changes.receivingPort, 10);
+      body["synapse-receive-port"] = changes.receivingPort === '' ? null : parseInt(changes.receivingPort, 10);
     if (changes.networkFolder !== undefined) body.synapseServerFolder = changes.networkFolder;
     if (changes.receivingFacility !== undefined)
       body.receivingFacility = changes.receivingFacility;
-    if (changes.imsName !== undefined) body.imsName = changes.imsName;
+    if (changes.imsName !== undefined) body["ims-name"] = changes.imsName;
     if (changes.networkFolder2 !== undefined) body.synapseServerFolder2  = changes.networkFolder2;
 
     setCardError(null);
