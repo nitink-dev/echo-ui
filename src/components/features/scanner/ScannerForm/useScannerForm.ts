@@ -44,7 +44,7 @@ const initialFormData: FormData = {
   remotePort: ''
 };
 
-const requiredFields = ['name', 'aeTitle', 'scannerType', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore', 'storageStrategy'];
+const requiredFields = ['name', 'aeTitle', 'scannerType', 'hospitalName', 'department', 'location', 'deviceSerialNumber','dicomStore'];
 const CSTORE_REQUIRED_FIELDS = ['remoteAeTitle', 'remoteHost', 'remotePort'];
 
 export function useScannerForm(scanner?: SlideScanner) {
@@ -68,6 +68,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
+        
         research: scanner.research || false,
         connected: scanner.connected || false,
         storageStrategy: scanner.storageStrategy || 'STOW-RS',
@@ -171,6 +172,7 @@ export function useScannerForm(scanner?: SlideScanner) {
         ipAddress: scanner.ipAddress || '',
         port: scanner.port || '',
         vendor: scanner.vendor || '',
+        
         research: scanner.research || false,
         connected: scanner.connected || false,
         storageStrategy: scanner.storageStrategy || 'STOW-RS',
