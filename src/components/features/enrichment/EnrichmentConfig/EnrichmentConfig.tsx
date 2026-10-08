@@ -481,7 +481,7 @@ export function EnrichmentToolConfig() {
         body = {
           ...(d.aet !== undefined && { aet: d.aet }),
           ...(d.port !== undefined && { port: d.port }),
-          // ...(d.ipAddress && { ipAddress: d.ipAddress }),
+          ...(d.samIpAddress !== undefined && { ipAddress: d.samIpAddress }),
           ...(d.networkDrive !== undefined && { "network-drive": d.networkDrive }),
           ...(d.watcherActive !== undefined && {
             "watcher-active": !!d.watcherActive,
