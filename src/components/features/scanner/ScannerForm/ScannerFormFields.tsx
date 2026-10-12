@@ -420,7 +420,7 @@ export function ScannerFormFields({
             onChange={handleIpChange}
             onKeyDown={handleIpKeyDown}
             onPaste={handleIpPaste}
-            placeholder="e.g. 192.168.1.1"
+            placeholder="00:00:00:00"
             aria-invalid={Boolean(errors.ipAddress || ipInlineError)}
             aria-describedby={
               errors.ipAddress || ipInlineError ? 'ipAddress-error' : undefined
@@ -457,7 +457,7 @@ export function ScannerFormFields({
             onChange={handlePortChange}
             onKeyDown={handlePortKeyDown}
             onPaste={handlePortPaste}
-            placeholder="e.g. 104"
+            placeholder="0"
             aria-invalid={Boolean(errors.port || portInlineError)}
             aria-describedby={
               errors.port || portInlineError ? 'port-error' : undefined
@@ -553,7 +553,7 @@ export function ScannerFormFields({
                 onChange={handleRemoteHostChange}
                 onKeyDown={handleRemoteHostKeyDown}
                 onPaste={handleRemoteHostPaste}
-                placeholder="e.g. 127.0.0.1"
+                placeholder="00:00:00:00"
                 aria-invalid={Boolean(errors.remoteHost || remoteHostInlineError)}
                 aria-describedby={
                   errors.remoteHost || remoteHostInlineError ? 'remoteHost-error' : undefined
@@ -585,7 +585,7 @@ export function ScannerFormFields({
                 onChange={handleRemotePortChange}
                 onKeyDown={handleRemotePortKeyDown}
                 onPaste={handleRemotePortPaste}
-                placeholder="e.g. 11112"
+                placeholder="0"
                 aria-invalid={Boolean(errors.remotePort || remotePortInlineError)}
                 aria-describedby={
                   errors.remotePort || remotePortInlineError ? 'remotePort-error' : undefined

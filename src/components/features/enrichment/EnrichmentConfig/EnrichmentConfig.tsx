@@ -625,6 +625,8 @@ export function EnrichmentToolConfig() {
     const error = fieldErrors[key];
     const isIP = IP_FIELDS[section]?.includes(field);
     const isPort = PORT_FIELDS[section]?.includes(field);
+    const looksLikeIp = isIP || field.toLowerCase().includes("ipaddress");
+    const placeholder = looksLikeIp ? "00:00:00:00" : isPort ? "0" : undefined;
 
     return (
       <div className="space-y-2">
@@ -664,6 +666,7 @@ export function EnrichmentToolConfig() {
               );
             }
           }}
+          placeholder={placeholder}
           disabled={disabled}
           className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
             error ? "border-red-500 focus:border-red-500" : ""

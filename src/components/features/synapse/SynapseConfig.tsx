@@ -365,6 +365,7 @@ export function SynapseConfig() {
     const label = labels[field] ?? rule?.label ?? field;
     const error = touched[field] ? errors[field] : "";
     const hasError = Boolean(error);
+    const placeholder = field === "ipAddress" ? "00:00:00:00" : field === "receivingPort" ? "0" : undefined;
 
     return (
       <div className="space-y-2">
@@ -384,6 +385,7 @@ export function SynapseConfig() {
             if (isCtrl) return;
             if (!rule.allowedPattern.test(e.key)) e.preventDefault();
           }}
+          placeholder={placeholder}
           disabled={disabled}
           className={`h-11 bg-[#f8faff] border-gray-200 focus:border-[#007BFF] focus:ring-[#007BFF]/20 ${
             hasError ? "border-red-500 focus:border-red-500" : ""
