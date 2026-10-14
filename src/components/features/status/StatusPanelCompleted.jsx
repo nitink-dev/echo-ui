@@ -133,4 +133,3 @@ export const StatusPanelCompleted = ({
     </div>
   );
 };
-``

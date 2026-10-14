@@ -106,7 +106,9 @@ const normalisePageable = (data) => {
   const page = Number.isFinite(Number(data.page ?? data.number))
     ? Number(data.page ?? data.number)
     : 0;
-  return { ...data, totalElements, totalPages, page };
+  const hasNext = page + 1 < totalPages;
+  const hasPrevious = page > 0;
+  return { ...data, totalElements, totalPages, page, hasNext, hasPrevious };
 };
 
 export function SlideScanStatus() {
