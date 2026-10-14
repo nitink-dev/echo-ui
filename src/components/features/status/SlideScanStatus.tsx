@@ -70,6 +70,8 @@ const SCAN_STATUS_TO_TAB = {
   inprogress: "inProgress",
   in_progress: "inProgress",
   completed: "completed",
+  "warning-completed": "completed",
+  "ibex-warning-completed": "completed",
   failed: "failed",
 };
 
