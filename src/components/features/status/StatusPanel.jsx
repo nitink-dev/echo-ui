@@ -60,6 +60,8 @@ export const StatusPanel = ({
           
 
             <button
+              onMouseDown={() => console.log("[pagination] StatusPanel: Next button MOUSEDOWN")}
+              onMouseUp={() => console.log("[pagination] StatusPanel: Next button MOUSEUP")}
               onClick={() => {
                 console.log("[pagination] StatusPanel: Next button clicked", { tab, hasNext: data.hasNext, isLoading, disabled: !data.hasNext || isLoading });
                 onPageChange(tab, "next");
