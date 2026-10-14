@@ -108,6 +108,7 @@ export const StatusPanelFailed = ({
                     <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">#</th>
                     {/* <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Case Number</th> */}
                     <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Slide Barcode</th>
+                    <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Accession Number</th>
                     <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Device Serial</th>
                     <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
                     {/* <th className="px-6 py-1 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Created At</th> */}

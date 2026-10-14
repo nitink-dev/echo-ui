@@ -36,6 +36,10 @@ export function RunningRecordsRow({ record, index }) {
       </td>
 
       <td className="px-6 py-1">
+        <div className="font-mono text-sm text-gray-700">{record.accessionNumber}</div>
+      </td>
+
+      <td className="px-6 py-1">
         <div className="text-sm text-gray-600">{record.deviceSerialNumber}</div>
       </td>
 
