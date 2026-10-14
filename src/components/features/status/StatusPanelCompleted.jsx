@@ -3,6 +3,47 @@ import React from "react";
 import { Microscope, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { CompletedRecordsRow } from "./records/CompletedRecordsRow";
 
+// Defined at module scope (not inside StatusPanelCompleted) so its component
+// type stays stable across renders - see StatusPanel.jsx for why.
+const PaginationControls = ({ data, tab, isLoading, onPageChange }) => {
+  if (!data) return null;
+
+  const start = data.page * data.size + 1;
+  const end = Math.min((data.page + 1) * data.size, data.totalElements);
+
+  return (
+    <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
+      <div className="text-sm text-gray-600">
+        Showing <span className="font-medium">{start}</span> to{" "}
+        <span className="font-medium">{end}</span> of{" "}
+        <span className="font-medium">{data.totalElements}</span> results
+      </div>
+
+      <div className="flex gap-2">
+        <button
+          onClick={() => onPageChange(tab, "prev")}
+          disabled={!data.hasPrevious || isLoading}
+          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Previous
+        </button>
+        <div className="flex items-center px-3 text-sm text-gray-700">
+          Page {data.page + 1} of {data.totalPages}
+        </div>
+        <button
+          onClick={() => onPageChange(tab, "next")}
+          disabled={!data.hasNext || isLoading}
+          className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+        >
+          Next
+          <ChevronRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
+  );
+};
+
 export const StatusPanelCompleted = ({
   statusKey,          // "failed" | "completed" | "inProgress"
   title,              // panel title text
@@ -21,58 +62,6 @@ export const StatusPanelCompleted = ({
     const minutes = Math.floor(seconds / 60);
     if (minutes < 60) return `${minutes}m ago`;
     return `${Math.floor(minutes / 60)}h ago`;
-  };
-
-  const PaginationControls = ({ data, tab }) => {
-    if (!data) return null;
-    console.log("[pagination] StatusPanelCompleted: PaginationControls render", {
-      tab,
-      page: data.page,
-      totalPages: data.totalPages,
-      totalElements: data.totalElements,
-      hasNext: data.hasNext,
-      hasPrevious: data.hasPrevious,
-      isLoading,
-      nextDisabled: !data.hasNext || isLoading,
-    });
-
-    const start = data.page * data.size + 1;
-    const end = Math.min((data.page + 1) * data.size, data.totalElements);
-
-    return (
-      <div className="flex items-center justify-between px-6 py-4 border-t border-gray-200 bg-gray-50">
-        <div className="text-sm text-gray-600">
-          Showing <span className="font-medium">{start}</span> to{" "}
-          <span className="font-medium">{end}</span> of{" "}
-          <span className="font-medium">{data.totalElements}</span> results
-        </div>
-
-        <div className="flex gap-2">
-          <button
-            onClick={() => onPageChange(tab, "prev")}
-            disabled={!data.hasPrevious || isLoading}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="h-4 w-4" />
-            Previous
-          </button>
-          <div className="flex items-center px-3 text-sm text-gray-700">
-            Page {data.page + 1} of {data.totalPages}
-          </div>
-          <button
-            onClick={() => {
-              console.log("[pagination] StatusPanelCompleted: Next button clicked", { tab, hasNext: data.hasNext, isLoading, disabled: !data.hasNext || isLoading });
-              onPageChange(tab, "next");
-            }}
-            disabled={!data.hasNext || isLoading}
-            className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-          >
-            Next
-            <ChevronRight className="h-4 w-4" />
-          </button>
-        </div>
-      </div>
-    );
   };
 
   return (
@@ -139,7 +128,7 @@ export const StatusPanelCompleted = ({
               </table>
             </div>
 
-            <PaginationControls data={data} tab={statusKey} />
+            <PaginationControls data={data} tab={statusKey} isLoading={isLoading} onPageChange={onPageChange} />
           </>
         )}
       </div>
