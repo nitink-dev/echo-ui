@@ -25,6 +25,16 @@ export const StatusPanelFailed = ({
 
   const PaginationControls = ({ data, tab }) => {
     if (!data) return null;
+    console.log("[pagination] StatusPanelFailed: PaginationControls render", {
+      tab,
+      page: data.page,
+      totalPages: data.totalPages,
+      totalElements: data.totalElements,
+      hasNext: data.hasNext,
+      hasPrevious: data.hasPrevious,
+      isLoading,
+      nextDisabled: !data.hasNext || isLoading,
+    });
 
     const start = data.page * data.size + 1;
     const end = Math.min((data.page + 1) * data.size, data.totalElements);
