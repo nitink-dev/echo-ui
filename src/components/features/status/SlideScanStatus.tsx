@@ -167,8 +167,11 @@ export function SlideScanStatus() {
         : "";
 
       const url = `${BASE_URL}/api/slide-scan-status/${apiStatus}?page=${page}&size=${pageSize}${barcodeParam}`;
+      console.log("[pagination] fetchData: calling backend", { statusKey, page, url });
       const response = await apiClient.get(url);
+      console.log("[pagination] fetchData: backend responded", { statusKey, page, raw: response.data });
       const data = normalisePageable(response.data);
+      console.log("[pagination] fetchData: normalised", { statusKey, page, data });
       setStatusData((prev) => {
         if (statusKey === "inProgress") {
           const newCount = data?.totalElements ?? 0;
@@ -194,6 +197,7 @@ export function SlideScanStatus() {
 
       return data;
     } catch (error) {
+      console.log("[pagination] fetchData: request failed", { statusKey, page, error: error?.message, error });
       setStatusData((prev) => ({
         ...prev,
         [statusKey]: emptyPageable(),
@@ -394,9 +398,23 @@ export function SlideScanStatus() {
     const nextVal = Math.min(currentPageNum + 1, totalPages - 1);
     const preVal = Math.max(0, currentPageNum - 1);
     const newPage = direction === "next" ? nextVal : preVal;
-    if (newPage === currentPageNum) return;
+    console.log("[pagination] handlePageChange called", {
+      tab,
+      direction,
+      currentPageNum,
+      totalPages,
+      hasNext: statusData[tab]?.hasNext,
+      hasPrevious: statusData[tab]?.hasPrevious,
+      isLoading: statusData.loading[tab],
+      computedNewPage: newPage,
+    });
+    if (newPage === currentPageNum) {
+      console.log("[pagination] no-op: newPage === currentPageNum, not fetching", { tab, newPage });
+      return;
+    }
     currentPageRef.current = { ...currentPageRef.current, [tab]: newPage };
     setCurrentPage((prev) => ({ ...prev, [tab]: newPage }));
+    console.log("[pagination] fetching next page", { tab, newPage });
     fetchData(tab, newPage, null);
   };
 

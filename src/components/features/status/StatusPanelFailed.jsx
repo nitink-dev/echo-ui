@@ -50,7 +50,10 @@ export const StatusPanelFailed = ({
             Page {data.page + 1} of {data.totalPages}
           </div>
           <button
-            onClick={() => onPageChange(tab, "next")}
+            onClick={() => {
+              console.log("[pagination] StatusPanelFailed: Next button clicked", { tab, hasNext: data.hasNext, isLoading, disabled: !data.hasNext || isLoading });
+              onPageChange(tab, "next");
+            }}
             disabled={!data.hasNext || isLoading}
             className="flex items-center gap-1 px-3 py-1.5 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
