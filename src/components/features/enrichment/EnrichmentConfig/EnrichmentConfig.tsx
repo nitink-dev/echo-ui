@@ -480,7 +480,7 @@ export function EnrichmentToolConfig() {
         }
         body = {
           ...(d.aet !== undefined && { aet: d.aet }),
-          ...(d.port !== undefined && { port: d.port }),
+          ...(d.port !== undefined && { port: d.port === '' ? null : parseInt(d.port, 10) }),
           ...(d.samIpAddress !== undefined && { ipAddress: d.samIpAddress }),
           ...(d.networkDrive !== undefined && { "network-drive": d.networkDrive }),
           ...(d.watcherActive !== undefined && {
