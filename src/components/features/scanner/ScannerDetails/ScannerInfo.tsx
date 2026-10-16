@@ -103,26 +103,28 @@ export function ScannerInfo({ scanner }: ScannerInfoProps) {
               <label className="text-sm font-medium text-gray-500">{labels.storageStrategy}</label>
               <p className="text-base">{scanner.storageStrategy || 'STOW-RS'}</p>
             </div>
-            {scanner.storageStrategy === 'C-STORE' && (
-              <>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{labels.remoteAeTitle}</label>
-                  <p className="text-base font-mono">{scanner.remoteAeTitle}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{labels.remoteHost}</label>
-                  <p className="text-base font-mono">{scanner.remoteHost || '00:00:00:00'}</p>
-                </div>
-                <div>
-                  <label className="text-sm font-medium text-gray-500">{labels.remotePort}</label>
-                  <p className="text-base font-mono">{scanner.remotePort ?? 0}</p>
-                </div>
-              </>
-            )}
           </div>
-
-       
         </div>
+
+        {scanner.storageStrategy === 'C-STORE' && (
+          <div className="mt-6 pt-6 border-t border-gray-200">
+            <h3 className="text-sm font-semibold text-gray-700 mb-4">Remote DICOM Destination</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div>
+                <label className="text-sm font-medium text-gray-500">{labels.remoteAeTitle}</label>
+                <p className="text-base font-mono">{scanner.remoteAeTitle}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">{labels.remoteHost}</label>
+                <p className="text-base font-mono">{scanner.remoteHost || '00:00:00:00'}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-500">{labels.remotePort}</label>
+                <p className="text-base font-mono">{scanner.remotePort ?? 0}</p>
+              </div>
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
