@@ -543,8 +543,8 @@ export function SlideScanStatus() {
                 options={[]}
                 value={barcodeFilter}
                 onChange={setBarcodeFilter}
-                placeholder="Search barcode…"
-                emptyText="Enter exact barcode to search"
+                placeholder="Search barcode or accession number…"
+                emptyText="Enter exact barcode or accession number to search"
                 onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
 
