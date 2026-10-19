@@ -72,7 +72,7 @@ export function DicomStoreConfig({
       <CardContent>
         <div className="space-y-4">
           <div>
-            <Label htmlFor="dicomStore">{labels.dicomStore}</Label>
+            <Label htmlFor="dicomStore">{labels["gcp-config.pathqa-store-url"] ?? DICOM_STORE_FIELD_LABELS.dicomStore}</Label>
             <div className="flex gap-2 mt-2">
               <select
                 id="dicomStore"

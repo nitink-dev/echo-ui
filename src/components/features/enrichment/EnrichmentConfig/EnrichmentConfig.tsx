@@ -903,9 +903,9 @@ export function EnrichmentToolConfig() {
         <>
 
           {renderInput("dicomReceiver", "aet", dicomReceiverLabels.aet, !editMode.dicom)}
-          {renderInput("dicomReceiver", "samIpAddress", dicomReceiverLabels.samIpAddress, !editMode.dicom)}
+          {renderInput("dicomReceiver", "samIpAddress", dicomReceiverLabels.ipAddress ?? DICOM_RECEIVER_FIELD_LABELS.samIpAddress, !editMode.dicom)}
           {renderInput("dicomReceiver", "port", dicomReceiverLabels.port, !editMode.dicom)}
-          {renderInput("dicomReceiver", "networkDrive", dicomReceiverLabels.networkDrive, !editMode.dicom)}
+          {renderInput("dicomReceiver", "networkDrive", dicomReceiverLabels["network-drive"] ?? DICOM_RECEIVER_FIELD_LABELS.networkDrive, !editMode.dicom)}
           {renderInput("dicomReceiver", "serviceIpAddress", dicomReceiverLabels.serviceIpAddress, true)}
 
           <div className="md:col-span-2 flex items-center gap-2">
@@ -923,7 +923,7 @@ export function EnrichmentToolConfig() {
               className="text-sm font-medium text-gray-700"
               style={{ opacity: 1 }}
             >
-              {dicomReceiverLabels.watcherActive}
+              {dicomReceiverLabels["watcher-active"] ?? DICOM_RECEIVER_FIELD_LABELS.watcherActive}
             </Label>
           </div>
 
@@ -935,8 +935,8 @@ export function EnrichmentToolConfig() {
         <Database className="h-5 w-5 text-[#007BFF]" />,
         "lis",
         <>
-          {renderInput("lisConnector", "applicationName", lisConnectorLabels.applicationName, !editMode.lis)}
-          {renderInput("lisConnector", "receivingPort", lisConnectorLabels.receivingPort, !editMode.lis)}
+          {renderInput("lisConnector", "applicationName", lisConnectorLabels.appName ?? LIS_CONNECTOR_FIELD_LABELS.applicationName, !editMode.lis)}
+          {renderInput("lisConnector", "receivingPort", lisConnectorLabels.port ?? LIS_CONNECTOR_FIELD_LABELS.receivingPort, !editMode.lis)}
           {renderInput("lisConnector", "sendingFacility", lisConnectorLabels.sendingFacility, !editMode.lis)}
           {renderInput("lisConnector", "serviceIpAddress", lisConnectorLabels.serviceIpAddress, true)}
         </>,
@@ -1015,8 +1015,8 @@ export function EnrichmentToolConfig() {
         <MessageSquare className="h-5 w-5 text-[#007BFF]" />,
         "hl7",
         <>
-          {renderInput("hl7Messaging", "applicationName", hl7ConnectorLabels.applicationName, !editMode.hl7)}
-          {renderInput("hl7Messaging", "receivingPort", hl7ConnectorLabels.receivingPort, !editMode.hl7)}
+          {renderInput("hl7Messaging", "applicationName", hl7ConnectorLabels.appName ?? HL7_CONNECTOR_FIELD_LABELS.applicationName, !editMode.hl7)}
+          {renderInput("hl7Messaging", "receivingPort", hl7ConnectorLabels["receive-port"] ?? HL7_CONNECTOR_FIELD_LABELS.receivingPort, !editMode.hl7)}
           {renderInput("hl7Messaging", "sendingFacility", hl7ConnectorLabels.sendingFacility, !editMode.hl7)}
           {renderInput("hl7Messaging", "serviceIpAddress", hl7ConnectorLabels.serviceIpAddress, true)}
         </>,

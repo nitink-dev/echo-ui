@@ -154,6 +154,17 @@ const SYNAPSE_FIELD_LABELS: Record<string, string> = Object.fromEntries(
   Object.entries(FIELD_RULES).map(([field, rule]) => [field, rule.label]),
 );
 
+// Maps each form-state field to the key form-labels.yml actually uses for it (the wire-level
+// GET/PATCH key), so title lookups hit the backend-driven label instead of always falling back
+// to the hardcoded default above. ipAddress/receivingFacility/networkFolder2 aren't listed since
+// their form-state name already matches the YAML key directly.
+const SYNAPSE_LABEL_KEY_MAP: Partial<Record<keyof FormState, string>> = {
+  applicationName: "receivingAppName",
+  receivingPort: "synapse-receive-port",
+  networkFolder: "synapseServerFolder",
+  imsName: "ims-name",
+};
+
 export function SynapseConfig() {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
@@ -362,7 +373,7 @@ export function SynapseConfig() {
 
   const renderInput = (field: keyof FormState, disabled: boolean) => {
     const rule = FIELD_RULES[field];
-    const label = labels[field] ?? rule?.label ?? field;
+    const label = labels[SYNAPSE_LABEL_KEY_MAP[field] ?? field] ?? rule?.label ?? field;
     const error = touched[field] ? errors[field] : "";
     const hasError = Boolean(error);
     const placeholder = field === "ipAddress" ? "00:00:00:00" : field === "receivingPort" ? "0" : undefined;
