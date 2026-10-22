@@ -56,6 +56,14 @@ export default defineConfig({
   server: {
     port: 3001,
     open: true,
+    proxy: {
+      '/grafana': {
+        target: 'http://10.201.8.197:3000',
+        changeOrigin: true,
+        ws: true,
+        rewrite: (path) => path.replace(/^\/grafana/, ''),
+      },
+    },
   },
   test: {
     globals: true,

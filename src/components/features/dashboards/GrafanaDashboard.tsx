@@ -1,6 +1,6 @@
 import { AlertTriangle, ExternalLink } from "lucide-react";
 
-const GRAFANA_URL = "http://10.201.8.197:3000/dashboards";
+const GRAFANA_URL = "/grafana/dashboards";
 
 export function GrafanaDashboard() {
   return (
