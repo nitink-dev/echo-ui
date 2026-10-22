@@ -5,6 +5,7 @@ import { setUnauthorizedHandler } from "./api/services/apiClient";
 import { Layout } from "./components/Layout";
 import { LoginPage } from "./components/auth/login/login";
 import { EnrichmentToolConfig } from "./components/features/enrichment/EnrichmentConfig/EnrichmentConfig";
+import { GrafanaDashboard } from "./components/features/dashboards/GrafanaDashboard";
 import { HealthMonitor } from "./components/features/health/HealthMonitor";
 import { LisConfig } from "./components/features/lis/LISConfig";
 import { QAConfig } from "./components/features/qa/QAConfig/QAConfig";
@@ -34,6 +35,7 @@ import { IdleTimeoutModal } from "./components/common/TimeoutModal/IdleTimeoutMo
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
   "qa-analysis", "enrichment-tool", "health-status", "slide-status",
+  "grafana-dashboard",
 ];
 
 function PageLoader() {
@@ -276,6 +278,7 @@ export default function App() {
       ],
       "health-status": [{ label: "Health Monitor" }],
       "slide-status": [{ label: "Slide Scan Status" }],
+      "grafana-dashboard": [{ label: "Grafana Dashboard" }],
     };
     return breadcrumbMap[currentPage] || [];
   };
@@ -366,6 +369,7 @@ export default function App() {
       "enrichment-tool": <EnrichmentToolConfig />,
       "health-status": <HealthMonitor />,
       "slide-status": <SlideScanStatus />,
+      "grafana-dashboard": <GrafanaDashboard />,
     };
 
     return pageComponents[currentPage] ?? <div>Page Not Found</div>;

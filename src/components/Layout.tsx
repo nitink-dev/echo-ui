@@ -1,6 +1,7 @@
 import endeavorLogo from "figma:asset/8d23b78a5fe745720187a8b480f0debc13c0b121.png";
 import {
   Activity,
+  BarChart3,
   ChevronDown,
   ChevronRight,
   Cpu,
@@ -69,6 +70,7 @@ const navigationItems: NavigationItem[] = [
     children: [
       { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status", permissionKey: "slide-status" },
       { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
+      { label: "Grafana Dashboard", icon: BarChart3, id: "grafana-dashboard", permissionKey: "grafana-dashboard" },
     ],
   },
   {
@@ -100,6 +102,7 @@ function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAcc
     "qa-analysis":     canAccess(API_URLS.qaAnalysis.base.path,        API_URLS.qaAnalysis.base.method),
     "enrichment-tool": canAccess(API_URLS.enrichment.tools.path,       API_URLS.enrichment.tools.method),
     "health-status":   true,
+    "grafana-dashboard": true,
     "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
     "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
   };
