@@ -12,7 +12,8 @@ export type PageType =
   | 'enrichment-tool'
   | 'slide-status'
   | 'health-status'
-  | 'grafana-dashboard';
+  | 'grafana-dashboard'
+  | 'sam-server';
 
 export interface Breadcrumb {
   label: string;

@@ -1,6 +1,7 @@
 import { AlertTriangle, ExternalLink } from "lucide-react";
 
 const GRAFANA_URL = "/grafana/dashboards";
+const GRAFANA_EMBED_URL = "/grafana/dashboards?kiosk";
 
 export function GrafanaDashboard() {
   return (
@@ -45,7 +46,7 @@ export function GrafanaDashboard() {
         style={{ height: "calc(100vh - 260px)", minHeight: "480px" }}
       >
         <iframe
-          src={GRAFANA_URL}
+          src={GRAFANA_EMBED_URL}
           title="Grafana Dashboard"
           className="w-full h-full border-0"
           allow="fullscreen"

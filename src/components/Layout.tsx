@@ -9,6 +9,7 @@ import {
   Microscope,
   Monitor,
   MonitorCheckIcon,
+  Server,
   Settings,
   Stethoscope,
   User,
@@ -71,6 +72,7 @@ const navigationItems: NavigationItem[] = [
       { label: "Slide Status", icon: MonitorCheckIcon, id: "slide-status", permissionKey: "slide-status" },
       { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
       { label: "Grafana Dashboard", icon: BarChart3, id: "grafana-dashboard", permissionKey: "grafana-dashboard" },
+      { label: "SAM Server", icon: Server, id: "sam-server", permissionKey: "sam-server" },
     ],
   },
   {
@@ -103,6 +105,7 @@ function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAcc
     "enrichment-tool": canAccess(API_URLS.enrichment.tools.path,       API_URLS.enrichment.tools.method),
     "health-status":   true,
     "grafana-dashboard": true,
+    "sam-server": true,
     "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
     "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
   };
