@@ -1,7 +1,7 @@
 import { AlertTriangle, ExternalLink } from "lucide-react";
 
 const GRAFANA_URL = "/grafana/dashboards";
-const GRAFANA_EMBED_URL = "/grafana/dashboards?kiosk";
+const GRAFANA_EMBED_URL = "/grafana/dashboards?kiosk&theme=light";
 
 export function GrafanaDashboard() {
   return (
