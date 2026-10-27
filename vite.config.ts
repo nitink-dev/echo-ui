@@ -63,13 +63,6 @@ export default defineConfig({
         ws: true,
         rewrite: (path) => path.replace(/^\/grafana/, ''),
       },
-      '/sam': {
-        target: 'https://10.201.8.35',
-        changeOrigin: true,
-        secure: false,
-        ws: true,
-        rewrite: (path) => path.replace(/^\/sam/, ''),
-      },
     },
   },
   test: {

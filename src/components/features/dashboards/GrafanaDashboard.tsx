@@ -1,7 +1,8 @@
 import { AlertTriangle, ExternalLink } from "lucide-react";
 
-const GRAFANA_URL = "/grafana/dashboards";
-const GRAFANA_EMBED_URL = "/grafana/dashboards?kiosk&theme=light";
+const GRAFANA_DASHBOARD_PATH = "/grafana/d/X034JGT7Gz/springboot-apm-dashboard";
+const GRAFANA_URL = `${GRAFANA_DASHBOARD_PATH}?orgId=1&from=now-6h&to=now`;
+const GRAFANA_EMBED_URL = `${GRAFANA_DASHBOARD_PATH}?orgId=1&from=now-6h&to=now&kiosk&theme=light`;
 
 export function GrafanaDashboard() {
   return (
