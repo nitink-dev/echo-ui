@@ -98,9 +98,15 @@ export default function App() {
     await dispatch(logoutUser());
   }, [dispatch]);
 
+  const lastActivityExtendRef = useRef(0);
+
   const handleSessionActivity = useCallback(() => {
+    const now = Date.now();
+    if (now - lastActivityExtendRef.current < 5000) return;
+    lastActivityExtendRef.current = now;
+
     const timeoutMinutes = Math.max(1, Number(sessionTimeoutMinutes) || 6);
-    setSessionExpiresAt(new Date(Date.now() + timeoutMinutes * 60 * 1000));
+    setSessionExpiresAt(new Date(now + timeoutMinutes * 60 * 1000));
   }, [isLoggedIn, sessionTimeoutMinutes]);
 
   const { isIdle, secondsLeft, countdownSeconds, resetTimer, dismissModal } =
