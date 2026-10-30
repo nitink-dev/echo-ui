@@ -13,7 +13,9 @@ export type PageType =
   | 'slide-status'
   | 'health-status'
   | 'grafana-dashboard'
-  | 'sam-server';
+  | 'sam-server'
+  | 'ibex'
+  | 'synapse-pathology';
 
 export interface Breadcrumb {
   label: string;

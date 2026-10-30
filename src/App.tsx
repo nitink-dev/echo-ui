@@ -6,6 +6,8 @@ import { Layout } from "./components/Layout";
 import { LoginPage } from "./components/auth/login/login";
 import { EnrichmentToolConfig } from "./components/features/enrichment/EnrichmentConfig/EnrichmentConfig";
 import { GrafanaDashboard } from "./components/features/dashboards/GrafanaDashboard";
+import { IbexDashboard } from "./components/features/dashboards/IbexDashboard";
+import { SynapsePathology } from "./components/features/dashboards/SynapsePathology";
 import { HealthMonitor } from "./components/features/health/HealthMonitor";
 import { LisConfig } from "./components/features/lis/LISConfig";
 import { QAConfig } from "./components/features/qa/QAConfig/QAConfig";
@@ -35,7 +37,7 @@ import { IdleTimeoutModal } from "./components/common/TimeoutModal/IdleTimeoutMo
 const VALID_PAGES: PageType[] = [
   "list", "add", "edit", "view", "lis", "synapse",
   "qa-analysis", "enrichment-tool", "health-status", "slide-status",
-  "grafana-dashboard",
+  "grafana-dashboard", "ibex", "synapse-pathology",
 ];
 
 function PageLoader() {
@@ -279,6 +281,8 @@ export default function App() {
       "health-status": [{ label: "Health Monitor" }],
       "slide-status": [{ label: "Slide Scan Status" }],
       "grafana-dashboard": [{ label: "Grafana Dashboard" }],
+      "ibex": [{ label: "Ibex" }],
+      "synapse-pathology": [{ label: "Synapse Pathology" }],
     };
     return breadcrumbMap[currentPage] || [];
   };
@@ -370,6 +374,8 @@ export default function App() {
       "health-status": <HealthMonitor />,
       "slide-status": <SlideScanStatus />,
       "grafana-dashboard": <GrafanaDashboard />,
+      "ibex": <IbexDashboard />,
+      "synapse-pathology": <SynapsePathology />,
     };
 
     return pageComponents[currentPage] ?? <div>Page Not Found</div>;

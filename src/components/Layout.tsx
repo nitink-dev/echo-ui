@@ -2,9 +2,11 @@ import endeavorLogo from "figma:asset/8d23b78a5fe745720187a8b480f0debc13c0b121.p
 import {
   Activity,
   BarChart3,
+  Boxes,
   ChevronDown,
   ChevronRight,
   Cpu,
+  FlaskConical,
   HelpCircle,
   Microscope,
   Monitor,
@@ -73,6 +75,8 @@ const navigationItems: NavigationItem[] = [
       { label: "Health Status", icon: Activity, id: "health-status", permissionKey: "health-status" },
       { label: "Grafana Dashboard", icon: BarChart3, id: "grafana-dashboard", permissionKey: "grafana-dashboard" },
       { label: "SAM Server", icon: Server, id: "sam-server", permissionKey: "sam-server" },
+      { label: "Ibex", icon: Boxes, id: "ibex", permissionKey: "ibex" },
+      { label: "Synapse Pathology", icon: FlaskConical, id: "synapse-pathology", permissionKey: "synapse-pathology" },
     ],
   },
   {
@@ -106,6 +110,8 @@ function buildPermissionMap(canAccess: ReturnType<typeof usePermissions>["canAcc
     "health-status":   true,
     "grafana-dashboard": true,
     "sam-server": true,
+    "ibex": true,
+    "synapse-pathology": true,
     "slide-status":    canAccess(API_URLS.scanStatus.all.path,         API_URLS.scanStatus.all.method),
     "slide-analysis":  canAccess(API_URLS.slideAnalysis.all.path,      API_URLS.slideAnalysis.all.method),
   };
