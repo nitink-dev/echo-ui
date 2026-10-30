@@ -1,6 +1,6 @@
 import { ExternalLink } from "lucide-react";
 
-const SAM_URL = "https://10.201.8.35/";
+const SAM_URL = "https://10.201.8.35/#/";
 
 export function SamServer() {
   return (

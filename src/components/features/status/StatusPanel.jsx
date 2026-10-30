@@ -2,13 +2,6 @@ import React from "react";
 import { Microscope, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { RunningRecordsRow } from "./records/RunningRecordsRow";
 
-// Defined at module scope (not inside StatusPanel) so its component type
-// stays stable across renders. When this was nested inside StatusPanel, every
-// re-render (e.g. from the In Progress tab's SSE updates) created a brand new
-// PaginationControls type, forcing React to unmount/remount the whole
-// subtree - including the Next button - on every render. If that happened
-// between a user's mousedown and mouseup, the browser never fired a click
-// event at all (click requires mouseup on the same element as mousedown).
 const PaginationControls = ({ data, tab, isLoading, onPageChange }) => {
   if (!data) return null;
 

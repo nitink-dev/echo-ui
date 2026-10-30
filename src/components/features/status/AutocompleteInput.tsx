@@ -19,7 +19,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   value,
   onChange,
   placeholder = 'Search...',
-  noOptionsText = 'Provide exact barcode..',
+  noOptionsText = 'Provide exact value ..',
   loading = false,
   disableSuggestions = false,
   className,

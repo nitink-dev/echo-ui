@@ -1,4 +1,4 @@
-import { AlertTriangle, Database, Edit, Save, X } from "lucide-react";
+import { Database, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { toast } from "sonner";
@@ -83,11 +83,6 @@ const INITIAL_FORM: FormState = {
 const LIS_FIELD_LABELS: Record<string, string> = Object.fromEntries(
   Object.entries(FIELD_RULES).map(([field, rule]) => [field, rule.label]),
 );
-
-// Maps each form-state field to the key form-labels.yml actually uses for it (the wire-level
-// PATCH key), so title lookups hit the backend-driven label instead of always falling back to
-// the hardcoded default above. ipAddress/receivingFacility/port aren't listed since their
-// form-state name already matches the YAML key directly.
 const LIS_LABEL_KEY_MAP: Partial<Record<keyof FormState, string>> = {
   applicationName: "receivingAppName",
   name: "lisName",
@@ -107,12 +102,8 @@ export function LisConfig() {
   const [initialized, setInitialized] = useState(false);
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [originalForm, setOriginalForm] = useState<FormState>(INITIAL_FORM);
-  const [touched, setTouched] = useState<
-    Partial<Record<keyof FormState, boolean>>
-  >({});
-  const [errors, setErrors] = useState<
-    Partial<Record<keyof FormState, string>>
-  >({});
+  const [touched, setTouched] = useState<Partial<Record<keyof FormState, boolean>>  >({});
+  const [errors, setErrors] = useState<Partial<Record<keyof FormState, string>>>({});
 
   const [cardError, setCardError] = useState<string | null>(null);
 
