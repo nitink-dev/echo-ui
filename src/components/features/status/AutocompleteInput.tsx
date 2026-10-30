@@ -1,6 +1,6 @@
 
 import React, { useState, useRef, useEffect, useMemo } from 'react';
-import { Search, X, ChevronDown } from 'lucide-react';
+import { Search, X } from 'lucide-react';
 import { Input } from '../../ui/input';
 
 interface AutocompleteInputProps {
@@ -19,7 +19,7 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
   value,
   onChange,
   placeholder = 'Search...',
-  noOptionsText = 'Provide exact barcode..',
+  noOptionsText = 'Search by barcode or accession number…',
   loading = false,
   disableSuggestions = false,
   className,
@@ -158,12 +158,6 @@ export const AutocompleteInput: React.FC<AutocompleteInputProps> = ({
           >
             <X className="h-4 w-4" />
           </button>
-        )}
-        {!disableSuggestions && (
-          <ChevronDown
-            className={`h-4 w-4 text-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-            aria-hidden="true"
-          />
         )}
       </div>
 

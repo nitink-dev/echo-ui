@@ -9,9 +9,6 @@ export function useFormLabels(formKey: string, defaults: Record<string, string>)
     formLabelsService.fetchLabels(formKey)
       .then((data) => {
         if (cancelled || !data) return;
-        // Only merge in non-empty label values - a blank/null value from the
-        // backend (e.g. a key present but unset) should never blank out a
-        // field that already has a correct hardcoded default.
         const nonEmpty = Object.fromEntries(
           Object.entries(data).filter(([, value]) => typeof value === 'string' && value.trim().length > 0)
         );

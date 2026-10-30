@@ -3,8 +3,6 @@ import React from "react";
 import { Microscope, RefreshCw, XCircle, ChevronLeft, ChevronRight } from "lucide-react";
 import { CompletedRecordsRow } from "./records/CompletedRecordsRow";
 
-// Defined at module scope (not inside StatusPanelCompleted) so its component
-// type stays stable across renders - see StatusPanel.jsx for why.
 const PaginationControls = ({ data, tab, isLoading, onPageChange }) => {
   if (!data) return null;
 
