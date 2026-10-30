@@ -70,11 +70,6 @@ export default defineConfig({
         ws: true,
         rewrite: (path) => path.replace(/^\/sam/, ''),
       },
-      '/static': {
-        target: 'https://10.201.8.35',
-        changeOrigin: true,
-        secure: false,
-      },
     },
   },
   test: {
