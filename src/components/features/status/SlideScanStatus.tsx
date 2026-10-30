@@ -540,7 +540,6 @@ export function SlideScanStatus() {
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
               <AutocompleteInput
-                options={[]}
                 value={barcodeFilter}
                 onChange={setBarcodeFilter}
                 placeholder="Enter exact value to search"
