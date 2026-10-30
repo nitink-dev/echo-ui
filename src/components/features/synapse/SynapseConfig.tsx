@@ -2,7 +2,9 @@ import { createAsyncThunk } from "@reduxjs/toolkit";
 import { AlertTriangle, Cloud, Edit, Save, X } from "lucide-react";
 import React, { useCallback, useEffect, useState } from "react";
 import { toast } from "sonner";
-import apiClient, { extractApiErrorMessage } from "../../../api/services/apiClient";
+import apiClient, {
+  extractApiErrorMessage,
+} from "../../../api/services/apiClient";
 import { useAppDispatch } from "../../../hooks";
 import { useRefetchOnFocus } from "../../../hooks/useRefetchOnFocus";
 import {
@@ -31,7 +33,9 @@ export const fetchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/fetch", async (_, { rejectWithValue }) => {
   try {
-    const res = await apiClient.get(`${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`);
+    const res = await apiClient.get(
+      `${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`,
+    );
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -55,7 +59,10 @@ export const patchSynapse = createAsyncThunk<
   { rejectValue: string }
 >("synapse/patch", async ({ body }, { rejectWithValue }) => {
   try {
-    const res = await apiClient.patch(`${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`, body);
+    const res = await apiClient.patch(
+      `${API_URLS.enrichment.getTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE })}`,
+      body,
+    );
     return res.data;
   } catch (err: any) {
     const data = err?.response?.data;
@@ -154,10 +161,6 @@ const SYNAPSE_FIELD_LABELS: Record<string, string> = Object.fromEntries(
   Object.entries(FIELD_RULES).map(([field, rule]) => [field, rule.label]),
 );
 
-// Maps each form-state field to the key form-labels.yml actually uses for it (the wire-level
-// GET/PATCH key), so title lookups hit the backend-driven label instead of always falling back
-// to the hardcoded default above. ipAddress/receivingFacility/networkFolder2 aren't listed since
-// their form-state name already matches the YAML key directly.
 const SYNAPSE_LABEL_KEY_MAP: Partial<Record<keyof FormState, string>> = {
   applicationName: "receivingAppName",
   receivingPort: "synapse-receive-port",
@@ -181,10 +184,13 @@ export function SynapseConfig() {
   const [cardError, setCardError] = useState<string | null>(null);
 
   const { canAccess } = usePermissions();
-  const canEditSynapse = canAccess(API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE }), API_URLS.enrichment.updateTool.method);
-  
+  const canEditSynapse = canAccess(
+    API_URLS.enrichment.updateTool.build({ toolKey: ENRICHMENT_TOOLS.SYNAPSE }),
+    API_URLS.enrichment.updateTool.method,
+  );
+
   const { isBannerVisible: isScanInProgress } = useSlideScan();
-  const labels = useFormLabels('synapse', SYNAPSE_FIELD_LABELS);
+  const labels = useFormLabels("synapse", SYNAPSE_FIELD_LABELS);
 
   useEffect(() => {
     const loadData = async () => {
@@ -299,7 +305,12 @@ export function SynapseConfig() {
   );
 
   const handleEdit = (enable: boolean) => {
-    console.log("handleEdit called with enable:", enable, "isScanInProgress:", isScanInProgress);
+    console.log(
+      "handleEdit called with enable:",
+      enable,
+      "isScanInProgress:",
+      isScanInProgress,
+    );
     if (enable && isScanInProgress) {
       toast.warning(
         "A slide scan is currently in progress. Configuration changes may affect the ongoing scan.",
@@ -347,12 +358,17 @@ export function SynapseConfig() {
       body.receivingAppName = changes.applicationName;
     if (changes.ipAddress !== undefined) body.ipAddress = changes.ipAddress;
     if (changes.receivingPort !== undefined)
-     body["synapse-receive-port"] = changes.receivingPort === '' ? null : parseInt(changes.receivingPort, 10);
-    if (changes.networkFolder !== undefined) body.synapseServerFolder = changes.networkFolder;
+      body["synapse-receive-port"] =
+        changes.receivingPort === ""
+          ? null
+          : parseInt(changes.receivingPort, 10);
+    if (changes.networkFolder !== undefined)
+      body.synapseServerFolder = changes.networkFolder;
     if (changes.receivingFacility !== undefined)
       body.receivingFacility = changes.receivingFacility;
     if (changes.imsName !== undefined) body["ims-name"] = changes.imsName;
-    if (changes.networkFolder2 !== undefined) body.synapseServerFolder2  = changes.networkFolder2;
+    if (changes.networkFolder2 !== undefined)
+      body.synapseServerFolder2 = changes.networkFolder2;
 
     setCardError(null);
     setLoading(true);
@@ -373,10 +389,16 @@ export function SynapseConfig() {
 
   const renderInput = (field: keyof FormState, disabled: boolean) => {
     const rule = FIELD_RULES[field];
-    const label = labels[SYNAPSE_LABEL_KEY_MAP[field] ?? field] ?? rule?.label ?? field;
+    const label =
+      labels[SYNAPSE_LABEL_KEY_MAP[field] ?? field] ?? rule?.label ?? field;
     const error = touched[field] ? errors[field] : "";
     const hasError = Boolean(error);
-    const placeholder = field === "ipAddress" ? "00:00:00:00" : field === "receivingPort" ? "0" : undefined;
+    const placeholder =
+      field === "ipAddress"
+        ? "00:00:00:00"
+        : field === "receivingPort"
+          ? "0"
+          : undefined;
 
     return (
       <div className="space-y-2">
@@ -432,13 +454,29 @@ export function SynapseConfig() {
           {cardError && (
             <div className="mx-6 mb-4 flex items-start gap-3 rounded-lg border border-[#F09595] bg-[#FCEBEB] px-4 py-3.5">
               <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#F7C1C1] mt-0.5">
-                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#791F1F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="#791F1F"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <circle cx="12" cy="12" r="10" />
+                  <line x1="12" y1="8" x2="12" y2="12" />
+                  <line x1="12" y1="16" x2="12.01" y2="16" />
+                </svg>
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-[#791F1F] leading-snug mb-0.5">
                   Request failed
                 </p>
-                <p className="text-sm text-[#A32D2D] leading-snug">{cardError}</p>
+                <p className="text-sm text-[#A32D2D] leading-snug">
+                  {cardError}
+                </p>
               </div>
               <button
                 type="button"
@@ -458,9 +496,8 @@ export function SynapseConfig() {
               {renderInput("ipAddress", !editMode)}
               {renderInput("receivingPort", !editMode)}
               {renderInput("networkFolder", !editMode)}
-               {renderInput("networkFolder2", !editMode)}
+              {renderInput("networkFolder2", !editMode)}
               {renderInput("receivingFacility", !editMode)}
-
             </div>
 
             <div className="flex justify-end gap-2 pt-6 mt-2 border-t border-gray-200">
