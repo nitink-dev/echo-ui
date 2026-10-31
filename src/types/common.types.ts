@@ -11,11 +11,7 @@ export type PageType =
   | 'synapse'
   | 'enrichment-tool'
   | 'slide-status'
-  | 'health-status'
-  | 'grafana-dashboard'
-  | 'sam-server'
-  | 'ibex'
-  | 'synapse-pathology';
+  | 'health-status';
 
 export interface Breadcrumb {
   label: string;
