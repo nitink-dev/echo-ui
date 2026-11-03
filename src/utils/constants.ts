@@ -1,5 +1,5 @@
-
-export const BASE_URL = import.meta.env.VITE_API_URL ;
+export const BASE_URL =
+  import.meta.env.VITE_API_URL || "http://10.201.8.208:8097";
 
 if (!BASE_URL) {
   console.warn('BASE_URL is empty. Check .env variables.');

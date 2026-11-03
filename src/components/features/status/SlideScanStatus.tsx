@@ -543,7 +543,8 @@ export function SlideScanStatus() {
                 options={[]}
                 value={barcodeFilter}
                 onChange={setBarcodeFilter}
-                placeholder="Enter exact value to search"
+                placeholder="Search barcode or accession number…"
+                emptyText="Enter exact barcode or accession number to search"
                 onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
               />
 
@@ -587,7 +588,7 @@ export function SlideScanStatus() {
         {searchState === "found" && isSearchActive && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800">
             <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
-            <span>Found Record</span>
+            <span>Found barcode</span>
             <code className="px-2 py-0.5 bg-green-100 rounded font-mono text-green-900 text-xs">
               {appliedFilters.barcode}
             </code>
@@ -600,7 +601,7 @@ export function SlideScanStatus() {
         {searchState === "not-found" && isSearchActive && (
           <div className="flex items-center gap-2 px-4 py-2.5 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800">
             <XCircle className="h-4 w-4 text-red-400 shrink-0" />
-            <span>No results found for</span>
+            <span>No results found for barcode</span>
             <code className="px-2 py-0.5 bg-red-100 rounded font-mono text-red-900 text-xs">
               {appliedFilters.barcode}
             </code>

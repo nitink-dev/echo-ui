@@ -70,7 +70,7 @@ export default defineConfig({
         ws: true,
         rewrite: (path) => path.replace(/^\/sam/, ''),
       },
-      '/ibex': {
+       '/ibex': {
         target: 'https://endeavor.ibex-ai.com',
         changeOrigin: true,
         ws: true,
