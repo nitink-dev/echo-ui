@@ -70,12 +70,6 @@ export default defineConfig({
         ws: true,
         rewrite: (path) => path.replace(/^\/sam/, ''),
       },
-       '/ibex': {
-        target: 'https://endeavor.ibex-ai.com',
-        changeOrigin: true,
-        ws: true,
-        rewrite: (path) => path.replace(/^\/ibex/, ''),
-      },
       '/synapse-pathology': {
         target: 'https://synapse.nsdev.tech',
         changeOrigin: true,
