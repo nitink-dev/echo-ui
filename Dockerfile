@@ -43,9 +43,9 @@ COPY --from=build /app/build /usr/share/nginx/html
 
 COPY default.conf /etc/nginx/conf.d/default.conf
  
-# Expose port 80
+# Expose echo-ui (3001) and the dedicated Ibex proxy (3002)
 
-EXPOSE 80
+EXPOSE 3001 3002
  
 # Start Nginx server
 
