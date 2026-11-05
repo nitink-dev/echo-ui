@@ -20,8 +20,22 @@ import { IframeViewModal } from "./IframeViewModal";
 const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
 const SYNAPSE_PATHOLOGY_URL = "/synapse-pathology/";
 
+// Per-leg completion markers the backend itself uses to decide a scan is done
+// (see SlideScanStatusService -- a record only reaches overall "completed"
+// once its progressEvents contain both of these), not the top-level
+// record.scanStatus, which is "completed"/"warning-completed" as a whole.
+const SYNAPSE_COMPLETED_STATUS = "synapse-completed";
+const IBEX_COMPLETED_STATUS = "ibex-classification-finished";
+
+const hasProgressEvent = (record, scanStatus) =>
+  (record.progressEvents ?? []).some(
+    (event) => event.scanStatus?.toLowerCase() === scanStatus,
+  );
+
 export function CompletedRecordsRow({ record, index }) {
   const [viewModal, setViewModal] = useState(null); // null | "ibex" | "synapse"
+  const showIbexButton = hasProgressEvent(record, IBEX_COMPLETED_STATUS);
+  const showSynapseButton = hasProgressEvent(record, SYNAPSE_COMPLETED_STATUS);
   const statusConfig = {
     completed: {
       color: "text-green-600",
@@ -143,18 +157,25 @@ export function CompletedRecordsRow({ record, index }) {
 
       <td className="px-3 py-0">
         <div className="flex items-center gap-2">
-          <button
-            onClick={() => setViewModal("ibex")}
-            className="px-2.5 py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-md hover:bg-indigo-50 transition-colors"
-          >
-            Ibex
-          </button>
-          <button
-            onClick={() => setViewModal("synapse")}
-            className="px-2.5 py-1 text-xs font-medium text-teal-600 border border-teal-200 rounded-md hover:bg-teal-50 transition-colors"
-          >
-            Synapse
-          </button>
+          {showIbexButton && (
+            <button
+              onClick={() => setViewModal("ibex")}
+              className="px-2.5 py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-md hover:bg-indigo-50 transition-colors"
+            >
+              Ibex
+            </button>
+          )}
+          {showSynapseButton && (
+            <button
+              onClick={() => setViewModal("synapse")}
+              className="px-2.5 py-1 text-xs font-medium text-teal-600 border border-teal-200 rounded-md hover:bg-teal-50 transition-colors"
+            >
+              Synapse
+            </button>
+          )}
+          {!showIbexButton && !showSynapseButton && (
+            <span className="text-xs text-gray-400">—</span>
+          )}
         </div>
       </td>
     </tr>
