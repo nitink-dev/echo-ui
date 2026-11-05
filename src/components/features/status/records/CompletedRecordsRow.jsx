@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -12,8 +12,16 @@ import {
   TooltipTrigger,
 } from "../../../ui/tooltip";
 import { toTitleCase } from "../../../../utils/helpers";
+import { IframeViewModal } from "./IframeViewModal";
+
+// Same URLs the Ibex and Synapse Pathology dashboard tabs embed in their own
+// iframes (see IbexDashboard.tsx / SynapsePathology.tsx) -- reused here so the
+// "View" column opens the exact same thing in a popup instead of a separate page.
+const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
+const SYNAPSE_PATHOLOGY_URL = "/synapse-pathology/";
 
 export function CompletedRecordsRow({ record, index }) {
+  const [viewModal, setViewModal] = useState(null); // null | "ibex" | "synapse"
   const statusConfig = {
     completed: {
       color: "text-green-600",
@@ -57,6 +65,7 @@ export function CompletedRecordsRow({ record, index }) {
   };
 
   return (
+    <>
     <tr className="border-b border-gray-100 hover:bg-gray-50 transition-colors">
       <td className="px-6 py-0 text-sm text-gray-500">
         {index + 1}
@@ -131,6 +140,39 @@ export function CompletedRecordsRow({ record, index }) {
       <td className="px-6 py-0 text-sm text-gray-500">
         {formatTimestamp(record.updatedAt)}
       </td>
+
+      <td className="px-3 py-0">
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setViewModal("ibex")}
+            className="px-2.5 py-1 text-xs font-medium text-indigo-600 border border-indigo-200 rounded-md hover:bg-indigo-50 transition-colors"
+          >
+            Ibex
+          </button>
+          <button
+            onClick={() => setViewModal("synapse")}
+            className="px-2.5 py-1 text-xs font-medium text-teal-600 border border-teal-200 rounded-md hover:bg-teal-50 transition-colors"
+          >
+            Synapse
+          </button>
+        </div>
+      </td>
     </tr>
+
+    {viewModal === "ibex" && (
+      <IframeViewModal
+        title="Ibex"
+        url={IBEX_URL}
+        onClose={() => setViewModal(null)}
+      />
+    )}
+    {viewModal === "synapse" && (
+      <IframeViewModal
+        title="Synapse"
+        url={SYNAPSE_PATHOLOGY_URL}
+        onClose={() => setViewModal(null)}
+      />
+    )}
+    </>
   );
 }
