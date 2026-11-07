@@ -1,12 +1,8 @@
 import { ExternalLink } from "lucide-react";
 
-// Ibex's own frontend hardcodes its router base to "/" (no subpath support),
-// so it can't be served behind a path prefix like /ibex/ on this app's own
-// port -- the client-side router fails to match any route and renders a
-// blank screen. It's proxied same-origin on its own dedicated port instead
-// (see default.conf), which keeps it same-site for cookies while letting
-// Ibex's router see itself as running at the root, as it expects.
-const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
+// const IBEX_URL = "https://endeavor.ibex-ai.com/login";
+   const IBEX_URL = "http://10.201.8.208:3002/";
+//  const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
 
 export function IbexDashboard() {
   return (

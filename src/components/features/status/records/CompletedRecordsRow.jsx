@@ -14,16 +14,9 @@ import {
 import { toTitleCase } from "../../../../utils/helpers";
 import { IframeViewModal } from "./IframeViewModal";
 
-// Same URLs the Ibex and Synapse Pathology dashboard tabs embed in their own
-// iframes (see IbexDashboard.tsx / SynapsePathology.tsx) -- reused here so the
-// "View" column opens the exact same thing in a popup instead of a separate page.
-const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
+const IBEX_URL = `/IBEX/`;
 const SYNAPSE_PATHOLOGY_URL = "/synapse-pathology/";
 
-// Per-leg completion markers the backend itself uses to decide a scan is done
-// (see SlideScanStatusService -- a record only reaches overall "completed"
-// once its progressEvents contain both of these), not the top-level
-// record.scanStatus, which is "completed"/"warning-completed" as a whole.
 const SYNAPSE_COMPLETED_STATUS = "synapse-completed";
 const IBEX_COMPLETED_STATUS = "ibex-classification-finished";
 
