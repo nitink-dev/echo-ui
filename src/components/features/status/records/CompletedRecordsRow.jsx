@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import {
   CheckCircle2,
   XCircle,
@@ -13,8 +13,9 @@ import {
 } from "../../../ui/tooltip";
 import { toTitleCase } from "../../../../utils/helpers";
 import { IframeViewModal } from "./IframeViewModal";
+import apiClient from "../../../../api/services/apiClient";
+import { BASE_URL } from "../../../../utils/constants";
 
-const IBEX_URL = `/IBEX/`;
 const SYNAPSE_PATHOLOGY_URL = "/synapse-pathology/";
 
 const SYNAPSE_COMPLETED_STATUS = "synapse-completed";
@@ -25,8 +26,19 @@ const hasProgressEvent = (record, scanStatus) =>
     (event) => event.scanStatus?.toLowerCase() === scanStatus,
   );
 
+const fetchIbexUrl = async (record) => {
+  const response = await apiClient.get(
+    `${BASE_URL}/api/slide-scan-status/barcode/${encodeURIComponent(record.slideBarcode)}/ibex-url?seriesId=${encodeURIComponent(record.seriesId)}`,
+  );
+  return response.data.ibexUrl;
+};
+
 export function CompletedRecordsRow({ record, index }) {
   const [viewModal, setViewModal] = useState(null); // null | "ibex" | "synapse"
+  const loadIbexUrl = useCallback(
+    () => fetchIbexUrl(record),
+    [record.slideBarcode, record.seriesId],
+  );
   const showIbexButton = hasProgressEvent(record, IBEX_COMPLETED_STATUS);
   const showSynapseButton = hasProgressEvent(record, SYNAPSE_COMPLETED_STATUS);
   const statusConfig = {
@@ -176,7 +188,7 @@ export function CompletedRecordsRow({ record, index }) {
     {viewModal === "ibex" && (
       <IframeViewModal
         title="Ibex"
-        url={IBEX_URL}
+        loadUrl={loadIbexUrl}
         onClose={() => setViewModal(null)}
       />
     )}

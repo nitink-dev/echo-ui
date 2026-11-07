@@ -1,6 +1,34 @@
-import { X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { X, Loader2 } from "lucide-react";
 
-export function IframeViewModal({ title, url, onClose }) {
+export function IframeViewModal({ title, url, loadUrl, onClose }) {
+  const [resolvedUrl, setResolvedUrl] = useState(url ?? null);
+  const [loading, setLoading] = useState(!url && !!loadUrl);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    if (url || !loadUrl) return;
+
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+
+    loadUrl()
+      .then((fetchedUrl) => {
+        if (!cancelled) setResolvedUrl(fetchedUrl);
+      })
+      .catch((err) => {
+        if (!cancelled) setError(err?.message || "Failed to load URL");
+      })
+      .finally(() => {
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [loadUrl, url]);
+
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-8">
       <div
@@ -20,13 +48,27 @@ export function IframeViewModal({ title, url, onClose }) {
           </button>
         </div>
 
-        <div className="flex-1 overflow-hidden rounded-b-xl">
-          <iframe
-            src={url}
-            title={title}
-            className="w-full h-full border-0"
-            allow="fullscreen"
-          />
+        <div className="flex-1 overflow-hidden rounded-b-xl relative">
+          {loading && (
+            <div className="absolute inset-0 flex items-center justify-center bg-white">
+              <Loader2 className="h-8 w-8 text-indigo-600 animate-spin" />
+            </div>
+          )}
+
+          {!loading && error && (
+            <div className="absolute inset-0 flex items-center justify-center text-sm text-red-600 px-6 text-center">
+              {error}
+            </div>
+          )}
+
+          {!loading && !error && resolvedUrl && (
+            <iframe
+              src={resolvedUrl}
+              title={title}
+              className="w-full h-full border-0"
+              allow="fullscreen"
+            />
+          )}
         </div>
       </div>
     </div>
