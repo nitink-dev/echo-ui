@@ -14,9 +14,10 @@ import {
 import { toTitleCase } from "../../../../utils/helpers";
 import { IframeViewModal } from "./IframeViewModal";
 import apiClient from "../../../../api/services/apiClient";
-import { BASE_URL } from "../../../../utils/constants";
 
 const SYNAPSE_PATHOLOGY_URL = "/synapse-pathology/";
+// base url synapse "https://synapse-plugin-svc.nsdev.tech"
+const IBEX_CASE_URL = "https://synapse-plugin-svc.nsdev.tech/api/ibex/case";
 
 const SYNAPSE_COMPLETED_STATUS = "synapse-completed";
 const IBEX_COMPLETED_STATUS = "ibex-classification-finished";
@@ -26,18 +27,55 @@ const hasProgressEvent = (record, scanStatus) =>
     (event) => event.scanStatus?.toLowerCase() === scanStatus,
   );
 
+// const fetchIbexUrl = async (record) => {
+//   const accessionNumber = record.accessionNumber;
+//   const url = `${IBEX_CASE_URL}/${encodeURIComponent(accessionNumber)}`;
+//   // https://synapse-plugin-svc.nsdev.tech/api/ibex/case/SEV26-12612
+
+//   try {
+//     await apiClient.get(url);
+//   } catch (error) {
+//     if (error.response?.status === 404) {
+//       throw new Error(
+//         `No Ibex case found for accession number ${accessionNumber}.`,
+//       );
+//     }
+
+//     throw error;
+//   }
+
+//   return url;
+// };
+
 const fetchIbexUrl = async (record) => {
-  const response = await apiClient.get(
-    `${BASE_URL}/api/slide-scan-status/barcode/${encodeURIComponent(record.slideBarcode)}/ibex-url?seriesId=${encodeURIComponent(record.seriesId)}`,
-  );
-  return response.data.ibexUrl;
+  const accessionNumber = record.accessionNumber;
+  const url = `${IBEX_CASE_URL}/${encodeURIComponent(accessionNumber)}`;
+  console.log("Fetching Ibex URL for accession number:", url);  
+  // https://synapse-plugin-svc.nsdev.tech/api/ibex/case/SEV26-12612
+
+  try {
+    const response = await apiClient.get(url);
+    if (!response.data.ibex_url) {
+      throw new Error("Ibex URL was not returned for this case.");
+    }
+    return response.data.ibex_url;
+  } catch (error) {
+    if (error.response?.status === 404) {
+      throw new Error(
+        `No Ibex case found for accession number ${accessionNumber}.`,
+      );
+    }
+    throw error;
+  }
 };
 
 export function CompletedRecordsRow({ record, index }) {
+
+  console.log("Rendering CompletedRecordsRow for record:",JSON.stringify(record));
   const [viewModal, setViewModal] = useState(null); // null | "ibex" | "synapse"
   const loadIbexUrl = useCallback(
     () => fetchIbexUrl(record),
-    [record.slideBarcode, record.seriesId],
+    [record.accessionNumber],
   );
   const showIbexButton = hasProgressEvent(record, IBEX_COMPLETED_STATUS);
   const showSynapseButton = hasProgressEvent(record, SYNAPSE_COMPLETED_STATUS);

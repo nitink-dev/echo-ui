@@ -15,6 +15,8 @@ export function IframeViewModal({ title, url, loadUrl, onClose }) {
 
     loadUrl()
       .then((fetchedUrl) => {
+        console.log("Fetched URL:", fetchedUrl);
+
         if (!cancelled) setResolvedUrl(fetchedUrl);
       })
       .catch((err) => {

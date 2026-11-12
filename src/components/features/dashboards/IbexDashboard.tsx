@@ -1,8 +1,8 @@
 import { ExternalLink } from "lucide-react";
 
 // const IBEX_URL = "https://endeavor.ibex-ai.com/login";
-   const IBEX_URL = "http://10.201.8.208:3002/";
-//  const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
+//   const IBEX_URL = "http://10.201.8.208:3002/";
+const IBEX_URL = `${window.location.protocol}//${window.location.hostname}:3002/`;
 
 export function IbexDashboard() {
   return (
