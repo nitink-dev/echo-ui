@@ -14,7 +14,6 @@ import {
 import { toTitleCase } from "../../../../utils/helpers";
 import { IframeViewModal } from "./IframeViewModal";
 import apiClient from "../../../../api/services/apiClient";
-import { BASE_URL } from "../../../../utils/constants";
 
 const SYNAPSE_PATHOLOGY_URL = "/synapse-pathology/";
 
@@ -28,14 +27,17 @@ const hasProgressEvent = (record, scanStatus) =>
 
 const fetchIbexUrl = async (record) => {
   const accessionNumber = record.accessionNumber;
-  const url = `${BASE_URL}/api/slide-scan-status/accession/${encodeURIComponent(accessionNumber)}/ibex-url`;
+  // Same-origin path, proxied by nginx (default.conf: /api/ibex/) straight to
+  // synapse-plugin-svc.nsdev.tech -- not apiClient's BASE_URL, which points at
+  // a different backend entirely.
+  const url = `${window.location.origin}/api/ibex/case/${encodeURIComponent(accessionNumber)}`;
 
   try {
     const response = await apiClient.get(url);
-    if (!response.data.ibexUrl) {
+    if (!response.data.ibex_url) {
       throw new Error("Ibex URL was not returned for this case.");
     }
-    return response.data.ibexUrl;
+    return response.data.ibex_url;
   } catch (error) {
     if (error.response?.status === 404) {
       throw new Error(
