@@ -15,9 +15,12 @@ export function IframeViewModal({ title, url, loadUrl, onClose }) {
 
     loadUrl()
       .then((fetchedUrl) => {
-        console.log("Fetched URL:", fetchedUrl);
+        const proxiedUrl = fetchedUrl.replace(
+          "https://endeavor.ibex-ai.com/",
+          `${window.location.protocol}//${window.location.hostname}:3002/`,
+        );
 
-        if (!cancelled) setResolvedUrl(fetchedUrl);
+        if (!cancelled) setResolvedUrl(proxiedUrl);
       })
       .catch((err) => {
         if (!cancelled) setError(err?.message || "Failed to load URL");
